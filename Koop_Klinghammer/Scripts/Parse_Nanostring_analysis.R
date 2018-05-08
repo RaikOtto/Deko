@@ -21,6 +21,7 @@ if (  mis_samp != 0 ){
   write.table( meta_info, "~/Koop_Klinghammer/Misc/Meta_information.tsv",sep="\t", quote = F, row.names = F)
 }
 meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_information.tsv",sep="\t",header =T, stringsAsFactors = F)
+meta_info = subset( meta_info, Included == TRUE)
 
 ### normalization
 
