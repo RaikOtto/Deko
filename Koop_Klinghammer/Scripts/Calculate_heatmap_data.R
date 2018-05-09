@@ -61,16 +61,6 @@ pheatmap::pheatmap(
   annotation_colors = aka3
 )
 
-# tSNE
-
-colors =as.character( meta_data$Subtype)
-colors[ colors == "MS"] = "blue"
-colors[ colors == "BA"] = "red"
-colors[ colors == "CL"] = "green"
-colors[ colors == "Not_sig"] = "black"
-tsne_out <- Rtsne::Rtsne( t(pure_data), perplexity = 3) # Run TSNE
-plot( tsne_out$Y, col = colors)
-
 ### GOI
 
 GOI = c("AKR1C1","AKR1C3","AREG","CDKN2A","CXCL10","E2F2","EGFR","HIF1A","IDO1","IFNG","IL17A","KRT9","LAG3","STAT1","VEGF")
@@ -82,3 +72,31 @@ colnames( dd2 )  = c( "Subtype", "Gene", "Exp" )
 
 ggplot( dd2, aes( Gene, Exp, fill = Subtype ) ) + geom_boxplot( position = "dodge" ) + theme(axis.text.x=element_text(angle=45, hjust=1), legend.position = "top")
 
+###
+
+data = table(meta_data[,c("Subtype","Best_response")])
+fisher.test(data)
+
+###
+
+data = aggregate(meta_data$Chemozyklen, by = list(meta_data$Subtype), FUN = c)
+t.test( 
+  as.double( as.character(unlist(data[ data$Group.1 == "BA",2] ) ) ),
+  as.double( as.character(unlist(data[ data$Group.1 == "MS",2] ) ) )
+)
+
+vis_mat = reshape2::melt(meta_data[,c("Subtype","Best_response")])
+ggplot( vis_mat, aes( Subtype, Best_response ) ) + geom_bar(aes( x = Subtype, y = Best_response, fill = Best_response),stat="identity" ) + theme(axis.text.x=element_text(angle=45, hjust=1), legend.position = "top")
+
+sub_vec = meta_data$Subtype[s_match]
+r_mat[1:5,1:5]
+
+exp_mat = apply(
+  r_mat[ , !( colnames(r_mat) %in% c("Sample", "OS") )], 
+  FUN = function(vec){
+     return(
+        aggregate(vec, by = list(sub_vec) , c)
+     )
+  },
+  MARGIN = 1
+)
