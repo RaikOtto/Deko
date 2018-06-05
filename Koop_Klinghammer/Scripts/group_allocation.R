@@ -23,7 +23,7 @@ pure_data = pure_data[row_var > 0, col_var > 0]
 dim(pure_data)
 
 meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_information.tsv",sep="\t",header =T, stringsAsFactors = F)
-meta_data = meta_info[match(colnames(pure_data), meta_info$Name),]
+meta_data = meta_info[match(colnames(pure_data), as.character( meta_info$Name)),]
 
 ###
 
@@ -55,6 +55,6 @@ class_data = as.data.frame(expr2bc$correlation)
 meta_match = match( class_data$Sample, meta_info$Name, nomatch = 0 )
 meta_info$Subtype[meta_match] = as.character( class_data$Subtype )
 meta_info$P_value[meta_match] = as.double( as.character( class_data$P_value ) )
-meta_info$Sig =meta_info$P_value < 0.05 
 
-write.table(meta_info,"~/Koop_Klinghammer/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names =F)
+
+#write.table(meta_info,"~/Koop_Klinghammer/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names =F)

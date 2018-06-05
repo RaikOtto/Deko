@@ -6,65 +6,68 @@ meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_information.tsv", sep ="\t"
 meta_info = subset( meta_info, Included == TRUE)
 meta_info = subset( meta_info, Sig == TRUE)
 meta_info = subset( meta_info, Sig == TRUE)
-colnames(meta_info) = str_replace_all(colnames(meta_info), pattern = "\\.AF8\\.","_")
-meta_info$OS = str_replace_all( meta_info$OS, pattern = ",", "." )
 meta_info$OS = as.double(meta_info$OS)
 
 f_mat = meta_info[ ,c("Subtype","Geschlecht","OS","Loc_Primaertumor","Treatment","Chemozyklen","Best_response","Vortherapie","Raucher","Alkohol","Anzahl_py")]
 f_mat$OS = str_replace(f_mat$OS, pattern = ",",".")
 f_mat$OS = as.double(f_mat$OS)
 
-s_match = match(rownames(r_mat), meta_info$Name, nomatch = 0)
+###
+
+s_match = match(rownames(t(r_mat)), meta_info$Name, nomatch = 0)
 r_mat = r_mat[s_match != 0,]
 meta_data = meta_info[ s_match, ]
 
-tuneGrid = expand.grid(
+r_mat = cbind( as.character( meta_data$Best_response ) , t(pure_data))
+colnames(r_mat)[1] = "Best_response"
+#r_mat = cbind( as.character( rownames(r_mat) ) , r_mat)
+#colnames(r_mat)[1] = "Sample"
+#lambda <- 10^seq(10, -2, length = 100)
+
+splitIndex = caret::createDataPartition( 1:nrow(r_mat), p = .75, list = FALSE, times = 1)
+trainDF = r_mat[ splitIndex,]
+testDF  = r_mat[-splitIndex,]
+
+predictorsNames = colnames(r_mat)[2:(ncol(r_mat))]
+
+tune_grid = tuneGrid = expand.grid(
   .alpha=1,
   .lambda=seq(0, 100, by = 0.1)
 )
 
-trainControl = trainControl(
+objControl <- caret::trainControl(method='cv', number=3, returnResamp='none', classProbs = TRUE)
+
+trainControl = caret::trainControl(
   method = "cv",
   number = 10#,
   #summaryFunction = prSummary,
   #classProbs = T
 )
 
-trainControl = trainControl(method='cv', number=3, returnResamp='none')
+prop.table(table(r_mat[,1]))
 
-r_mat = cbind( as.double( meta_data$OS ) , r_mat)
-colnames(r_mat)[1] = "OS"
-r_mat = cbind( as.character( rownames(r_mat) ) , r_mat)
-colnames(r_mat)[1] = "Sample"
-lambda <- 10^seq(10, -2, length = 100)
-
-splitIndex = createDataPartition( 1:nrow(r_mat), p = .75, list = FALSE, times = 1)
-trainDF = r_mat[ splitIndex,]
-testDF  = r_mat[-splitIndex,]
-
-predictorsNames = colnames(r_mat)[3:ncol(r_mat)]
-
-expand.grid(alpha = seq(0.1, 1, length = len),
-            lambda = seq(.1, 3, length = 3 * len))
-
-modelFit = train(
+modelFit = caret::train(
   trainDF[,predictorsNames],
-  trainDF[,"OS"],
-  method = "glmnet",
-  lambda = 0.0,
-  #tuneLength = 10,
-  #trControl = trainControl,
-  metric = "RMSE",
+  trainDF[,"Best_response"],
+  method='gbm', 
+  trControl=objControl,  
+  metric = "ROC",
   preProc = c("center", "scale")
-  #family="binomial"
 )
 
 predictions <- predict(object = modelFit, testDF[,predictorsNames], type='raw')
-plot(predictions, testDF$OS)
+table(as.character(predictions), testDF[,1])
 #auc <- pROC::roc( testDF[,outcomeName], predictions)
 #print(auc$auc)
 
-plot(varImp(modelFit,scale=T))
+d=varImp(modelFit,scale=T)
+imp_vars = d$importance
+vis_vars = imp_vars[order(imp_vars[,1], decreasing = T),]
+names(vis_vars) = rownames(imp_vars)[order(imp_vars[,1], decreasing = T)]
+
+plot( vis_vars[1:10] )
+
+aggregate( pure_data[rownames(pure_data) == "SPRR3",], by = list(meta_data$Subtype), FUN = mean)
 ###
 
 #create test and training sets

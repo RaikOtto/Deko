@@ -1,18 +1,41 @@
 library("stringr")
 library("ggplot2")
 
-# pure data pre-processing
+s_match = match( as.character( colnames(pure_data)), as.character( meta_info$Name), nomatch = 0)
+meta_data = meta_info[s_match,]
+rownames(meta_data) = meta_data$Name
 
-#pure_data = read.table("~/Koop_Klinghammer/Data/35S.14_03_2018.normalized.tsv", sep ="\t", header = T, row.names = 1, stringsAsFactors = F)
-colnames(pure_data) = str_replace_all(colnames(pure_data), pattern = "^X", "")
-pure_data = pure_data[, !( colnames(pure_data) %in% c("25") ) ]
-meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_information.tsv",sep="\t",header =T, stringsAsFactors = F)
-meta_data = meta_info[match(colnames(pure_data), meta_info$Name),]
+threshold = 0.05
+meta_data$Sig[ which( meta_data$P_value < threshold ) ] = "Sig"
+meta_data$Sig[ which( meta_data$P_value >= threshold ) ] = "Not_Sig"
+meta_data$Subtype[ which( meta_data$P_value >= threshold ) ] = "Not_sig"
 
-meta_data$Subtype[! meta_data$Sig] = "Not_sig"
-meta_data$P_value = 1-meta_data$P_value
-meta_data$Subtype_2[! meta_data$Sig_2] = "Not_sig"
-meta_data$P_value_2 = 1-meta_data$P_value_2
+#meta_data$Sig[ (as.character(meta_data$Erhaltungstherapie) != "2" ) ] = "Not_sig"
+
+meta_data = meta_data[meta_data$Sig == "Sig",]
+pure_data = pure_data[,colnames(pure_data) %in% meta_data$Name]
+
+meta_data$OS = str_replace_all(meta_data$OS, pattern = ",", ".")
+meta_data$OS = as.double(meta_data$OS)
+meta_data$OS = as.double(meta_data$OS)
+meta_data$OS = log(meta_data$OS)
+
+meta_data$PFS = str_replace_all(meta_data$PFS, pattern = ",", ".")
+meta_data$PFS = as.double(meta_data$PFS)
+meta_data$PFS = as.double(meta_data$PFS)
+meta_data$PFS = log(meta_data$PFS)
+
+#meta_data$Subtype_2[! meta_data$Sig_2] = "Not_sig"
+#meta_data$P_value_2 = 1-meta_data$P_value_2
+
+#hc.cut <- factoextra::hcut(
+#  scale(t(pure_data)),
+#  k = 3,
+#  hc_method = "ward.D"
+#)
+#factoextra::fviz_dend(hc.cut, show_labels = FALSE, rect = TRUE)
+#factoextra::fviz_cluster(hc.cut, ellipse.type = "convex")
+#meta_data$Subtype = hc.cut$cluster
 
 ###
 
@@ -23,11 +46,15 @@ aka3 = list(
       MS = "darkblue",
       Not_sig = "black"
   ),
-  Subtype_2   = c(
-    BA = "red",
-    CL = "darkgreen",
-    MS = "darkblue",
-    Not_sig = "black"
+  OS = c(
+      low = "white",
+      middle = "gray",
+      high = "black"
+  ),
+  PFS = c(
+    low = "white",
+    middle = "gray",
+    high = "black"
   ),
   AREG = c(low = "white", middle= "gray", high = "black"),
   IDO1 = c(low = "white", middle= "gray", high = "black"),
@@ -46,7 +73,8 @@ ggbiplot::ggbiplot(
   labels.size = 4,
   labels = colnames(pure_data),
   alpha = 1,
-  groups = meta_data$Subtype,
+  #groups = as.character( meta_data$Erhaltungstherapie ),
+  groups = as.character( meta_data$Subtype ),
   ellipse = TRUE, 
   circle = TRUE,
   var.axes = F
@@ -54,16 +82,39 @@ ggbiplot::ggbiplot(
 
 pheatmap::pheatmap(
   cor_mat,
-  annotation_col = meta_data["Subtype"],
+  annotation_col = meta_data[c("Loc_Primaertumor","PFS","OS","Best_response","Erhaltungstherapie","Subtype")],
   show_rownames = F,
   show_colnames = F,
-  clustering_method = "average",
+  clustering_method = "complete",
   annotation_colors = aka3
 )
 
+OS = as.double(as.character(meta_data$OS))
+Subtype = meta_data$Subtype[!(is.na(OS))]
+response_vec = meta_data$Best_response[!(is.na(OS))]
+pfs_vec = meta_data$OS[!(is.na(OS))]
+
+OS = OS[!(is.na(OS))]
+OS = OS[ (response_vec != "NE") & (response_vec != "")]
+pfs_vec = pfs_vec[ (response_vec != "NE") & (response_vec != "")]
+pfs_vec = as.double(pfs_vec)
+Subtype = Subtype[ (response_vec != "NE") & (response_vec != "")]
+
+response_vec = response_vec[ (response_vec != "NE") & (response_vec != "")]
+aggregate(pfs_vec, by = list(Subtype), FUN = mean)
+library(survival)
+fit <- survfit(
+  Surv(OS) ~ Subtype
+)
+survminer::ggsurvplot(fit, data = meta_data, risk.table = FALSE)
+
+tab_mat = data.frame(cbind(os_vec, subtype_vec))
+table(tab_mat)
+fisher.test(table(tab_mat))
+
 ### GOI
 
-GOI = c("AKR1C1","AKR1C3","AREG","CDKN2A","CXCL10","E2F2","EGFR","HIF1A","IDO1","IFNG","IL17A","KRT9","LAG3","STAT1","VEGF")
+GOI = c("SPRR3","KRT13","KRT1","CCL19","CXCL9","CCR7","VNN2")
 
 dd = as.data.frame( t( pure_data[rownames(pure_data) %in% GOI,] ) )
 dd$Subtype = meta_data$Subtype
