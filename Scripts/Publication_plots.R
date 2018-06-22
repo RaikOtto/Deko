@@ -7,7 +7,7 @@ draw_colnames_45 <- function (coln, gaps, ...) {
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 
-expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = bam_data#read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -91,10 +91,11 @@ meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metas
 
 pheatmap::pheatmap(
   cor_mat,
-  annotation_col = meta_data[c("Cell_type","Grading","Location","NEC_NET","Study")],
+  #annotation_col = meta_data[c("Cell_type","Grading","Location","NEC_NET","Study")],
+  annotation_col = meta_data[c("cell_type")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   treeheight_col = 0,
   legend = F,
   fontsize_col = 7
@@ -118,7 +119,7 @@ p = ggbiplot::ggbiplot(
 MKI67 = as.double( meta_data$MKI67)**1
 Grading = as.character(meta_data$Grading)
 p = p + geom_point( aes(colour= meta_data$Cell_type, size = MKI67, shape = Grading ) )
-p = p + scale_color_manual( values = c("Blue","Yellow","Orange","Purple","Black","Gray") )
+p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown","Orange","Gray") )
 #p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
 
 #png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
