@@ -11,7 +11,7 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 ###
 
 bam_data = read.table("~/Deko/Data/GSE73338.HGNC.tsv",sep ="\t", header = T)
-bam_data = read.table("~/Deko/Data/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.88S.tsv",sep ="\t", header = T)
+bam_data = read.table("~/Deko/Data/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.89S.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
 bam_data[1:5,1:5]
