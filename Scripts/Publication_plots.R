@@ -7,7 +7,9 @@ draw_colnames_45 <- function (coln, gaps, ...) {
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 
-expr_raw = bam_data#read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#expr_raw = bam_data#
+expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#expr_raw = read.table("~/Deko/Data/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.89S.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -15,7 +17,7 @@ expr_raw[1:5,1:5]
 
 library("grid")
 
-#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 meta_data = meta_info[ match(colnames(expr_raw), meta_info$Name), ]
 rownames(meta_data) = meta_data$Name
 df_map = match(colnames(expr_raw), meta_data$Name)
@@ -23,6 +25,7 @@ meta_data$INS = as.double(expr_raw[ which( rownames(expr_raw) == "INS"),df_map])
 meta_data$GCG = as.double(expr_raw[ which( rownames(expr_raw) == "GCG"),df_map])
 meta_data$PPY = as.double(expr_raw[ which( rownames(expr_raw) == "PPY"),df_map])
 meta_data$SST = as.double(expr_raw[ which( rownames(expr_raw) == "SST"),df_map])
+meta_data$TTR = as.double(expr_raw[ which( rownames(expr_raw) == "TTR"),df_map])
 meta_data$MEN1_exp = as.double(expr_raw[ which( rownames(expr_raw) == "MEN1"),df_map])
 meta_data$Location = str_replace_all(meta_data$Location, pattern = "-", "_")
 meta_data$MKI67 = as.double(expr_raw[ which( rownames(expr_raw) == "MKI67"),])
@@ -42,7 +45,7 @@ aka3 = list(
     Gastric_NEN = "purple",
     Liver = "Darkgreen",
     CUP = "pink"),
-  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray"),
+  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray", Alpha_five = "Red"),
   Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
@@ -60,6 +63,7 @@ aka3 = list(
   Significance_Sadanandam = c(Sig = "green", Not_sig = "red"),
   Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White")
 )
+
 meta_data$Subtype_Sadanandam[meta_data$Grading == ""] = "Norm"
 meta_data$Grading[meta_data$Grading == ""] = "G0"
 meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
@@ -68,8 +72,7 @@ meta_data$Subtype_Sadanandam[meta_data$Subtype_Sadanandam == ""] = "Unknown"
 ###
 
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
-sad_genes = str_replace_all(sad_genes, "\\+AF8", "")
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[15,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 expr = expr_raw[ rownames(expr_raw) %in% sad_genes,]
 cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
@@ -105,17 +108,10 @@ p = ggbiplot::ggbiplot(
     circle = TRUE,
     var.axes = F#,labels = meta_data$Name
 )
-p
-
 MKI67 = as.double( meta_data$MKI67)**1
 Grading = as.character(meta_data$Grading)
-#p = p + geom_point( aes(shape = meta_data$Deco_type ) )
-p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown","Orange","Gray") )
-#p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
-
-#png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-    p
-#dev.off()
+p = p + scale_color_manual( values = c("Blue","Red","Yellow","Purple", "Orange","Black") )
+p
 
 ## Figure 2 Plot 2
 
