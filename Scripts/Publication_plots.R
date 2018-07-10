@@ -72,7 +72,7 @@ meta_data$Subtype_Sadanandam[meta_data$Subtype_Sadanandam == ""] = "Unknown"
 ###
 
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[15,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[30,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 expr = expr_raw[ rownames(expr_raw) %in% sad_genes,]
 cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
