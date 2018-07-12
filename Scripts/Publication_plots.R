@@ -15,11 +15,7 @@ expr_raw[1:5,1:5]
 
 library("grid")
 
-meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-colnames(meta_info) = str_replace_all(colnames(meta_info), pattern = "\\+AF8","")
-colnames(meta_info) = str_replace_all(colnames(meta_info), pattern = "\\.AF8\\.","_")
-meta_info$Histology = str_replace_all( meta_info$Histology, pattern = "\\+AF8","")
-meta_info$Histology = str_replace_all( meta_info$Histology, pattern = "-","_")
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 meta_data = meta_info[ match(colnames(expr_raw), meta_info$Name), ]
 rownames(meta_data) = meta_data$Name
 df_map = match(colnames(expr_raw), meta_data$Name)
@@ -29,7 +25,7 @@ meta_data$PPY = as.double(expr_raw[ which( rownames(expr_raw) == "PPY"),df_map])
 meta_data$SST = as.double(expr_raw[ which( rownames(expr_raw) == "SST"),df_map])
 meta_data$MEN1_exp = as.double(expr_raw[ which( rownames(expr_raw) == "MEN1"),df_map])
 meta_data$Location = str_replace_all(meta_data$Location, pattern = "-", "_")
-meta_data$MKI67 = as.double(expr_raw[ which( rownames(expr_raw) == "MKI67"),df_map])
+meta_data$MKI67 = as.double(expr_raw[ which( rownames(expr_raw) == "MKI67"),])
 meta_data$MKI67 = meta_data$MKI67 + ( sign(min(meta_data$MKI67)) *  min(meta_data$MKI67) )
 meta_data$MKI67 = meta_data$MKI67/ max(meta_data$MKI67)
 meta_data$Marker_Genes = meta_data$INS + meta_data$GCG + meta_data$PPY + meta_data$SST
@@ -39,40 +35,35 @@ meta_data$Marker_Genes = meta_data$Marker_Genes/ max(meta_data$Marker_Genes)
 ##
 meta_data$Location[str_detect(meta_data$Location, pattern = "_Met")] = "Metastasis"
 aka3 = list(
-  Histology   = c(
-    Pancreatic_NEN = "BLACK",
-    Colorectal_NEN = "Orange",
-    Small_intestinal_NEN = "Yellow",
-    Gastric_NEN = "purple",
-    Liver = "Darkgreen",
-    CUP = "pink"),
-  Cell_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray"),
-  Location = c(Primary = "white", Metastasis = "black"),
-  NEC_NET = c(NEC= "red", NET = "blue"),
+  #Histology   = c(
+  #  Pancreatic_NEN = "BLACK",
+  #  Colorectal_NEN = "Orange",
+  #  Small_intestinal_NEN = "Yellow",
+  #  Gastric_NEN = "purple",
+  #  Liver = "Darkgreen",
+  #  CUP = "pink"),
+  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray"),
+  #Location = c(Primary = "white", Metastasis = "black"),
+  NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
   MKI67 = c(high = "White", medium = "gray", low = "black"),
   Purity = c(high = "White", medium = "gray", low = "Blue"),
   Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
-  FGFR3 = c(high = "White", medium = "gray", low = "Black"),
-  FGFR4 = c(high = "White", medium = "gray", low = "Black"),
-  MEN1 = c("0" = "White", "1" = "White", "-1" = "#838383"),
-  RICTOR = c("0" = "Gray", "1" = "White", "-1" = "Black"),
-  MYC = c("0" = "Gray", "1" = "White", "-1" = "Black"),
-  ATRX = c("0" = "Gray", "1" = "White", "-1" = "Black"),
-  DAXX = c("0" = "Gray", "1" = "White", "-1" = "Black"),
-  CDKN2A = c("0" = "Gray", "1" = "White", "-1" = "Black"),
   ImmuneScore = c(high = "White", medium = "gray", low = "Black"),
   StromalScore = c(high = "White", medium = "gray", low = "Black"),
   TumorPurity = c(high = "White", medium = "gray", low = "Black"),
   Marker_Genes = c(high = "White", medium = "Yellow", low = "Red"),
   Functionality = c( Unknown = "White",Functional = "green", Non_Functional="red"),
-  Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red"),
+  Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", "Other" = "green", G0 = "white"),
   Included = c(Yes = "green", No = "red"),
   Chemotherapy = c( Yes = "red", No = "green", Unknown = "gray"),
   Significance_Sadanandam = c(Sig = "green", Not_sig = "red"),
-  Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown")
+  Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White")
 )
-
+meta_data$Subtype_Sadanandam[meta_data$Grading == ""] = "Norm"
+meta_data$Grading[meta_data$Grading == ""] = "G0"
+meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
+meta_data$Subtype_Sadanandam[meta_data$Subtype_Sadanandam == ""] = "Unknown"
 
 ###
 
@@ -87,15 +78,13 @@ cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
 # Plot 1
 
-meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
-
 pheatmap::pheatmap(
   cor_mat,
-  #annotation_col = meta_data[c("Cell_type","Grading","Location","NEC_NET","Study")],
-  annotation_col = meta_data[c("cell_type")],
+  annotation_col = meta_data[c("Deco_type","Location","Histology","Subtype_Sadanandam","Grading","NEC_NET")],
+  #annotation_col = meta_data[c("Deco_type")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = F,
+  show_colnames = T,
   treeheight_col = 0,
   legend = F,
   fontsize_col = 7
@@ -105,20 +94,22 @@ pheatmap::pheatmap(
 
 # Plot 1
 
-meta_data$Cell_type = factor( meta_data$Cell_type, levels = c("Alpha","Beta","Gamma","Delta", "Ductal", "Not_sig") )
+#meta_data$Deco_type = factor( meta_data$Deco_type, levels = c("Alpha","Beta","Gamma","Delta", "Ductal", "Acinar") )
 
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = .75,
-    groups = as.character(meta_data$Cell_type),
+    groups = as.character(meta_data$Deco_type),
     #shape = as.character(meta_data$Grading),
     ellipse = TRUE,
     circle = TRUE,
     var.axes = F#,labels = meta_data$Name
 )
+p
+
 MKI67 = as.double( meta_data$MKI67)**1
 Grading = as.character(meta_data$Grading)
-p = p + geom_point( aes(colour= meta_data$Cell_type, size = MKI67, shape = Grading ) )
+#p = p + geom_point( aes(shape = meta_data$Deco_type ) )
 p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown","Orange","Gray") )
 #p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
 
