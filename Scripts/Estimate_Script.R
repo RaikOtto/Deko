@@ -24,5 +24,3 @@ estimateScore(
   "~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.estimate.gct",
   "~/MAPTor_NET/BAMs/Kallisto_three_groups/estimate.tsv"
 )
-
-
