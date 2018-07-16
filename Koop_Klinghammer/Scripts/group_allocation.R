@@ -58,3 +58,6 @@ meta_info$P_value[meta_match] = as.double( as.character( class_data$P_value ) )
 
 
 #write.table(meta_info,"~/Koop_Klinghammer/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names =F)
+
+#s_match = match( meta_data$Name, meta_info$Name, nomatch = 0 )
+#meta_info$Subtype_Kmeans[s_match] = meta_data$Subtype_Kmeans

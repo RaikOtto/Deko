@@ -24,7 +24,7 @@ sample_names = names(raw_data$header)
 sample_names = str_replace(sample_names, pattern = "^X","")
 sample_names = str_replace_all(sample_names, pattern = "\\.","_")
 
-meta_match = match( sample_names, meta_info$Raw_Name , nomatch = 0)
+meta_match = match( sample_names, meta_info$Raw_Name, nomatch = 0)
 colnames(raw_data$x)[-seq(3)] = meta_info$Name[meta_match]
 
 ### normalization
@@ -78,3 +78,15 @@ v = limma::voom(DGE,design)
 #pure_data = DGE$counts
 #pure_data = v$E
 boxplot(pure_data)
+
+#write.table(pure_data, "~/Koop_Klinghammer/Data/Pure_data.05_06_2018.tsv", quote= F, row.names = T, sep = "\t")
+
+meta_data$OS = str_replace_all(meta_data$OS, pattern = ",", ".")
+meta_data$OS = as.double(meta_data$OS)
+meta_data$OS = as.double(meta_data$OS)
+meta_data$OS = log(meta_data$OS)
+
+meta_data$PFS = str_replace_all(meta_data$PFS, pattern = ",", ".")
+meta_data$PFS = as.double(meta_data$PFS)
+meta_data$PFS = as.double(meta_data$PFS)
+meta_data$PFS = log(meta_data$PFS)
