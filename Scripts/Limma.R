@@ -2,14 +2,15 @@ library("stringr")
 library("limma")
 
 # bP60, bP18, bP15, bP9, bP3, bP0, bE17.5
-bP = grep(colnames(expr_raw), pattern = "bP0")
-cohort = rep("CTRL",ncol(expr_raw))
-cohort[bP] = "CASE"
+#bP = grep(colnames(expr_raw), pattern = "bP0")
+cohort = as.integer(cutree(k_clust, 3))
+cohort[cohort == 2] = "CASE"
+cohort[cohort != "CASE"] = "CTRL"
 
 design <- model.matrix(~0 + as.factor(cohort))
 colnames(design) = c("CASE","CTRL")
 
-vfit <- lmFit(expr_raw,design)
+vfit <- lmFit(m_data,design)
 
 contr.matrix = makeContrasts( contrast = CASE - CTRL ,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
@@ -17,7 +18,7 @@ efit <- eBayes(vfit)
 
 summary(decideTests(efit))
 
-result_t = topTable( efit, coef = "contrast", number  = nrow(expr_raw), adjust  ="none", p.value = 1, lfc = 0)
+result_t = topTable( efit, coef = "contrast", number  = nrow(m_data), adjust  ="none", p.value = 1, lfc = 0)
 result_t$hgnc_symbol = rownames(result_t)
 colnames(result_t) = c("Log_FC","Average_Expr","t","P_value","adj_P_value","B","HGNC")
 
@@ -27,7 +28,7 @@ result_t$Log_FC = round(result_t$Log_FC, 1)
 result_t$Average_Expr = round(result_t$Average_Expr, 1)
 result_t = result_t[order(result_t$Log_FC,decreasing = T),]
 
-#write.table("~/Koop_Klinghammer/Results/05_06_2018/CL_minus_MS.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
+#write.table("~/Deko/Results/2_minus_all.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
 
 ###
 
