@@ -1,27 +1,23 @@
 library("stringr")
 library("limma")
 
-mean_os = mean(meta_data$OS)
-above_avg_os = meta_data$OS > mean_os
+# bP60, bP18, bP15, bP9, bP3, bP0, bE17.5
+bP = grep(colnames(expr_raw), pattern = "bP0")
+cohort = rep("CTRL",ncol(expr_raw))
+cohort[bP] = "CASE"
 
-design <- model.matrix(~0 + as.factor(above_avg_os))
-#design <- model.matrix(~0 + as.factor(meta_data$Subtype))
-#colnames(design) = c("BA","CL","MS")
-colnames(design) = c("Not_above_avg_OS","Above_avg_OS")
+design <- model.matrix(~0 + as.factor(cohort))
+colnames(design) = c("CASE","CTRL")
 
-#vfit <- lmFit(t(r_mat[,c(-1,-2)]),design)
-vfit <- lmFit(pure_data,design)
-#vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
-#plotSA(efit)
+vfit <- lmFit(expr_raw,design)
 
-#contr.matrix = makeContrasts( contrast = CL - MS,  levels = design )
-contr.matrix = makeContrasts( contrast = Not_above_avg_OS - Above_avg_OS ,  levels = design )
+contr.matrix = makeContrasts( contrast = CASE - CTRL ,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
 efit <- eBayes(vfit)
 
 summary(decideTests(efit))
 
-result_t = topTable( efit, coef = "contrast", number  = nrow(pure_data), adjust  ="none", p.value = 1, lfc = 0)
+result_t = topTable( efit, coef = "contrast", number  = nrow(expr_raw), adjust  ="none", p.value = 1, lfc = 0)
 result_t$hgnc_symbol = rownames(result_t)
 colnames(result_t) = c("Log_FC","Average_Expr","t","P_value","adj_P_value","B","HGNC")
 
