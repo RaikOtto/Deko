@@ -34,12 +34,13 @@ l_match = match( gene_length_t$hgnc_symbol, rownames(count_data), nomatch = 0)
 gene_length = gene_length_t$transcript_length[l_match]
 x = count_data / gene_length
 count_data = t(x) * 1e6 / colSums(x)
-
-seg_meta = read.table("~/Deko/Data/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
-
 count_data = t(count_data)
-s_match = match( colnames(count_data), seg_meta$Extract.Name, nomatch = 0)
 
+seg_meta = read.table("~/Deko/Misc/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
+
+#count_data = t(count_data)
+
+s_match = match( colnames(count_data), seg_meta$Extract.Name, nomatch = 0)
 subtypes = as.character(seg_meta$Characteristics.cell.type.)[s_match]
 subtypes = str_replace_all(subtypes, pattern = " cell", "")
 table(subtypes)
@@ -52,13 +53,13 @@ table(row_var == 0)
 table(col_var == 0)
 count_data = count_data[row_var != 0,col_var != 0]
 count_data = count_data[rowSums(count_data) >= 1,]
-count_data = t(count_data)
+#count_data = t(count_data)
 dim(count_data)
 
 ### load_data
 
 marker_genes = read.table(
-  "~/Deko/Data/Baron_pancreas_marker.tsv",
+  "~/Deko/Misc/Baron_pancreas_marker.tsv",
   sep = "\t",
   header = T,
   stringsAsFactors = F
@@ -66,10 +67,10 @@ marker_genes = read.table(
 
 #pancreasMarkers = list("Alpha" = marker_genes$alpha[marker_genes$alpha != ""],"Beta" = marker_genes$beta[marker_genes$beta != ""],"Gamma" = marker_genes$gamma[marker_genes$gamma != ""],"Delta" = marker_genes$delta[marker_genes$delta != ""],"Ductal" = marker_genes$ductal[marker_genes$ductal != ""],"Acinar" = marker_genes$acinar[marker_genes$acinar != ""])
 pancreasMarkers = list(
-  "Alpha" = marker_genes$alpha[1],
-  "Beta" = marker_genes$beta[1],
-  "Gamma" = marker_genes$gamma[1],
-  "Delta" = marker_genes$delta[1]
+  "Alpha" = marker_genes$alpha[5],
+  "Beta" = marker_genes$beta[5],
+  "Gamma" = marker_genes$gamma[5],
+  "Delta" = marker_genes$delta[5]
   #"Ductal" = marker_genes$ductal[1],
   #"Acinar" = marker_genes$acinar[1]
 )
@@ -82,7 +83,11 @@ pancreasMarkers = list(
 #table(str_to_upper(names(pancreasMarkers)))
 count_data = count_data[ which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))), ]
 subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
-dim(count_data)
+
+# special merge case
+
+
+dim(new_merge)
 length(subtypes)
 
 subtypes[subtypes == "alpha"] = "Alpha"

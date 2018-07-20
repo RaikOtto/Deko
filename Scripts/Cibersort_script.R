@@ -2,7 +2,7 @@
 table(subtypes)
 
 eislet = new("ExpressionSet", exprs = 
-               t(as.matrix(count_data))
+               (as.matrix(count_data))
 )
 fData(eislet) = data.frame( subtypes )
 pData(eislet) = data.frame( subtypes )
@@ -28,8 +28,8 @@ res_cor   = fit$stats
 res_coeff[ is.na(res_coeff) ] = 0.0
 res_cor[ is.na(res_cor) ] = 0.0
 
-#res_coeff[ res_cor[,"Correlation"] <= .3, ] = .0
-#res_cor[ res_cor[,"Correlation"] <= .3, "Correlation" ] = 0.0
+res_coeff[ res_cor[,"Correlation"] <= .3, ] = .0
+res_cor[ res_cor[,"Correlation"] <= .3, "Correlation" ] = 0.0
 
 ###
 
@@ -56,10 +56,11 @@ meta_data = meta_info[meta_match,]
 #rownames(meta_data) = meta_data$Sample
 
 #write.table(meta_info, "~/Deko/Misc/Meta_information.tsv",sep="\t", row.names = F, quote = F)
+meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
 
 pheatmap::pheatmap(
   t(res_coeff),
-  annotation_col = meta_data[c("Deco_type")],
+  annotation_col = meta_data[c("Deco_type","NEC_NET")],
   annotation_colors = aka3,
   annotation_legend = T,
   treeheight_col = 0,
@@ -67,5 +68,25 @@ pheatmap::pheatmap(
   show_rownames = T,
   gaps_row = 20
 )
+
+cor_mat = cor(expr_raw);pcr = prcomp(t(cor_mat))
+
+p = ggbiplot::ggbiplot(
+  pcr,
+  obs.scale = .75,
+  #groups = as.character(meta_data$Study),
+  groups = as.character(unlist(meta_data["Deco_type"])),
+  ellipse = TRUE,
+  circle = TRUE,
+  var.axes = F#,labels = meta_data$Name
+)
+MKI67 = as.double( meta_data$MKI67)**1
+Grading = as.character(meta_data$Grading)
+p = p + geom_point( aes(colour= meta_data$Study, size = MKI67, shape = Grading ) )
+p = p + scale_color_manual( values = c("Darkgreen","Brown") )
+p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
+
+#png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
+p
 
 #write.table(meta_info, "~/Deko/Misc/Deko_table.tsv",sep ="\t", row.names = F, quote = F)
