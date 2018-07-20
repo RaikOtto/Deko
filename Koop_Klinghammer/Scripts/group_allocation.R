@@ -4,8 +4,6 @@ balanced.centroid = read.table( "~/Koop_Klinghammer/Misc//balanced.centroid.txt"
 balanced.centroid_importance = sort(rowSums(abs(balanced.centroid)), decreasing = T)
 balanced.centroid = balanced.centroid[ match(names(balanced.centroid_importance),rownames(balanced.centroid)),]
 
-#pure_data = read.table("~/Koop_Klinghammer/Data/35S.14_03_2018.normalized.tsv", sep ="\t", header = T, row.names = 1)
-
 ### Preparation
 
 rownames(pure_data) = str_to_upper(rownames(pure_data))
@@ -57,7 +55,7 @@ meta_info$Subtype[meta_match] = as.character( class_data$Subtype )
 meta_info$P_value[meta_match] = as.double( as.character( class_data$P_value ) )
 
 
-#write.table(meta_info,"~/Koop_Klinghammer/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names =F)
+write.table(meta_info,"~/Koop_Klinghammer/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names =F)
 
 #s_match = match( meta_data$Name, meta_info$Name, nomatch = 0 )
 #meta_info$Subtype_Kmeans[s_match] = meta_data$Subtype_Kmeans

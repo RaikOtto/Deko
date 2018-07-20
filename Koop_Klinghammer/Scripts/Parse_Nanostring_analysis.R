@@ -28,13 +28,13 @@ meta_match = match( sample_names, meta_info$Raw_Name, nomatch = 0)
 colnames(raw_data$x)[-seq(3)] = meta_info$Name[meta_match]
 
 ### normalization
-
+#sum_none_top.mean_vsn
 #norm.comp.results.test = norm.comp(raw_data, verbose = T)
 eset = NanoStringNorm::NanoStringNorm( 
   raw_data,
   CodeCount.methods = "sum",
-  Background.methods = "mean.2sd",
-  SampleContent.methods = "housekeeping.sum",
+  Background.methods = "none", #mean.2sd
+  SampleContent.methods = "top.mean", #housekeeping.sum
   OtherNorm.methods = "vsn",
   take.log = T,
   round.values = T,
@@ -43,40 +43,31 @@ eset = NanoStringNorm::NanoStringNorm(
   verbose = T
 )
 
-m    = matrix( as.character(unlist( eset$normalized.data)), nrow=  dim(eset$normalized.data)[1], ncol = dim(eset$normalized.data)[2])
+source_mat = eset$normalized.data
+m    = matrix( as.character(unlist( source_mat)), nrow=  dim(source_mat)[1], ncol = dim(source_mat)[2])
 info = m[,seq(3)]
-data = matrix( as.double(m[,-seq(3)]), nrow=  dim(eset$normalized.data)[1], ncol = dim(eset$normalized.data)[2]-3)
+data = matrix( as.double(m[,-seq(3)]), nrow=  dim(source_mat)[1], ncol = dim(source_mat)[2]-3)
 data = round(data,1)
 
-rownames(data) = rownames(eset$normalized.data)
-col_labels = str_replace( colnames(eset$normalized.data)[-seq(3)], pattern = "^X", "") 
+rownames(data) = rownames(source_mat)
+col_labels = str_replace( colnames(source_mat)[-seq(3)], pattern = "^X", "") 
 
 colnames(data) = col_labels
 res = cbind( info,data )
-res = cbind(rownames(eset$normalized.data), res)
+res = cbind(rownames(source_mat), res)
 
-pure_data = as.character(res)[-seq(dim(eset$normalized.data)[1]*4)]
-pure_data = matrix( as.double( pure_data ), nrow = dim(eset$normalized.data)[1] )
+pure_data = as.character(res)[-seq(dim(source_mat)[1]*4)]
+pure_data = matrix( as.double( pure_data ), nrow = dim(source_mat)[1] )
 rownames( pure_data ) = info[ ,2 ]
 pure_data = pure_data[ info[,1] == "Endogenous"  ,]
 colnames(pure_data) = colnames(data)
 
-pure_data = pure_data[,colnames(pure_data) != "25"]
+#pure_data = pure_data[,colnames(pure_data) != "25"]
 s_match = match( as.character( colnames(pure_data)), as.character( meta_info$Name), nomatch = 0)
 meta_data = meta_info[s_match,]
 rownames(meta_data) = meta_data$Name
 
-### optional normalization
-
-design <- model.matrix(~0 + meta_data$Subtype)
-colnames(design) = c("BA","CL", "MS")
-
-DGE = edgeR::DGEList(pure_data)
-DGE = edgeR::calcNormFactors(DGE,method =c("TMM"))
-v = limma::voom(DGE,design)
-
-#pure_data = DGE$counts
-#pure_data = v$E
+d= colMeans(pure_data)
 boxplot(pure_data)
 
 #write.table(pure_data, "~/Koop_Klinghammer/Data/Pure_data.05_06_2018.tsv", quote= F, row.names = T, sep = "\t")
