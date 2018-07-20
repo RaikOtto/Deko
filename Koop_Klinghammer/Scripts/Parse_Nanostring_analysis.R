@@ -1,12 +1,12 @@
 require('NanoStringNorm')
 library("stringr")
 
-meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_information.tsv",sep="\t",header =T, stringsAsFactors = F)
-meta_info$Raw_Name = str_replace_all(meta_info$Raw_Name, pattern = "-", "_")
+meta_info = read.table("~/Koop_Klinghammer/Misc/Meta_Information.tsv",sep="\t",header =T, stringsAsFactors = F)
+meta_info$Raw_name = str_replace_all(meta_info$Raw_name, pattern = "-", "_")
 meta_info$OS = str_replace_all(meta_info$OS, pattern = ",", ".")
 meta_info$OS = as.double(meta_info$OS)
 
-excluded_files = meta_info$Raw_Name[meta_info$Included == FALSE]
+excluded_files = meta_info$Raw_name[meta_info$Included == FALSE]
 for ( file in excluded_files){
   
   ori_file = paste( c( "/home/ottoraik/Koop_Klinghammer/Data/Raw_data/",file, ".RCC"), collapse = "" )
@@ -24,22 +24,21 @@ sample_names = names(raw_data$header)
 sample_names = str_replace(sample_names, pattern = "^X","")
 sample_names = str_replace_all(sample_names, pattern = "\\.","_")
 
-meta_match = match( sample_names, meta_info$Raw_Name, nomatch = 0)
-colnames(raw_data$x)[-seq(3)] = meta_info$Name[meta_match]
+meta_match = match( sample_names, meta_info$Raw_name, nomatch = 0)
+colnames(raw_data$x)[-seq(3)] = meta_info$Sample_ID[meta_match]
 
 ### normalization
-#sum_none_top.mean_vsn
+
 #norm.comp.results.test = norm.comp(raw_data, verbose = T)
 eset = NanoStringNorm::NanoStringNorm( 
   raw_data,
   CodeCount.methods = "sum",
-  Background.methods = "none", #mean.2sd
-  SampleContent.methods = "top.mean", #housekeeping.sum
+  Background.methods = "mean.2sd",
+  SampleContent.methods = "housekeeping.sum",
   OtherNorm.methods = "vsn",
   take.log = T,
   round.values = T,
   return.matrix.of.endogenous.probes = F,
-  #traits = meta_data,
   verbose = T
 )
 
@@ -63,21 +62,13 @@ pure_data = pure_data[ info[,1] == "Endogenous"  ,]
 colnames(pure_data) = colnames(data)
 
 #pure_data = pure_data[,colnames(pure_data) != "25"]
-s_match = match( as.character( colnames(pure_data)), as.character( meta_info$Name), nomatch = 0)
+s_match = match( as.character( colnames(pure_data)), as.character( meta_info$Sample_ID), nomatch = 0)
 meta_data = meta_info[s_match,]
-rownames(meta_data) = meta_data$Name
+rownames(meta_data) = meta_data$Sample_ID
+meta_data$OS = as.double(meta_data$OS)
 
-d= colMeans(pure_data)
+d = colMeans(pure_data)
 boxplot(pure_data)
 
 #write.table(pure_data, "~/Koop_Klinghammer/Data/Pure_data.05_06_2018.tsv", quote= F, row.names = T, sep = "\t")
 
-meta_data$OS = str_replace_all(meta_data$OS, pattern = ",", ".")
-meta_data$OS = as.double(meta_data$OS)
-meta_data$OS = as.double(meta_data$OS)
-meta_data$OS = log(meta_data$OS)
-
-meta_data$PFS = str_replace_all(meta_data$PFS, pattern = ",", ".")
-meta_data$PFS = as.double(meta_data$PFS)
-meta_data$PFS = as.double(meta_data$PFS)
-meta_data$PFS = log(meta_data$PFS)
