@@ -3,12 +3,12 @@ library("stringr")
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord = pheatmap:::find_coordinates(length(coln), gaps)
   x = coord$coord - 0.5 * coord$size
-  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
+  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...))
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 
-expr_raw = bam_data#read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -43,7 +43,8 @@ aka3 = list(
   #  Gastric_NEN = "purple",
   #  Liver = "Darkgreen",
   #  CUP = "pink"),
-  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray"),
+  #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton_1 = "Black",Botton_2 = "cyan",Botton_3 = "Brown", Not_sig = "Gray"),
+  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
   #Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),

@@ -66,14 +66,21 @@ marker_genes = read.table(
 )
 
 #pancreasMarkers = list("Alpha" = marker_genes$alpha[marker_genes$alpha != ""],"Beta" = marker_genes$beta[marker_genes$beta != ""],"Gamma" = marker_genes$gamma[marker_genes$gamma != ""],"Delta" = marker_genes$delta[marker_genes$delta != ""],"Ductal" = marker_genes$ductal[marker_genes$ductal != ""],"Acinar" = marker_genes$acinar[marker_genes$acinar != ""])
+delimiter = 1:100
 pancreasMarkers = list(
-  "Alpha" = marker_genes$alpha[5],
-  "Beta" = marker_genes$beta[5],
-  "Gamma" = marker_genes$gamma[5],
-  "Delta" = marker_genes$delta[5]
+  "Alpha" = marker_genes$Alpha,#,[delimiter],
+  "Beta" = marker_genes$Beta,#,[delimiter],
+  "Gamma" = marker_genes$Gamma,#,[delimiter],
+  "Delta" = marker_genes$Delta,#,[delimiter],
+  #"Botton" = marker_genes$Stem#,[delimiter]
+  #"Botton_1" = marker_genes$Botton_1[delimiter],
+  #"Botton_2" = marker_genes$Botton_2[delimiter],
+  "Botton_3" = marker_genes$Botton_3[delimiter]
   #"Ductal" = marker_genes$ductal[1],
   #"Acinar" = marker_genes$acinar[1]
 )
+table(as.character(unlist(pancreasMarkers)) %in% rownames(new_merge))
+count_data = new_merge
 
 # count data baron
 
@@ -81,19 +88,10 @@ pancreasMarkers = list(
 
 #table(str_to_upper(subtypes))
 #table(str_to_upper(names(pancreasMarkers)))
-count_data = count_data[ which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))), ]
+count_data = count_data[ ,which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))) ]
 subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
 
 # special merge case
 
-
-dim(new_merge)
+dim(count_data)
 length(subtypes)
-
-subtypes[subtypes == "alpha"] = "Alpha"
-subtypes[subtypes == "beta"] = "Beta"
-subtypes[subtypes == "gamma"] = "Gamma"
-subtypes[subtypes == "delta"] = "Delta"
-subtypes[subtypes == "epsilon"] = "Epsilon"
-subtypes[subtypes == "acinar"] = "Acinar"
-subtypes[subtypes == "ductal"] = "Ductal"

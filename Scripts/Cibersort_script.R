@@ -1,9 +1,4 @@
-
-table(subtypes)
-
-eislet = new("ExpressionSet", exprs = 
-               (as.matrix(count_data))
-)
+eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
 fData(eislet) = data.frame( subtypes )
 pData(eislet) = data.frame( subtypes )
 
@@ -28,8 +23,8 @@ res_cor   = fit$stats
 res_coeff[ is.na(res_coeff) ] = 0.0
 res_cor[ is.na(res_cor) ] = 0.0
 
-res_coeff[ res_cor[,"Correlation"] <= .3, ] = .0
-res_cor[ res_cor[,"Correlation"] <= .3, "Correlation" ] = 0.0
+#res_coeff[ res_cor[,"Correlation"] <= .3, ] = .0
+#res_cor[ res_cor[,"Correlation"] <= .3, "Correlation" ] = 0.0
 
 ###
 
@@ -49,13 +44,7 @@ meta_info$Deco_type = rep("",nrow(meta_info))
 meta_info$Deco_type[meta_match] = cell_type
 meta_data = meta_info[meta_match,]
 
-#meta_data = data.frame(
-#  "Sample" = colnames(exprs(eset)),
-#  "Deco_type" = cell_type
-#)
-#rownames(meta_data) = meta_data$Sample
-
-#write.table(meta_info, "~/Deko/Misc/Meta_information.tsv",sep="\t", row.names = F, quote = F)
+meta_data$NEUROG3 = as.double(expr_raw[ which( rownames(new_merge) == "NEUROG3"),])
 meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
 
 pheatmap::pheatmap(
@@ -69,24 +58,35 @@ pheatmap::pheatmap(
   gaps_row = 20
 )
 
-cor_mat = cor(expr_raw);pcr = prcomp(t(cor_mat))
-
+groups = as.character(unlist(meta_data["Deco_type"]))
+groups[!(groups %in% c("Botton"))] = "other"
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
   #groups = as.character(meta_data$Study),
-  groups = as.character(unlist(meta_data["Deco_type"])),
+  groups = groups,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F#,labels = meta_data$Name
 )
-MKI67 = as.double( meta_data$MKI67)**1
+NEUROG3 = log2(as.double( meta_data$NEUROG3)+1)**1
 Grading = as.character(meta_data$Grading)
-p = p + geom_point( aes(colour= meta_data$Study, size = MKI67, shape = Grading ) )
-p = p + scale_color_manual( values = c("Darkgreen","Brown") )
-p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
-
-#png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
+p = p + geom_point( aes(colour= groups, size = NEUROG3, shape = Grading ) )
+p = p + scale_color_manual( values = c("Black","Gray") )
+#p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
 p
 
 #write.table(meta_info, "~/Deko/Misc/Deko_table.tsv",sep ="\t", row.names = F, quote = F)
+
+umap_plot = umap::umap(t(expr))
+vis_data = as.data.frame(umap_plot$layout)
+colnames(vis_data) = c("x","y")
+
+dist_mat = dist((vis_data))
+
+hgnc_gene_name = "NEUROG3"
+neurog3 = (as.double(expr_raw[rownames(expr_raw) == hgnc_gene_name,]))
+size_indicator = neurog3 + min(neurog3) + 1
+p = ggplot2::qplot( x = vis_data$x, y = vis_data$y, size = size_indicator, color = groups)
+p = p + ggtitle(hgnc_gene_name) +  xlab("umap x") + ylab("umap y")# + geom_text(aes(label=names(clusterCut)),hjust=0, vjust=0)
+p
