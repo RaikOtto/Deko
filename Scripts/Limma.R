@@ -3,14 +3,14 @@ library("limma")
 
 # bP60, bP18, bP15, bP9, bP3, bP0, bE17.5
 #bP = grep(colnames(expr_raw), pattern = "bP0")
-cohort = as.integer(cutree(k_clust, 3))
-cohort[cohort == 2] = "CASE"
+cohort = as.character(subtypes)
+cohort[cohort %in% c("Botton_1","Botton_2","Botton_3")] = "CASE"
 cohort[cohort != "CASE"] = "CTRL"
 
 design <- model.matrix(~0 + as.factor(cohort))
 colnames(design) = c("CASE","CTRL")
 
-vfit <- lmFit(m_data,design)
+vfit <- lmFit(new_merge,design)
 
 contr.matrix = makeContrasts( contrast = CASE - CTRL ,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
@@ -18,7 +18,7 @@ efit <- eBayes(vfit)
 
 summary(decideTests(efit))
 
-result_t = topTable( efit, coef = "contrast", number  = nrow(m_data), adjust  ="none", p.value = 1, lfc = 0)
+result_t = topTable( efit, coef = "contrast", number  = nrow(new_merge), adjust  ="none", p.value = 1, lfc = 0)
 result_t$hgnc_symbol = rownames(result_t)
 colnames(result_t) = c("Log_FC","Average_Expr","t","P_value","adj_P_value","B","HGNC")
 
@@ -47,4 +47,4 @@ add_mat[r_match , 3] = centroid_mat[ r_match != 0, 4]
 
 result_t = cbind(result_t,add_mat )
 
-#write.table("~/Koop_Klinghammer/Results/Linear_regression/BA_vs_all.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
+#write.table("~/Deko/Results/Botton_vs_Segerstolpe_Merged.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
