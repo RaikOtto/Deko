@@ -9,6 +9,15 @@ B = bseqsc_basis(
   samples = colnames(exprs(eislet)),
   ct.scale = FALSE
 )
+plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
+
+maxi = apply( B, FUN = which.max, MARGIN = 1 )
+for( type in names(pancreasMarkers)){
+  cell_type = (eval(paste(type)))
+  genes = names(maxi)[as.integer(maxi) == which(colnames(B) == type)]
+  pancreasMarkers[cell_type] = list(genes)
+}
+
 
 ### run
 
@@ -106,3 +115,4 @@ pheatmap::pheatmap(
 )
 
 table(as.data.frame(cbind(meta_data$NEC_NET,meta_data$Groups)))
+

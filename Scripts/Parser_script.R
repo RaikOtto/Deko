@@ -56,7 +56,7 @@ dim(count_data)
 
 ### load_data
 
-delimiter = 1:1
+delimiter = 1:10
 marker_genes = read.table(
   "~/Deko/Misc/Baron_pancreas_marker.tsv",
   sep = "\t",
@@ -70,8 +70,7 @@ pancreasMarkers = list(
   "Gamma" = marker_genes$Gamma[delimiter],
   "Delta" = marker_genes$Delta[delimiter],
   #"Botton" = marker_genes$Stem#,[delimiter]
-  "Botton_1" = marker_genes$Botton_1[delimiter],
-  "Botton_2" = marker_genes$Botton_2[delimiter],
+  "Botton_1" = unique( c( marker_genes$Botton_1,marker_genes$Botton_2  ))[delimiter],
   "Botton_3" = marker_genes$Botton_3[delimiter],
   "Ductal" = marker_genes$Ductal
   #"Acinar" = marker_genes$acinar[1]
@@ -81,6 +80,7 @@ for( type in names(pancreasMarkers)){
     cell_type = (eval(paste(type)))
     genes = as.character(unlist(pancreasMarkers[cell_type]))
     genes = genes[genes %in% rownames(count_data)]
+    genes = rownames(count_data)
     pancreasMarkers[cell_type] = list(genes)
 }
 
