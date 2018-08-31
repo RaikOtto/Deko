@@ -10,11 +10,13 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-#bam_data = read.table("~/Deko/Data/GSE73338.HGNC.tsv",sep ="\t", header = T)
+#bam_data = read.table("~/Deko/Data/TPMs.81_Samples.Groetzinger_Scarpa.tsv",sep ="\t", header = T)
 bam_data = read.table("~/Deko/Data/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.89S.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
+bam_data = bam_data[ , meta_info$Name[meta_info$Included == "Yes"] ]
 bam_data[1:5,1:5]
+dim(bam_data)
 
 #condition = (meta_info$Included == "Yes") & (meta_info$NEC_NET %in% c("NEC","NET")) #& (meta_info$Grading %in% c("G3"))
 #include_list  = meta_info$Name[ condition ]
@@ -54,6 +56,7 @@ dim(count_data)
 
 ### load_data
 
+delimiter = 1:1
 marker_genes = read.table(
   "~/Deko/Misc/Baron_pancreas_marker.tsv",
   sep = "\t",
@@ -61,12 +64,11 @@ marker_genes = read.table(
   stringsAsFactors = F
 )
 
-delimiter = 1:100
 pancreasMarkers = list(
-  "Alpha" = marker_genes$Alpha,#,[delimiter],
-  "Beta" = marker_genes$Beta,#,[delimiter],
-  "Gamma" = marker_genes$Gamma,#,[delimiter],
-  "Delta" = marker_genes$Delta,#,[delimiter],
+  "Alpha" = marker_genes$Alpha[delimiter],
+  "Beta" = marker_genes$Beta[delimiter],
+  "Gamma" = marker_genes$Gamma[delimiter],
+  "Delta" = marker_genes$Delta[delimiter],
   #"Botton" = marker_genes$Stem#,[delimiter]
   "Botton_1" = marker_genes$Botton_1[delimiter],
   "Botton_2" = marker_genes$Botton_2[delimiter],
@@ -98,3 +100,4 @@ table(subtypes)
 
 dim(count_data)
 length(subtypes)
+
