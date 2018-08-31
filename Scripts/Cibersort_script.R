@@ -44,7 +44,7 @@ meta_info$Deco_type = rep("",nrow(meta_info))
 meta_info$Deco_type[meta_match] = cell_type
 meta_data = meta_info[meta_match,]
 
-meta_data$NEUROG3 = as.double(expr_raw[ which( rownames(new_merge) == "NEUROG3"),])
+meta_data$NEUROG3 = as.double(expr_raw[ which( rownames(expr_raw) == "NEUROG3"),])
 meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
 
 pheatmap::pheatmap(
@@ -60,6 +60,7 @@ pheatmap::pheatmap(
 
 groups = as.character(unlist(meta_data["Deco_type"]))
 groups[!(groups %in% c("Botton"))] = "other"
+cor_mat = cor(expr_raw);pcr = prcomp(t(cor_mat))
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
