@@ -10,11 +10,13 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-#bam_data = read.table("~/Deko/Data/GSE73338.HGNC.tsv",sep ="\t", header = T)
+#bam_data = read.table("~/Deko/Data/TPMs.81_Samples.Groetzinger_Scarpa.tsv",sep ="\t", header = T)
 bam_data = read.table("~/Deko/Data/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.89S.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
+bam_data = bam_data[ , meta_info$Name[meta_info$Included == "Yes"] ]
 bam_data[1:5,1:5]
+dim(bam_data)
 
 #condition = (meta_info$Included == "Yes") & (meta_info$NEC_NET %in% c("NEC","NET")) #& (meta_info$Grading %in% c("G3"))
 #include_list  = meta_info$Name[ condition ]
@@ -24,7 +26,8 @@ bam_data[1:5,1:5]
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-count_data = read.table("~/Deko/Data/Count_data.Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Count_data.Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data = read.table("~/Deko/Data/Merge_Seger_Botton.tsv",sep ="\t", header = T, stringsAsFactors = F)
 count_data[1:5,1:5]
 
 gene_length_t = read.table("~/Deko/Misc/gene_length.tsv",sep ="\t", header = T, stringsAsFactors = F)
@@ -36,14 +39,9 @@ x = count_data / gene_length
 count_data = t(x) * 1e6 / colSums(x)
 count_data = t(count_data)
 
-seg_meta = read.table("~/Deko/Misc/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
+#seg_meta = read.table("~/Deko/Misc/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
 
 #count_data = t(count_data)
-
-s_match = match( colnames(count_data), seg_meta$Extract.Name, nomatch = 0)
-subtypes = as.character(seg_meta$Characteristics.cell.type.)[s_match]
-subtypes = str_replace_all(subtypes, pattern = " cell", "")
-table(subtypes)
 
 ### normalization
 
@@ -58,6 +56,7 @@ dim(count_data)
 
 ### load_data
 
+delimiter = 1:10
 marker_genes = read.table(
   "~/Deko/Misc/Baron_pancreas_marker.tsv",
   sep = "\t",
@@ -65,33 +64,40 @@ marker_genes = read.table(
   stringsAsFactors = F
 )
 
-#pancreasMarkers = list("Alpha" = marker_genes$alpha[marker_genes$alpha != ""],"Beta" = marker_genes$beta[marker_genes$beta != ""],"Gamma" = marker_genes$gamma[marker_genes$gamma != ""],"Delta" = marker_genes$delta[marker_genes$delta != ""],"Ductal" = marker_genes$ductal[marker_genes$ductal != ""],"Acinar" = marker_genes$acinar[marker_genes$acinar != ""])
-delimiter = 1:100
 pancreasMarkers = list(
-  "Alpha" = marker_genes$Alpha,#,[delimiter],
-  "Beta" = marker_genes$Beta,#,[delimiter],
-  "Gamma" = marker_genes$Gamma,#,[delimiter],
-  "Delta" = marker_genes$Delta,#,[delimiter],
+  "Alpha" = marker_genes$Alpha[delimiter],
+  "Beta" = marker_genes$Beta[delimiter],
+  "Gamma" = marker_genes$Gamma[delimiter],
+  "Delta" = marker_genes$Delta[delimiter],
   #"Botton" = marker_genes$Stem#,[delimiter]
-  #"Botton_1" = marker_genes$Botton_1[delimiter],
-  #"Botton_2" = marker_genes$Botton_2[delimiter],
-  "Botton_3" = marker_genes$Botton_3[delimiter]
-  #"Ductal" = marker_genes$ductal[1],
+  "Botton_1" = unique( c( marker_genes$Botton_1,marker_genes$Botton_2  ))[delimiter],
+  "Botton_3" = marker_genes$Botton_3[delimiter],
+  "Ductal" = marker_genes$Ductal
   #"Acinar" = marker_genes$acinar[1]
 )
-table(as.character(unlist(pancreasMarkers)) %in% rownames(new_merge))
-count_data = new_merge
 
-# count data baron
+for( type in names(pancreasMarkers)){
+    cell_type = (eval(paste(type)))
+    genes = as.character(unlist(pancreasMarkers[cell_type]))
+    genes = genes[genes %in% rownames(count_data)]
+    genes = rownames(count_data)
+    pancreasMarkers[cell_type] = list(genes)
+}
 
-# count_data based training
+table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
+table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
 
-#table(str_to_upper(subtypes))
-#table(str_to_upper(names(pancreasMarkers)))
-count_data = count_data[ ,which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))) ]
-subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
+#count_data = count_data[ ,which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))) ]
+#s_match = match( colnames(count_data), seg_meta$Extract.Name, nomatch = 0)
+#subtypes = ncol(count_data)as.character(seg_meta$Characteristics.cell.type.)[s_match]
+#subtypes = str_replace_all(subtypes, pattern = " cell", "")
+#subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
+subtypes = read.table("~/Deko/Data/Merge_Subtypes.tsv", sep = "\t", stringsAsFactors = F)[,1]
+pancreasMarkers = pancreasMarkers[names(pancreasMarkers) %in% subtypes]
+table(subtypes)
 
 # special merge case
 
 dim(count_data)
 length(subtypes)
+
