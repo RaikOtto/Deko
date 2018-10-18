@@ -1,13 +1,14 @@
+
 library("stringr")
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord = pheatmap:::find_coordinates(length(coln), gaps)
   x = coord$coord - 0.5 * coord$size
-  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
+  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...))
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 
-expr_raw = bam_data#read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -35,15 +36,16 @@ meta_data$Marker_Genes = meta_data$Marker_Genes/ max(meta_data$Marker_Genes)
 ##
 meta_data$Location[str_detect(meta_data$Location, pattern = "_Met")] = "Metastasis"
 aka3 = list(
-  Histology   = c(
-    Pancreatic_NEN = "BLACK",
-    Colorectal_NEN = "Orange",
-    Small_intestinal_NEN = "Yellow",
-    Gastric_NEN = "purple",
-    Liver = "Darkgreen",
-    CUP = "pink"),
-  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Acinar = "Black",Ductal = "Brown", Not_sig = "Gray"),
-  Location = c(Primary = "white", Metastasis = "black"),
+  #Histology   = c(
+  #  Pancreatic_NEN = "BLACK",
+  #  Colorectal_NEN = "Orange",
+  #  Small_intestinal_NEN = "Yellow",
+  #  Gastric_NEN = "purple",
+  #  Liver = "Darkgreen",
+  #  CUP = "pink"),
+  #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton_1 = "Black",Botton_2 = "cyan",Botton_3 = "Brown", Not_sig = "Gray"),
+  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
+  #Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
   MKI67 = c(high = "White", medium = "gray", low = "black"),
@@ -80,7 +82,7 @@ cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
 pheatmap::pheatmap(
   cor_mat,
-  annotation_col = meta_data[c("Deco_type","Subtype_Sadanandam","Grading","NEC_NET")],
+  annotation_col = meta_data[c("Deco_type","Location","Histology","Subtype_Sadanandam","Grading","NEC_NET")],
   #annotation_col = meta_data[c("Deco_type")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -97,13 +99,13 @@ pheatmap::pheatmap(
 #meta_data$Deco_type = factor( meta_data$Deco_type, levels = c("Alpha","Beta","Gamma","Delta", "Ductal", "Acinar") )
 
 p = ggbiplot::ggbiplot(
-    pcr,
-    obs.scale = .75,
-    groups = as.character(meta_data$Deco_type),
-    #shape = as.character(meta_data$Grading),
-    ellipse = TRUE,
-    circle = TRUE,
-    var.axes = F#,labels = meta_data$Name
+  pcr,
+  obs.scale = .75,
+  groups = as.character(meta_data$Deco_type),
+  #shape = as.character(meta_data$Grading),
+  ellipse = TRUE,
+  circle = TRUE,
+  var.axes = F#,labels = meta_data$Name
 )
 p
 
@@ -114,7 +116,7 @@ p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown"
 #p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
 
 #png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-    p
+p
 #dev.off()
 
 ## Figure 2 Plot 2
@@ -150,7 +152,7 @@ p = p + scale_color_manual( values = c("Blue","Yellow","Purple","Black","Orange"
 #p = p + guides(color=guide_legend(title="NEC_NET"), position = "top") + guides(shape=guide_legend(title="Grading"), position = "top", size = F)
 
 #png("~/MAPTor_NET/Results/Dif_exp/Grading.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-    p
+p
 #dev.off()
 
 ### Figure 2 Plot 3
@@ -174,10 +176,10 @@ p = p + scale_color_manual( values = c("orange","pink","purple","RED","BLUE","bl
 p = p + scale_size_manual(labels = c("Metastasis", "Primary"), values=as.integer(size_vec)*2)
 
 #png("~/MAPTor_NET/Results/Dif_exp/Histology.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-    p
+p
 #dev.off()
-    
-        
+
+
 ### Figure 2 Plot 4
 
 size_vec = meta_data$Significance_Sadanandam
@@ -198,22 +200,22 @@ p = p + geom_point( aes( size = as.integer(size_vec), color = as.factor(meta_dat
 p = p + scale_color_manual( values = c("Blue","Brown","Orange","Darkgreen") )
 
 #png("~/MAPTor_NET/Results/Dif_exp/Sadanandam_signature.57.png", width = 1024, height= 768)
-    p
+p
 #dev.off()
 
 ### Figure 3 Plot 1
 
 #png("~/MAPTor_NET/Results/Dif_exp/Heatmap_57.integrated.png",width=1014, height = 768)
-    pheatmap::pheatmap(
-      cor_mat,
-      annotation_col = meta_data[c("MEN1","Marker_Genes","MKI67","NEC_NET","Grading","Location","Histology","Study")],
-      annotation_colors = aka3,
-      annotation_legend = T,
-      treeheight_col = 0,
-      show_colnames = T,
-      show_rownames = F,
-      gaps_row = 20
-    )
+pheatmap::pheatmap(
+  cor_mat,
+  annotation_col = meta_data[c("MEN1","Marker_Genes","MKI67","NEC_NET","Grading","Location","Histology","Study")],
+  annotation_colors = aka3,
+  annotation_legend = T,
+  treeheight_col = 0,
+  show_colnames = T,
+  show_rownames = F,
+  gaps_row = 20
+)
 #dev.off()
 
 ### Figure 3 Plot 2

@@ -54,4 +54,3 @@ count_data = assay( dds_n )
 vsn::meanSdPlot( count_data)
 
 ###
-

@@ -14,4 +14,3 @@ round(basis(nmf_res) %*% coef(nmf_res),1)
 summary( nmf_res, target= type_vec)
 
 #init = nmfModel(4,W = .5)
-
