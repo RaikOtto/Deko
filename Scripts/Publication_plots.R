@@ -10,6 +10,8 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+expr_raw = expr_raw[,meta_info$Name[meta_info$Study == "Groetzinger"] %in% colnames(expr_raw)]
+dim(expr_raw)
 expr_raw[1:5,1:5]
 
 ### Prep
@@ -115,7 +117,7 @@ p = ggbiplot::ggbiplot(
 )
 p
 
-MKI67 = as.double( meta_data$MKI67)**1
+MKI67 = as.double( meta_data$Dec_dist)**1
 Grading = as.character(meta_data$Grading)
 #p = p + geom_point( aes(shape = meta_data$Deco_type ) )
 p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown","Orange","Gray") )
@@ -369,8 +371,10 @@ data$Abvg_avg[data$Dec_dist > median(data$Dec_dist)] = "TRUE"
 data$Abvg_avg[ data$Abvg_avg != "TRUE"] = "FALSE"
 
 subtype = data$Abvg_avg
-fit = survival::survfit( survival::Surv( data$Abvg_avg ) ~ data$OS_Tissue)
+fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$Abvg_avg)
 
-survminer::ggsurvplot(fit, data = meta_data, risk.table = T, pval = T)
+survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T)
 # Visualize with survminer
 
+cors = apply( expr_raw, MARGIN = 1, FUN = function(vec){return(cor(meta_data$Dec_dist, vec))})
+h = (sort(cors))[1:100]
