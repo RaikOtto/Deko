@@ -1,10 +1,10 @@
 library("NMF")
 library("stringr")
 
-type_vec = as.factor( c(1,2,3,4) )
+#type_vec = as.factor( c(1,2,3,4,5) )
 
-rand_m = matrix(1:16,ncol = 4)
-nmf_res = nmf(count_data, 4,nrun=5, .opt='vP8')
+#rand_m = matrix(1:16,ncol = 5)
+nmf_res = nmf(count_data, 5,nrun=8, .opt='vP8')
 
 basis(nmf_res)
 coef(nmf_res)
