@@ -36,21 +36,23 @@ meta_data$Marker_Genes = meta_data$Marker_Genes/ max(meta_data$Marker_Genes)
 ##
 meta_data$Location[str_detect(meta_data$Location, pattern = "_Met")] = "Metastasis"
 aka3 = list(
-  #Histology   = c(
-  #  Pancreatic_NEN = "BLACK",
-  #  Colorectal_NEN = "Orange",
-  #  Small_intestinal_NEN = "Yellow",
-  #  Gastric_NEN = "purple",
-  #  Liver = "Darkgreen",
-  #  CUP = "pink"),
-  #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton_1 = "Black",Botton_2 = "cyan",Botton_3 = "Brown", Not_sig = "Gray"),
-  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
+  Histology   = c(
+    Pancreatic_NEN = "BLACK",
+    Colorectal_NEN = "Orange",
+    Small_intestinal_NEN = "Yellow",
+    Gastric_NEN = "purple",
+    Liver = "Darkgreen",
+    CUP = "pink"),
+  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton_1 = "Black",Botton_3 = "Brown", Not_sig = "Gray"),
+  Deco_group = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
+  #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
   #Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
   MKI67 = c(high = "White", medium = "gray", low = "black"),
   Purity = c(high = "White", medium = "gray", low = "Blue"),
   Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
+  Dec_dist = c(high = "Red", medium = "Yellow", low = "Green"),
   ImmuneScore = c(high = "White", medium = "gray", low = "Black"),
   StromalScore = c(high = "White", medium = "gray", low = "Black"),
   TumorPurity = c(high = "White", medium = "gray", low = "Black"),
@@ -66,12 +68,15 @@ meta_data$Subtype_Sadanandam[meta_data$Grading == ""] = "Norm"
 meta_data$Grading[meta_data$Grading == ""] = "G0"
 meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
 meta_data$Subtype_Sadanandam[meta_data$Subtype_Sadanandam == ""] = "Unknown"
+meta_data$Dec_dist = rep("",nrow(meta_data))
+meta_data[colnames(t(res_coeff)),"Dec_dist"] = as.double(colSums(t(res_coeff)))
+meta_data$Dec_dist = as.double(meta_data$Dec_dist)
 
 ###
 
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
-sad_genes = str_replace_all(sad_genes, "\\+AF8", "")
+genes_of_interest_hgnc_t$V1
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[33,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 expr = expr_raw[ rownames(expr_raw) %in% sad_genes,]
 cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
@@ -82,7 +87,7 @@ cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
 pheatmap::pheatmap(
   cor_mat,
-  annotation_col = meta_data[c("Deco_type","Location","Histology","Subtype_Sadanandam","Grading","NEC_NET")],
+  annotation_col = meta_data[c("Study","Dec_dist","Subtype_Sadanandam","Grading","NEC_NET")],
   #annotation_col = meta_data[c("Deco_type")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -101,11 +106,12 @@ pheatmap::pheatmap(
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
-  groups = as.character(meta_data$Deco_type),
+  groups = as.character(meta_data$Study),
   #shape = as.character(meta_data$Grading),
   ellipse = TRUE,
   circle = TRUE,
-  var.axes = F#,labels = meta_data$Name
+  var.axes = F
+  ,labels = meta_data$Name
 )
 p
 
@@ -182,8 +188,8 @@ p
 
 ### Figure 2 Plot 4
 
-size_vec = meta_data$Significance_Sadanandam
-size_vec[ as.character(size_vec) == "Not_sig" ]= "0";size_vec[size_vec != "0"]= "1"
+size_vec = meta_data$Dec_dist
+size_vec[size_vec>1] = 1
 
 p = ggbiplot::ggbiplot(
   pcr,
@@ -196,7 +202,7 @@ p = ggbiplot::ggbiplot(
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = as.integer(size_vec), color = as.factor(meta_data$Subtype_Sad) )) +guides(size=guide_legend(title="P_value")) +guides(color=guide_legend(title="Subtype_Sadanandam"))
+p = p + geom_point( aes( size = as.double(size_vec), color = as.factor(meta_data$Subtype_Sad) )) #+guides(size=guide_legend(title="P_value")) +guides(color=guide_legend(title="Subtype_Sadanandam"))
 p = p + scale_color_manual( values = c("Blue","Brown","Orange","Darkgreen") )
 
 #png("~/MAPTor_NET/Results/Dif_exp/Sadanandam_signature.57.png", width = 1024, height= 768)
@@ -307,7 +313,7 @@ pheatmap::pheatmap(
 
 library(ggplot2)
 
-vis_mat = meta_data[str_detect(meta_data$Histology, pattern = "Pancreatic"),c("Name","MEN1","MEN1.AF8.Mut.AF8.AF")]
+vis_mat = meta_data[,c("Dec_dist","Neurog3")]
 vis_mat
 colnames(vis_mat) = c("Name","MEN1_exp","MEN1_mt_AF")
 vis_mat = reshape2::melt(vis_mat, id = c("Name","MEN1_exp","MEN1_mt_AF"))
@@ -353,3 +359,18 @@ g_bench = g_bench + geom_point( )
 g_bench = g_bench + geom_smooth(method = "lm")
 
 g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
+
+### survival plots ###
+
+data = meta_data[,c("Dec_dist","OS_Tissue")]
+data = data[!is.na(data[,2]),]
+data$Abvg_avg = rep("",nrow(data))
+data$Abvg_avg[data$Dec_dist > median(data$Dec_dist)] = "TRUE"
+data$Abvg_avg[ data$Abvg_avg != "TRUE"] = "FALSE"
+
+subtype = data$Abvg_avg
+fit = survival::survfit( survival::Surv( data$Abvg_avg ) ~ data$OS_Tissue)
+
+survminer::ggsurvplot(fit, data = meta_data, risk.table = T, pval = T)
+# Visualize with survminer
+

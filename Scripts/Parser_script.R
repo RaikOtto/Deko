@@ -30,6 +30,8 @@ dim(bam_data)
 count_data = read.table("~/Deko/Data/Merge_Seger_Botton.tsv",sep ="\t", header = T, stringsAsFactors = F)
 count_data[1:5,1:5]
 
+# TPM count transformation
+
 gene_length_t = read.table("~/Deko/Misc/gene_length.tsv",sep ="\t", header = T, stringsAsFactors = F)
 l_match = match(rownames(count_data), gene_length_t$hgnc_symbol, nomatch = 0)
 count_data = count_data[ l_match != 0,]
@@ -71,18 +73,18 @@ pancreasMarkers = list(
   "Delta" = marker_genes$Delta[delimiter],
   #"Botton" = marker_genes$Stem#,[delimiter]
   "Botton_1" = unique( c( marker_genes$Botton_1,marker_genes$Botton_2  ))[delimiter],
-  "Botton_3" = marker_genes$Botton_3[delimiter],
-  "Ductal" = marker_genes$Ductal
+  "Botton_3" = marker_genes$Botton_3[delimiter]#,
+  #"Ductal" = marker_genes$Ductal
   #"Acinar" = marker_genes$acinar[1]
 )
 
-for( type in names(pancreasMarkers)){
-    cell_type = (eval(paste(type)))
-    genes = as.character(unlist(pancreasMarkers[cell_type]))
-    genes = genes[genes %in% rownames(count_data)]
-    genes = rownames(count_data)
-    pancreasMarkers[cell_type] = list(genes)
-}
+#for( type in names(pancreasMarkers)){
+#    cell_type = (eval(paste(type)))
+#    genes = as.character(unlist(pancreasMarkers[cell_type]))
+#    genes = genes[genes %in% rownames(count_data)]
+#    genes = rownames(count_data)
+#    pancreasMarkers[cell_type] = list(genes)
+#}
 
 table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
 table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
@@ -92,12 +94,11 @@ table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
 #subtypes = ncol(count_data)as.character(seg_meta$Characteristics.cell.type.)[s_match]
 #subtypes = str_replace_all(subtypes, pattern = " cell", "")
 #subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
-subtypes = read.table("~/Deko/Data/Merge_Subtypes.tsv", sep = "\t", stringsAsFactors = F)[,1]
-pancreasMarkers = pancreasMarkers[names(pancreasMarkers) %in% subtypes]
-table(subtypes)
+#subtypes = read.table("~/Deko/Data/Merge_Subtypes.tsv", sep = "\t", stringsAsFactors = F)[,1]
+#pancreasMarkers = pancreasMarkers[names(pancreasMarkers) %in% subtypes]
+#table(subtypes)
 
 # special merge case
 
 dim(count_data)
 length(subtypes)
-
