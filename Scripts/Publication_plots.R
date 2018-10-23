@@ -10,7 +10,9 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-expr_raw = expr_raw[,meta_info$Name[meta_info$Study == "Groetzinger"] %in% colnames(expr_raw)]
+#cands = meta_info$Name[meta_info$Study == "Groetzinger"]
+#cands = cands[cands %in% colnames(expr_raw)]
+#expr_raw = expr_raw[,  cands]
 dim(expr_raw)
 expr_raw[1:5,1:5]
 
@@ -71,7 +73,7 @@ meta_data$Grading[meta_data$Grading == ""] = "G0"
 meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
 meta_data$Subtype_Sadanandam[meta_data$Subtype_Sadanandam == ""] = "Unknown"
 meta_data$Dec_dist = rep("",nrow(meta_data))
-meta_data[colnames(t(res_coeff)),"Dec_dist"] = as.double(colSums(t(res_coeff)))
+meta_data[colnames(t(res_coeff[rownames(res_coeff) %in% colnames(expr_raw),])),"Dec_dist"] = as.double(colSums(t(res_coeff[rownames(res_coeff) %in% colnames(expr_raw),])))
 meta_data$Dec_dist = as.double(meta_data$Dec_dist)
 
 ###
@@ -96,7 +98,8 @@ pheatmap::pheatmap(
   show_colnames = T,
   treeheight_col = 0,
   legend = F,
-  fontsize_col = 7
+  fontsize_col = 7,
+  clustering_method = "ward.D2"
 )
 
 ## Figure 2
@@ -108,7 +111,7 @@ pheatmap::pheatmap(
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
-  groups = as.character(meta_data$Study),
+  groups = as.character(meta_data$Deco_group),
   #shape = as.character(meta_data$Grading),
   ellipse = TRUE,
   circle = TRUE,
@@ -377,4 +380,4 @@ survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T)
 # Visualize with survminer
 
 cors = apply( expr_raw, MARGIN = 1, FUN = function(vec){return(cor(meta_data$Dec_dist, vec))})
-h = (sort(cors))[1:100]
+h = (sort(cors))[1:10]
