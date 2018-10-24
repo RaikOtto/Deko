@@ -44,3 +44,38 @@ s_match = match(colnames(s_t), seg_meta$Extract.Name, nomatch = 0)
 cell_type = as.character(seg_meta$Characteristics.cell.type.)[s_match]
 cell_type = str_replace_all(cell_type, pattern = " cell", "")
 table(cell_type)
+
+
+###
+
+bam_data = readRDS("~/Downloads/baron-human.rds")
+bam_data = readRDS("~/Downloads/baron-mouse.rds")
+bam_data = readRDS("~/Downloads/segerstolpe.rds")
+bam_data = readRDS("~/Downloads/muraro.rds")
+bam_data = readRDS("~/Downloads/wang.rds")
+bam_data = readRDS("~/Downloads/xin.rds")
+bam_data = readRDS("~/Downloads/yan.rds")
+
+rownames(colData(bam_data))
+bam_data[1:5,1:5]
+as.character(colData(bam_data)$cell_type1)
+
+new_mat = data.frame(
+    "Samples" = rownames(colData(bam_data)),
+    "Subtype" = as.character(colData(bam_data)$cell_type1),
+    #"Study" = rep("Baron_human", length(rownames(colData(bam_data))))
+    #"Study" = rep("Baron_mouse", length(rownames(colData(bam_data))))
+    #"Study" = rep("Segerstolpe", length(rownames(colData(bam_data))))
+    #"Study" = rep("Muraro", length(rownames(colData(bam_data))))
+    #"Study" = rep("Wang", length(rownames(colData(bam_data))))
+    #"Study" = rep("Xin", length(rownames(colData(bam_data))))
+    "Study" = rep("Yan", length(rownames(colData(bam_data))))
+)
+
+meta_info = rbind(
+    meta_info,
+    new_mat
+)
+
+write.table(meta_info, "~/Deko/Data/Human_HSC/Meta_info_Yan.tsv", sep ="\t", quote =F , row.names = F)
+write.table(assay(bam_data), "~/Deko/Data/Human_HSC/Yan.tsv", sep = "\t", quote = F )

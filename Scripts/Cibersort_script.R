@@ -1,11 +1,12 @@
 eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
-fData(eislet) = data.frame( subtypes )
-pData(eislet) = data.frame( subtypes )
+fData(eislet) = data.frame( sub_list )
+pData(eislet) = data.frame( sub_list )
+names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
 
 B = bseqsc_basis(
   eislet,
   pancreasMarkers,
-  clusters = 'subtypes',
+  clusters = 'sub_list',
   samples = colnames(exprs(eislet)),
   ct.scale = FALSE
 )
