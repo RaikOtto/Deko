@@ -47,22 +47,22 @@ aka3 = list(
     Gastric_NEN = "purple",
     Liver = "Darkgreen",
     CUP = "pink"),
-  Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton_1 = "Black",Botton_3 = "Brown", Not_sig = "Gray"),
+  Deco_type = c(alpha = "Blue",beta = "Yellow",gamma = "Orange",delta = "Purple", acinar = "brown", ductal = "cyan", not_sig = "gray"),
   Deco_group = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
   #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
   #Location = c(Primary = "white", Metastasis = "black"),
-  NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
+  NEC_NET = c(NEC= "red", NET = "blue", "NA" = "white"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
   MKI67 = c(high = "White", medium = "gray", low = "black"),
   Purity = c(high = "White", medium = "gray", low = "Blue"),
   Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
-  Dec_dist = c(high = "Red", medium = "Yellow", low = "Green"),
+  Deco_similarity = c(low = "Red", medium = "Yellow", high = "Green"),
   ImmuneScore = c(high = "White", medium = "gray", low = "Black"),
   StromalScore = c(high = "White", medium = "gray", low = "Black"),
   TumorPurity = c(high = "White", medium = "gray", low = "Black"),
   Marker_Genes = c(high = "White", medium = "Yellow", low = "Red"),
   Functionality = c( Unknown = "White",Functional = "green", Non_Functional="red"),
-  Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", "Other" = "green", G0 = "white"),
+  Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", G0 = "white"),
   Included = c(Yes = "green", No = "red"),
   Chemotherapy = c( Yes = "red", No = "green", Unknown = "gray"),
   Significance_Sadanandam = c(Sig = "green", Not_sig = "red"),
@@ -80,7 +80,7 @@ meta_data$Dec_dist = as.double(meta_data$Dec_dist)
 
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[33,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 expr = expr_raw[ rownames(expr_raw) %in% sad_genes,]
 cor_mat = cor(expr);pcr = prcomp(t(cor_mat))

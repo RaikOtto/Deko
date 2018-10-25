@@ -4,6 +4,7 @@ library("grid")     ## Need to attach (and not just load) grid package
 #library("pheatmap")
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 draw_colnames_45 <- function (coln, gaps, ...) {coord = pheatmap:::find_coordinates(length(coln), gaps);x = coord$coord - 0.5 * coord$size;  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...));  return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
@@ -11,10 +12,15 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 ###
 
 #bam_data = read.table("~/Deko/Data/TPMs.81_Samples.Groetzinger_Scarpa.tsv",sep ="\t", header = T)
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Groetzinger_CTRLs.tsv",sep ="\t", header = T)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/",sep ="\t", header = T)
+bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
 rownames(bam_data) = str_to_upper( bam_data$HGNC )
+rownames(bam_data) = str_to_upper( rownames( bam_data) )
+hgnc_list = rownames(bam_data)
+hgnc_list_uni = unique(hgnc_list)
+
 bam_data = bam_data[,-1]
 source("~/Deko/Scripts/Variance_selection.R")
 
@@ -39,18 +45,19 @@ marker_genes = read.table(
     header = T,
     stringsAsFactors = F
 )
-delimiter = 1:100
+delimiter = 1:10
 
 pancreasMarkers = list(
     "Alpha" = marker_genes$Alpha[delimiter],
+    #"Alpha_five" = marker_genes$Alpha[delimiter],
     "Beta" = marker_genes$Beta[delimiter],
     "Gamma" = marker_genes$Gamma[delimiter],
     "Delta" = marker_genes$Delta[delimiter]#,
+    #"Ductal" = marker_genes$Ductal[delimiter],
+    #"Acinar" = marker_genes$Acinar[delimiter]#,
     #"Botton" = marker_genes$Stem#,[delimiter]
     #"Botton_1" = unique( c( marker_genes$Botton_1,marker_genes$Botton_2  ))[delimiter],
     #"Botton_3" = marker_genes$Botton_3[delimiter]#,
-    #"Ductal" = marker_genes$Ductal
-    #"Acinar" = marker_genes$acinar[1]
 )
 rownames(subtypes) = subtypes$Samples
 cands = subtypes[ colnames(count_data),]
@@ -63,14 +70,14 @@ table( sub_list )
 
 # TPM count transformation
 
-gene_length_t = read.table("~/Deko/Misc/gene_length.tsv",sep ="\t", header = T, stringsAsFactors = F)
-l_match = match(rownames(count_data), gene_length_t$hgnc_symbol, nomatch = 0)
-count_data = count_data[ l_match != 0,]
-l_match = match( gene_length_t$hgnc_symbol, rownames(count_data), nomatch = 0)
-gene_length = gene_length_t$transcript_length[l_match]
-x = count_data / gene_length
-count_data = t(x) * 1e6 / colSums(x)
-count_data = t(count_data)
+#gene_length_t = read.table("~/Deko/Misc/gene_length.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#l_match = match(rownames(count_data), gene_length_t$hgnc_symbol, nomatch = 0)
+#count_data = count_data[ l_match != 0,]
+#l_match = match( gene_length_t$hgnc_symbol, rownames(count_data), nomatch = 0)
+#gene_length = gene_length_t$transcript_length[l_match]
+#x = count_data / gene_length
+#count_data = t(x) * 1e6 / colSums(x)
+#count_data = t(count_data)
 
 #seg_meta = read.table("~/Deko/Misc/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
 
