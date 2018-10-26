@@ -3,6 +3,8 @@ library("stringr")
 library("grid")     ## Need to attach (and not just load) grid package
 #library("pheatmap")
 
+#write.table(meta_info, "~/Deko/Misc/Meta_information.tsv", row.names = F, quote =F , sep = "\t")
+
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
@@ -16,12 +18,10 @@ bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_B
 bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
-rownames(bam_data) = str_to_upper( bam_data$HGNC )
 rownames(bam_data) = str_to_upper( rownames( bam_data) )
 hgnc_list = rownames(bam_data)
 hgnc_list_uni = unique(hgnc_list)
 
-bam_data = bam_data[,-1]
 source("~/Deko/Scripts/Variance_selection.R")
 
 bam_data[1:5,1:5]
@@ -35,9 +35,11 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-#count_data = read.table("~/Deko/Data/Count_data.Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
-count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv",sep ="\t", header = T, stringsAsFactors = F)
-subtypes = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/meta_info_scRNA.tsv", sep = "\t", stringsAsFactors = F, header = T)
+count_data = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Zhang.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data[1:5,1:5]
+subtypes = meta_info[colnames(count_data),"Subtype"]
+names(subtypes) = meta_info[colnames(count_data),"Name"]
 
 marker_genes = read.table(
     "~/Deko/Misc/Baron_pancreas_marker.tsv",
@@ -45,19 +47,48 @@ marker_genes = read.table(
     header = T,
     stringsAsFactors = F
 )
-delimiter = 1:10
+delimiter = 1:100
+
+# Find genes
+
+subtype = "Pancreas"
+m_genes = apply( count_data, MARGIN = 1, FUN = function(vec){
+    case = vec[subtypes == subtype]
+    ctrl = vec[subtypes != subtype]
+    return(case - ctrl)
+})
+names(m_genes) = rownames(count_data)
+m_genes = m_genes[order(abs(m_genes), decreasing = T)]
+m_genes = m_genes[!is.na(names(m_genes))]
+m_genes = m_genes[ grep(names(m_genes), pattern = "^GM", invert = T ) ]
+m_genes[1:10]
+
+E17.5 = m_genes[delimiter]
+P0 = m_genes[delimiter]
+P3 = m_genes[delimiter]
+P9 = m_genes[delimiter]
+P15 = m_genes[delimiter]
+P18 = m_genes[delimiter]
+P60 = m_genes[delimiter]
+Pancreas = m_genes[delimiter]
+
 
 pancreasMarkers = list(
-    "Alpha" = marker_genes$Alpha[delimiter],
+    #"Alpha" = marker_genes$Alpha[delimiter],
     #"Alpha_five" = marker_genes$Alpha[delimiter],
-    "Beta" = marker_genes$Beta[delimiter],
-    "Gamma" = marker_genes$Gamma[delimiter],
-    "Delta" = marker_genes$Delta[delimiter]#,
+    #"Beta" = marker_genes$Beta[delimiter],
+    #"Gamma" = marker_genes$Gamma[delimiter],
+    #"Delta" = marker_genes$Delta[delimiter]#,
     #"Ductal" = marker_genes$Ductal[delimiter],
     #"Acinar" = marker_genes$Acinar[delimiter]#,
-    #"Botton" = marker_genes$Stem#,[delimiter]
-    #"Botton_1" = unique( c( marker_genes$Botton_1,marker_genes$Botton_2  ))[delimiter],
-    #"Botton_3" = marker_genes$Botton_3[delimiter]#,
+    E17.5 = names(E17.5),
+    P0 = names(P0),
+    P3 = names(P3),
+    P9 = names(P9),
+    P15 = names(P15),
+    P18 = names(P18),
+    P60 = names(P60),
+    Pancreas = names(Pancreas)
 )
 rownames(subtypes) = subtypes$Samples
 cands = subtypes[ colnames(count_data),]
@@ -107,13 +138,6 @@ dim(count_data)
 table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
 table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
 
-#count_data = count_data[ ,which(str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers))) ]
-#s_match = match( colnames(count_data), seg_meta$Extract.Name, nomatch = 0)
-#subtypes = ncol(count_data)as.character(seg_meta$Characteristics.cell.type.)[s_match]
-#subtypes = str_replace_all(subtypes, pattern = " cell", "")
-#subtypes = subtypes[ str_to_upper(subtypes) %in% str_to_upper(names(pancreasMarkers)) ]
-
-#pancreasMarkers = pancreasMarkers[names(pancreasMarkers) %in% subtypes]
-#table(subtypes)
+#write.table(pancreasMarkers,"~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Pancreas_marker_Zang.tsv",sep = "\t", quote = F)
 
 # special merge case

@@ -48,7 +48,7 @@ aka3 = list(
     Liver = "Darkgreen",
     CUP = "pink"),
   Deco_type = c(alpha = "Blue",beta = "Yellow",gamma = "Orange",delta = "Purple", acinar = "brown", ductal = "cyan", not_sig = "gray"),
-  Deco_group = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
+  Deco_group = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Not_sig = "Gray"),
   #Deco_type = c(Alpha = "Blue",Beta = "Yellow",Gamma = "Orange",Delta = "Purple",Botton = "Black", Not_sig = "Gray"),
   #Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", "NA" = "white"),

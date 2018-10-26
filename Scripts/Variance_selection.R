@@ -35,4 +35,4 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 expr_raw[1:5,1:5]
 
 bam_data = expr_raw
-#write.table(expr_raw,"~/Deko/Data/GSE73338.HGNC.tsv",sep="\t",quote =F , row.names = T)
+#write.table(expr_raw,"~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Zhang.tsv",sep="\t",quote =F , row.names = T)

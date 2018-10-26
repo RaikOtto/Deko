@@ -1,12 +1,12 @@
 eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
-fData(eislet) = data.frame( sub_list )
-pData(eislet) = data.frame( sub_list )
+fData(eislet) = data.frame( subtypes )
+pData(eislet) = data.frame( subtypes )
 names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
 
 B = bseqsc_basis(
   eislet,
   pancreasMarkers,
-  clusters = 'sub_list',
+  clusters = 'subtypes',
   samples = colnames(exprs(eislet)),
   ct.scale = FALSE
 )
@@ -96,21 +96,20 @@ fill_vec[fill_vec == "delta"] = "purple"
 fill_vec[fill_vec == "ductal"] = "cyan"
 fill_vec[fill_vec == "acinar"] = "brown"
 fill_vec[fill_vec ==  "not_sig"] = "gray"
+size_vec = as.double(meta_data$Deco_similarity**1)
+size_vec = max(size_vec) - size_vec
 
-
+meta_data = meta_data[rownames(pcr$x),]
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
-  groups = meta_data$Grading,
+  groups = meta_data$Deco_type,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F#,labels = meta_data$Name
 )
-p + geom_point( aes( size = as.double(meta_data$Deco_similarity**2), fill = fill_vec))
-Grading = as.character(meta_data$Grading)
-Grading[Grading == ""] = "G0"
-p = p + geom_point(data = meta_data, aes(colour= Groups, shape = Grading ) )
-p = p + scale_color_manual( values = c("Blue","Yellow","Black","Purple","Orange","Gray") )
+p = p + geom_point( aes( size = size_vec, colour = meta_data$Deco_type, shape = meta_data$Grading))
+p = p + scale_color_manual( values = c("Blue","Yellow","Purple","Orange","Gray") )
 #p = p + scale_color_manual( values = c("Blue","Yellow","Purple","Orange","Gray") )
 #p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
 p
@@ -128,17 +127,19 @@ fisher.test(cbind(upper,lower))
 
 # UMAP
 
-vis_mat = expr_raw[ ,]
-vis_mat$Gene = as.factor(rownames(vis_mat))
-vis_mat$Botton_3 = meta_data$Botton_3
+vis_mat = meta_data
+vis_mat$Sample = vis_mat$Name
+vis_mat  = vis_mat[,c("Sample","Deco_similarity","NEC_NET")]
 vis_mat = reshape2::melt(vis_mat )
-vis_mat$MEN1 = meta_data$MEN1[match(as.character(vis_mat$variable), rownames(meta_data))]
-colnames(vis_mat) = c("Gene","Sample","Expression","MEN1")
+colnames(vis_mat) = c("Sample","NEC_NET","Misc","Deco_Sim")
+vis_mat$Sample = factor( vis_mat$Sample, levels = meta_data$Name[order(meta_data$Deco_similarity, decreasing = F)] )
+vis_mat$Deco_Sim 
+
 #vis_mat["Expression"] = as.double(vis_mat["Expression"])
 
 #vis_mat = vis_mat[ match(vis_mat$Gene, result_t$hgnc_symbol),]
 
-men1_plot = ggplot( vis_mat, aes ( x = Gene,  y = Expression))
-men1_plot = men1_plot + geom_boxplot( aes(fill = MEN1))
+men1_plot = ggplot( vis_mat, aes ( x = Sample,  y = Deco_Sim))
+men1_plot = men1_plot + barplot( aes(fill = NEC_NET))
 men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 men1_plot
