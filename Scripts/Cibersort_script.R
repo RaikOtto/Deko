@@ -1,14 +1,13 @@
 names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
 eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
-subtypes = str_to_lower(subtypes)
-fData(eislet) = data.frame( subtypes )
-pData(eislet) = data.frame( subtypes )
+fData(eislet) = data.frame( sub_list )
+pData(eislet) = data.frame( sub_list )
 
 
 B = bseqsc_basis(
   eislet,
   pancreasMarkers,
-  clusters = 'subtypes',
+  clusters = 'sub_list',
   samples = colnames(exprs(eislet)),
   ct.scale = FALSE
 )
@@ -37,25 +36,37 @@ res_cor   = fit$stats
 res_coeff[ is.na(res_coeff) ] = 0.0
 res_cor[ is.na(res_cor) ] = 0.0
 
-not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .05]
-res_cor[ res_cor[,"Correlation"] <= .3, "Correlation" ] = 0.0
-
 meta_data = meta_info[ rownames(res_coeff),]
 
-meta_data$Progenitor_sim = log(res_coeff[,"e13.5"]+1)
-meta_data$HSC_sim = log(res_coeff[,"hsc"]+1)
-meta_data$Differentiated_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
+not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .05]
+not_sig_samples
+
+prog_sim = log(res_coeff[,"e13.5"]+1)
+meta_data$Progenitor_sim = rep("low", length(prog_sim))
+meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[34])] = "medium"
+meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[67])] = "high"
+meta_data[not_sig_samples,"Progenitor_sim"] = "not_sig"
+
+hsc_sim = log(res_coeff[,"hsc"]+1)
+meta_data$HSC_sim = rep("low", length(hsc_sim))
+meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[34])] = "medium"
+meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[67])] = "high"
+meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
+
+diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
+meta_data$Differentiated_sim = rep("low", length(diff_sim))
+meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[34])] = "medium"
+meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[67])] = "high"
+meta_data[not_sig_samples,"Differentiated_sim"] = "not_sig"
 
 ###
 
-res_coeff_match = match( rownames(res_coeff), meta_data$Name, nomatch = 0 )
-res_cor_match = match( rownames(res_cor), meta_info$Name, nomatch = 0 )
+#absolute_mat = cbind(rowSums(res_coeff[,c("alpha","beta","gamma","delta")]), res_coeff[,"e13.5"],res_coeff[,"hsc"])
 
-maxi = apply( res_coeff, FUN = which.max, MARGIN = 1 )
-cell_type = colnames(res_coeff)[maxi]
-#cell_type[res_cor[,"Correlation"] <= .3] = "Not_sig"
-#cell_type[res_cor[,"P-value"] > .05] = "Not_sig"
-table(cell_type)
+maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
+meta_data$Diff_Type = colnames(res_coeff)[maxi]
+meta_data[not_sig_samples,"Diff_Type"] = "not_sig"
+#meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
 
 meta_info$Deco_type = rep("",nrow(meta_info))
 meta_info$Deco_type[ match(rownames(res_coeff), meta_info$Name) ] = as.character( cell_type )
@@ -82,7 +93,7 @@ meta_data$HSC_sim[meta_data$HSC_sim <= 3 ] = 3
 pheatmap::pheatmap(
     #t(meta_data[order(meta_data$HSC_sim),c("HSC_sim","Progenitor_sim","Differentiated_sim")]),
     cor(expr),
-    annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET","Grading")],
+    annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -112,7 +123,7 @@ meta_data = meta_data[rownames(pcr$x),]
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale = .75,
-  groups = meta_data$Deco_type,
+  groups = meta_data$Diff_Type,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F#,labels = meta_data$Name
