@@ -1,17 +1,17 @@
 library("stringr")
 library("limma")
 
-groups = meta_data$Deco_type
-groups[groups != "Not_sig"] = "Sig"
-groups[groups != "Sig"] = "Not_sig"
+meta_data = meta_info[colnames(bam_data),]
+meta_data[1:5,1:5]
+
+groups = meta_data$Subtype
+groups[groups == "delta"] = "CASE"
+groups[groups != "CASE"] = "CTRL"
 design <- model.matrix(~0 + groups)
-colnames(design) = c("Not_Sig", "Sig")
+colnames(design) = c("delta", "Not_delta")
 
-vfit <- lmFit(expr_raw,design)
-#vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
-#plotSA(efit)
-
-contr.matrix = makeContrasts( contrast = Not_Sig - Sig ,  levels = design )
+vfit <- lmFit(bam_data,design)
+contr.matrix = makeContrasts( contrast = delta - Not_delta ,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
 efit <- eBayes(vfit)
 
@@ -27,5 +27,8 @@ result_t$Log_FC = round(result_t$Log_FC, 1)
 result_t$Average_Expr = round(result_t$Average_Expr, 1)
 result_t = result_t[order(result_t$Log_FC,decreasing = T),]
 
-write.table("~/Deko//Results/Dif_Exp/Not_Sig_Minus_Sig.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
+result_t$ABS_FC = abs(result_t$Log_FC)
+result_t = result_t[order(result_t$ABS_FC, decreasing = T),]
+
+#write.table("~/Deko//Results/Dif_Exp/Dif_exp_delta_vs_Not_delta_Merge_mat_HSC_Stanescu_Segerstolpe.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
 

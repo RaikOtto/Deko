@@ -32,6 +32,7 @@ expr_raw = expr_raw[max_list,]
 rownames(expr_raw) = hgnc_list[max_list]
 dim(expr_raw)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
+rownames(expr_raw) = str_to_upper(rownames(expr_raw))
 expr_raw[1:5,1:5]
 
 bam_data = expr_raw

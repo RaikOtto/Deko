@@ -1,81 +1,59 @@
 library("stringr")
 
-i_files = list.files("~/Deko/Data/", pattern = "GSM22", full.names = T)
+# Segerstolpe integration
 
-b_files <<- matrix(as.character(), ncol = 20128)
+bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Segerstolpe.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1[1:5,1:5]
 
-for (i in 1:4){
-    print(i)
-    i_mat = read.table( i_files[i], sep =",", header = T )  
-    b_files <<- rbind(b_files, i_mat)
-}
+meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+table(colnames(bam_data_1) %in% meta_info$Name)
 
-cell_types = b_files$assigned_cluster
-table(cell_types)
+meta_data = meta_info[colnames(bam_data_1),]
+bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("alpha","beta","gamma","delta")]
+rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
+dim(bam_data_1)
 
-b_files = b_files[, 4:ncol(b_files)]
+# Stanescu
 
-b_files[1:5,1:5]
+bam_data_2 = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Stanescu.tsv" , sep ="\t" ,header = T, stringsAsFactors = F )
+rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
+bam_data_2[1:5,1:5]
 
-#write.table(b_files, "~/Deko/Data/baron_data.tsv", sep ="\t", row.names = F, col.names = T, quote = F)
-#write.table(cell_types, "~/Deko/Data/baron_subtypes.tsv", sep ="\t", row.names = F, col.names = T, quote = F)
+# Yan
 
-dim(b_files)
+bam_data_3 = read.table("~/Deko/Data/Human_HSC/Yan.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+colnames(bam_data_3) = str_replace_all(colnames(bam_data_3) , pattern = "^X", "")
+rownames(bam_data_3) = str_to_upper(rownames(bam_data_3))
+bam_data_3[1:5,1:5]
 
-### vis
+meta_data = meta_info[colnames(bam_data_3),]
+bam_data_3 = bam_data_3[, meta_data$Subtype %in% c("HSC")]
+dim(bam_data_1)
 
-library(tsne)
+### integrate
 
-tsne(b_files[1:10,])
+merge_genes = intersect(rownames(bam_data_1),rownames(bam_data_2))
+merge_genes = intersect(merge_genes, rownames(bam_data_3))
+length(merge_genes)
 
-### estimate
-
-estimate_mat = read.table("~/MAPTor_NET/")
-
-### Segerstolpe
-
-data_mat = read.table("~/Deko/Data/pancreas_refseq_rpkms_counts_3514sc.txt", sep ="\t", header = T, stringsAsFactors = F)
-colnames(data_mat) = str_replace_all(colnames(data_mat), pattern = "^X", "")
-data_mat[1:5,1:5]
-
-seg_meta = read.table("~/Deko/Data/Segerstolpe_Meta_info.tsv", sep ="\t", header = T)
-s_match = match(colnames(s_t), seg_meta$Extract.Name, nomatch = 0)
-
-cell_type = as.character(seg_meta$Characteristics.cell.type.)[s_match]
-cell_type = str_replace_all(cell_type, pattern = " cell", "")
-table(cell_type)
-
-
-###
-
-bam_data = readRDS("~/Downloads/baron-human.rds")
-bam_data = readRDS("~/Downloads/baron-mouse.rds")
-bam_data = readRDS("~/Downloads/segerstolpe.rds")
-bam_data = readRDS("~/Downloads/muraro.rds")
-bam_data = readRDS("~/Downloads/wang.rds")
-bam_data = readRDS("~/Downloads/xin.rds")
-bam_data = readRDS("~/Downloads/yan.rds")
-
-rownames(colData(bam_data))
-bam_data[1:5,1:5]
-as.character(colData(bam_data)$cell_type1)
-
-new_mat = data.frame(
-    "Samples" = rownames(colData(bam_data)),
-    "Subtype" = as.character(colData(bam_data)$cell_type1),
-    #"Study" = rep("Baron_human", length(rownames(colData(bam_data))))
-    #"Study" = rep("Baron_mouse", length(rownames(colData(bam_data))))
-    #"Study" = rep("Segerstolpe", length(rownames(colData(bam_data))))
-    #"Study" = rep("Muraro", length(rownames(colData(bam_data))))
-    #"Study" = rep("Wang", length(rownames(colData(bam_data))))
-    #"Study" = rep("Xin", length(rownames(colData(bam_data))))
-    "Study" = rep("Yan", length(rownames(colData(bam_data))))
+new_mat = as.data.frame(
+    cbind(
+        bam_data_1[merge_genes,],
+        bam_data_2[merge_genes,],
+        bam_data_3[merge_genes,]
+    )
 )
+rownames(new_mat) = merge_genes
+new_mat[1:5,1:5]
 
 meta_info = rbind(
     meta_info,
     new_mat
 )
 
-write.table(meta_info, "~/Deko/Data/Human_HSC/Meta_info_Yan.tsv", sep ="\t", quote =F , row.names = F)
-write.table(assay(bam_data), "~/Deko/Data/Human_HSC/Yan.tsv", sep = "\t", quote = F )
+#write.table(meta_info, "~/Deko/Data/Human_HSC/Meta_info_Yan.tsv", sep ="\t", quote =F , row.names = F)
+#write.table(bam_data_3, "~/Deko/Data/Human_HSC/Yan.tsv", sep ="\t", quote =F , row.names = T)
+row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN = 1))
+new_mat = new_mat[row_var >= 1,]
+#write.table(new_mat, "~/Deko/Data/Merge_mat_HSC_Stanescu_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)

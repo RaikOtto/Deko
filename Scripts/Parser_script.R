@@ -13,12 +13,13 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-#bam_data = read.table("~/Deko/Data/TPMs.81_Samples.Groetzinger_Scarpa.tsv",sep ="\t", header = T)
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/",sep ="\t", header = T)
 bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
+#bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep ="\t", header = T, row.names = 1)
+rownames(bam_data) = str_to_upper( rownames( bam_data) )
+
+#bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
-rownames(bam_data) = str_to_upper( rownames( bam_data) )
 hgnc_list = rownames(bam_data)
 hgnc_list_uni = unique(hgnc_list)
 
@@ -35,8 +36,8 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-count_data = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Zhang.tsv",sep ="\t", header = T, stringsAsFactors = F)
-#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Zhang.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
 count_data[1:5,1:5]
 subtypes = meta_info[colnames(count_data),"Subtype"]
 names(subtypes) = meta_info[colnames(count_data),"Name"]
@@ -47,7 +48,7 @@ marker_genes = read.table(
     header = T,
     stringsAsFactors = F
 )
-delimiter = 1:100
+delimiter = 1:10
 
 # Find genes
 
@@ -72,24 +73,26 @@ P18 = m_genes[delimiter]
 P60 = m_genes[delimiter]
 Pancreas = m_genes[delimiter]
 
-
 pancreasMarkers = list(
-    #"Alpha" = marker_genes$Alpha[delimiter],
+    "Alpha" = marker_genes$Alpha[delimiter],
     #"Alpha_five" = marker_genes$Alpha[delimiter],
-    #"Beta" = marker_genes$Beta[delimiter],
-    #"Gamma" = marker_genes$Gamma[delimiter],
-    #"Delta" = marker_genes$Delta[delimiter]#,
+    "Beta" = marker_genes$Beta[delimiter & (marker_genes$Beta != "")],
+    "Gamma" = marker_genes$Gamma[delimiter & (marker_genes$Gamma != "")],
+    "Delta" = marker_genes$Delta[delimiter & (marker_genes$Delta != "")],
     #"Ductal" = marker_genes$Ductal[delimiter],
     #"Acinar" = marker_genes$Acinar[delimiter]#,
-    E17.5 = names(E17.5),
-    P0 = names(P0),
-    P3 = names(P3),
-    P9 = names(P9),
-    P15 = names(P15),
-    P18 = names(P18),
-    P60 = names(P60),
-    Pancreas = names(Pancreas)
+    "E13.5" = marker_genes$E13.5[delimiter & (marker_genes$E13.5 != "")],
+    "HSC" = marker_genes$HSC[delimiter & (marker_genes$HSC != "")]
+    #E17.5 = names(E17.5),
+    #P0 = names(P0),
+    #P3 = names(P3),
+    #P9 = names(P9),
+    #P15 = names(P15),
+    #P18 = names(P18),
+    #P60 = names(P60),
+    #Pancreas = names(Pancreas)
 )
+
 rownames(subtypes) = subtypes$Samples
 cands = subtypes[ colnames(count_data),]
 cands = cands$Samples[ str_to_upper(cands$Subtype) %in% str_to_upper( names(pancreasMarkers))]
