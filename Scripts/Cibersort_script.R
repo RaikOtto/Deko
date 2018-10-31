@@ -1,8 +1,8 @@
 names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
 eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
-fData(eislet) = data.frame( sub_list )
+sub_list = str_to_lower(sub_list)
+fData(eislet) = data.frame( sub_list  )
 pData(eislet) = data.frame( sub_list )
-
 
 B = bseqsc_basis(
   eislet,
@@ -13,20 +13,11 @@ B = bseqsc_basis(
 )
 plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
 
-#maxi = apply( B, FUN = which.max, MARGIN = 1 )
-#for( type in names(pancreasMarkers)){
-#  cell_type = (eval(paste(type)))
-#  genes = names(maxi)[as.integer(maxi) == which(colnames(B) == type)]
-#  pancreasMarkers[cell_type] = list(genes)
-#}
-
-
 ### RUN VARIANCE SELECTION FIRST
 
 eset = new("ExpressionSet", exprs=as.matrix(bam_data));
-#eset = new("ExpressionSet", exprs=as.matrix(cnts));
 
-fit = bseqsc_proportions(eset, B, verbose = TRUE, log = F, absolute = T, perm = 200)
+fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
 
 ###
 
@@ -38,8 +29,14 @@ res_cor[ is.na(res_cor) ] = 0.0
 
 meta_data = meta_info[ rownames(res_coeff),]
 
-not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .05]
+not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .1]
 not_sig_samples
+
+diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
+meta_data$Differentiated_sim = rep("low", length(diff_sim))
+meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[34])] = "medium"
+meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[67])] = "high"
+meta_data[not_sig_samples,"Differentiated_sim"] = "not_sig"
 
 prog_sim = log(res_coeff[,"e13.5"]+1)
 meta_data$Progenitor_sim = rep("low", length(prog_sim))
@@ -52,12 +49,6 @@ meta_data$HSC_sim = rep("low", length(hsc_sim))
 meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[34])] = "medium"
 meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[67])] = "high"
 meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
-
-diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
-meta_data$Differentiated_sim = rep("low", length(diff_sim))
-meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"Differentiated_sim"] = "not_sig"
 
 ###
 
@@ -94,6 +85,7 @@ pheatmap::pheatmap(
     #t(meta_data[order(meta_data$HSC_sim),c("HSC_sim","Progenitor_sim","Differentiated_sim")]),
     cor(expr),
     annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
+    #annotation_col = meta_data[c("Differentiated_sim","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -116,8 +108,9 @@ fill_vec[fill_vec == "delta"] = "purple"
 fill_vec[fill_vec == "ductal"] = "cyan"
 fill_vec[fill_vec == "acinar"] = "brown"
 fill_vec[fill_vec ==  "not_sig"] = "gray"
-size_vec = as.double(meta_data$Deco_similarity**1)
-size_vec = max(size_vec) - size_vec
+
+size_vec = as.double(log(rowSums(res_coeff[ rownames(pcr$x),c("alpha","beta","gamma","delta")])+1))^2
+#size_vec = max(size_vec) - size_vec
 
 meta_data = meta_data[rownames(pcr$x),]
 p = ggbiplot::ggbiplot(
