@@ -81,7 +81,9 @@ genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/S
 genes_of_interest_hgnc_t$V1
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
-expr = expr_raw[ rownames(expr_raw) %in% sad_genes,]
+expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw))
+colnames(expr) = colnames(expr_raw)
+rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
 ## Figure 1

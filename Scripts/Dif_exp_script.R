@@ -5,13 +5,13 @@ meta_data = meta_info[colnames(count_data),]
 meta_data[1:5,1:5]
 
 groups = meta_data$Subtype
-groups[groups == "HSC"] = "CASE"
+groups[groups == "Ductal"] = "CASE"
 groups[groups != "CASE"] = "CTRL"
 design <- model.matrix(~0 + groups)
-colnames(design) = c("HSC", "Not_HSC")
+colnames(design) = c("Ductal", "Not_Ductal")
 
 vfit <- lmFit(count_data,design)
-contr.matrix = makeContrasts( contrast = HSC - Not_HSC,  levels = design )
+contr.matrix = makeContrasts( contrast = Ductal - Not_Ductal,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
 efit <- eBayes(vfit)
 
@@ -30,4 +30,4 @@ result_t = result_t[order(result_t$Log_FC,decreasing = T),]
 #result_t$ABS_FC = abs(result_t$Log_FC)
 result_t = result_t[order(result_t$Log_FC, decreasing = T),]
 
-write.table("~/Deko//Results/Dif_Exp/Dif_exp_HSC_vs_Not_HSC_Merge_Baron_Stanescu_Yan_scRNA.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
+write.table("~/Deko//Results/Dif_Exp/Dif_exp_Ductal_vs_Not_Ductal_Lawlor_scRNA.tsv", x = result_t, sep = "\t", quote = F, row.names = F)

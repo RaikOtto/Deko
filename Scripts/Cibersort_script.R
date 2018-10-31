@@ -21,42 +21,7 @@ fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 
 
 ###
 
-res_coeff = t(fit$coefficients)
-res_cor   = fit$stats
-
-res_coeff[ is.na(res_coeff) ] = 0.0
-res_cor[ is.na(res_cor) ] = 0.0
-
-meta_data = meta_info[ rownames(res_coeff),]
-
-not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .1]
-not_sig_samples
-
-diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
-meta_data$Differentiated_sim = rep("low", length(diff_sim))
-meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"Differentiated_sim"] = "not_sig"
-
-prog_sim = log(res_coeff[,"e13.5"]+1)
-meta_data$Progenitor_sim = rep("low", length(prog_sim))
-meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"Progenitor_sim"] = "not_sig"
-
-hsc_sim = log(res_coeff[,"hsc"]+1)
-meta_data$HSC_sim = rep("low", length(hsc_sim))
-meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
-
-###
-
-#absolute_mat = cbind(rowSums(res_coeff[,c("alpha","beta","gamma","delta")]), res_coeff[,"e13.5"],res_coeff[,"hsc"])
-
-maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
-meta_data$Diff_Type = colnames(res_coeff)[maxi]
-meta_data[not_sig_samples,"Diff_Type"] = "not_sig"
+source("~/Deko/Scripts/Utility_script.R")
 #meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
 
 meta_info$Deco_type = rep("",nrow(meta_info))
@@ -81,6 +46,7 @@ meta_data$NEC_NET[meta_data$NEC_NET == "Unknown"] = "NA"
 #meta_data$Progenitor_sim[meta_data$Progenitor_sim <= 3 ] = 3
 meta_data$HSC_sim[meta_data$HSC_sim <= 3 ] = 3
 
+meta_data = meta_data[rownames(cor_mat),]
 pheatmap::pheatmap(
     #t(meta_data[order(meta_data$HSC_sim),c("HSC_sim","Progenitor_sim","Differentiated_sim")]),
     cor(expr),

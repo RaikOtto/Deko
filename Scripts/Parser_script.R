@@ -13,17 +13,16 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
-#bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Lawlor.tsv",sep ="\t", header = T, row.names = 1)
+#bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep ="\t", header = T, row.names = 1)
 #bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, row.names = 1)
 rownames(bam_data) = str_to_upper( rownames( bam_data) )
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
 
 hgnc_list = rownames(bam_data)
-hgnc_list_uni = unique(hgnc_list)
-
-source("~/Deko/Scripts/Variance_selection.R")
+#hgnc_list_uni = unique(hgnc_list)
+#source("~/Deko/Scripts/Variance_selection.R")
 
 bam_data[1:5,1:5]
 dim(bam_data)
@@ -36,8 +35,8 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-#count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Baron.tsv",sep ="\t", header = T, stringsAsFactors = F)
-count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
 
 colnames(count_data) = str_replace(colnames(count_data), pattern = "\\.", "_")
 colnames(count_data) = str_replace(colnames(count_data), pattern = "^X", "")
@@ -57,22 +56,14 @@ marker_genes = marker_genes[delimiter,]
 
 pancreasMarkers = list(
     "Alpha" = marker_genes$Alpha[ (marker_genes$Alpha %in% rownames(count_data))],
-    #"Alpha_five" = marker_genes$Alpha[delimiter],
     "Beta" = marker_genes$Beta[ (marker_genes$Beta != "") & (marker_genes$Beta %in% rownames(count_data))],
     "Gamma" = marker_genes$Gamma[ (marker_genes$Gamma != "")& (marker_genes$Gamma %in% rownames(count_data))],
     "Delta" = marker_genes$Delta[ (marker_genes$Delta != "")& (marker_genes$Delta %in% rownames(count_data))],
-    #"Ductal" = marker_genes$Ductal[delimiter],
-    #"Acinar" = marker_genes$Acinar[delimiter]#,
-    "E13.5" = marker_genes$E13.5[ (marker_genes$E13.5 != "")& (marker_genes$E13.5 %in% rownames(count_data))],
-    "HSC" = marker_genes$HSC[(marker_genes$HSC != "")& (marker_genes$HSC %in% rownames(count_data))]
+    "Ductal" = marker_genes$Ductal[ (marker_genes$Ductal != "")& (marker_genes$Ductal %in% rownames(count_data))],
+    "Acinar" = marker_genes$Acinar[ (marker_genes$Acinar != "")& (marker_genes$Acinar %in% rownames(count_data))]#,
+    #"E13.5" = marker_genes$E13.5[ (marker_genes$E13.5 != "")& (marker_genes$E13.5 %in% rownames(count_data))],
+    #"HSC" = marker_genes$HSC[(marker_genes$HSC != "")& (marker_genes$HSC %in% rownames(count_data))]
     #E17.5 = names(E17.5),
-    #P0 = names(P0),
-    #P3 = names(P3),
-    #P9 = names(P9),
-    #P15 = names(P15),
-    #P18 = names(P18),
-    #P60 = names(P60),
-    #Pancreas = names(Pancreas)
 )
 
 cands = names(subtypes)[ str_to_upper( subtypes ) %in% str_to_upper( names(pancreasMarkers))]
