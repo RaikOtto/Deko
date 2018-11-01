@@ -13,8 +13,8 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-#bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T)
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep ="\t", header = T, row.names = 1)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Lawlor.tsv",sep ="\t", header = T, row.names = 1)
+#bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Groetzinger_CTRLs.tsv",sep ="\t", header = T, row.names = 1)
 #bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, row.names = 1)
 rownames(bam_data) = str_to_upper( rownames( bam_data) )
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
@@ -112,4 +112,4 @@ dim(count_data)
 table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
 table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
 
-# write.table(count_data,"~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Muraro.tsv",sep = "\t", quote = F)
+#write.table(bam_data,"~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Groetzinger_CTRLs.tsv",sep = "\t", quote = F)

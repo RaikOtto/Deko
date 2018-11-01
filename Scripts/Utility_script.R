@@ -13,26 +13,51 @@ not_sig_samples
 alpha_sim = log( res_coeff[,"alpha"]+1)
 meta_data$Alpha_sim = rep("",length(alpha_sim))
 meta_data$Alpha_sim = alpha_sim
+#meta_data$Alpha_sim[ alpha_sim <= quantile(alpha_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Alpha_sim[ alpha_sim > quantile(alpha_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Alpha_sim[ alpha_sim > quantile(alpha_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Alpha_sim"] = "not_sig"
 
 beta_sim = log( res_coeff[,"beta"]+1)
 meta_data$Beta_sim = rep("",length(beta_sim))
 meta_data$Beta_sim = beta_sim
+#meta_data$Beta_sim[ beta_sim <= quantile(beta_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Beta_sim[ beta_sim > quantile(beta_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Beta_sim[ beta_sim > quantile(beta_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Beta_sim"] = "not_sig"
 
-gamme_sim = log( res_coeff[,"gamma"]+1)
-meta_data$Gamma_sim = rep("",length(gamme_sim))
-meta_data$Gamma_sim = gamme_sim
+gamma_sim = log( res_coeff[,"gamma"]+1)
+meta_data$Gamma_sim = rep("",length(gamma_sim))
+meta_data$Gamma_sim = gamma_sim
+#meta_data$Gamma_sim[ gamma_sim <= quantile(gamma_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Gamma_sim[ gamma_sim > quantile(gamma_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Gamma_sim[ gamma_sim > quantile(gamma_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Gamma_sim"] = "not_sig"
 
 delta_sim = log( res_coeff[,"delta"]+1)
 meta_data$Delta_sim = rep("",length(delta_sim))
 meta_data$Delta_sim = delta_sim
+#meta_data$Delta_sim[ delta_sim <= quantile(delta_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Delta_sim[ delta_sim > quantile(delta_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Delta_sim[ delta_sim > quantile(delta_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Delta_sim"] = "not_sig"
 
 acinar_sim = log( res_coeff[,"acinar"]+1)
 meta_data$Acinar_sim = rep("",length(acinar_sim))
 meta_data$Acinar_sim = acinar_sim
+#meta_data$Acinar_sim[ acinar_sim <= quantile(acinar_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Acinar_sim"] = "not_sig"
 
 ductal_sim = log( res_coeff[,"ductal"]+1)
 meta_data$Ductal_sim = rep("",length(ductal_sim))
 meta_data$Ductal_sim = ductal_sim
+#meta_data$Ductal_sim[ ductal_sim <= quantile(ductal_sim, seq(0,1,.01)[34])] = "low"
+#meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[34])] = "medium"
+#meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[67])] = "high"
+#meta_data[not_sig_samples,"Ductal_sim"] = "not_sig"
+
 
 diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
 meta_data$Differentiated_sim = rep("low", length(diff_sim))
@@ -59,3 +84,4 @@ meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
 maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
 meta_data$Diff_Type = colnames(res_coeff)[maxi]
 meta_data[not_sig_samples,"Diff_Type"] = "not_sig"
+rownames(meta_data) = meta_data$Name

@@ -19,39 +19,28 @@ eset = new("ExpressionSet", exprs=as.matrix(bam_data));
 
 fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
 
-###
-
 source("~/Deko/Scripts/Utility_script.R")
 #meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
 
-meta_info$Deco_type = rep("",nrow(meta_info))
-meta_info$Deco_type[ match(rownames(res_coeff), meta_info$Name) ] = as.character( cell_type )
-meta_data = meta_info[ rownames(res_coeff),]
-meta_data$Grading[ meta_data$Grading == ""] = "G0"
+#expr_raw = bam_data
+#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
-meta_data$Deco_similarity = rep(0.0,nrow( res_coeff ) )
-meta_data$Deco_similarity = as.double(colSums(t(res_coeff)))
-meta_data$NEC_NET[meta_data$NEC_NET == ""] = "NA"
-colmax = apply(t(res_coeff),  function(vec){max(as.double(vec))}, MARGIN = 2 )
-vis_mat =  apply( t(res_coeff), MARGIN = 2, FUN = function(vec){
-    if (max(vec) != 0 ){ return( vec / max(vec)) } else { return ( rep(0, length(vec) ) ) }})
-vis_mat = t(res_coeff)
-vis_mat[vis_mat > 5] = 5
-rownames(vis_mat) = colnames(res_coeff)
+genes_of_interest_hgnc_t = read.table("~/Deko/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t$V1
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = sad_genes[ sad_genes != ""]
+#expr = matrix(as.double(as.character(unlist(expr_raw))), ncol = ncol(expr_raw))
+expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw))
+colnames(expr) = colnames(expr_raw)
+rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
+cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
-dd = meta_data$Deco_similarity
-meta_data$Deco_similarity[meta_data$Deco_similarity > 5] = 5
-meta_data$Deco_type[meta_data$Deco_similarity < 1]  = "not_sig"
-meta_data$NEC_NET[meta_data$NEC_NET == "Unknown"] = "NA"
-#meta_data$Progenitor_sim[meta_data$Progenitor_sim <= 3 ] = 3
-meta_data$HSC_sim[meta_data$HSC_sim <= 3 ] = 3
-
-meta_data = meta_data[rownames(cor_mat),]
+meta_data = meta_data[as.character(rownames(cor_mat)),]
 pheatmap::pheatmap(
-    #t(meta_data[order(meta_data$HSC_sim),c("HSC_sim","Progenitor_sim","Differentiated_sim")]),
+    #t(res_coeff),
     cor(expr),
-    annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
-    #annotation_col = meta_data[c("Differentiated_sim","NEC_NET")],
+    #annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
+    annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET","Study")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -143,3 +132,5 @@ cor_plot = ggplot( data = meta_data, aes(x = Differentiated_sim, y = HSC_sim))
 cor_plot = cor_plot + geom_line() +geom_point( ) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 cor_plot + geom_smooth(method='lm')
 hist(meta_data$Differentiated_sim)
+
+table(meta_data$Diff_Type)
