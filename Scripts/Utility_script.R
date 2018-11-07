@@ -1,3 +1,44 @@
+aka3 = list(
+    Histology   = c(
+        Pancreatic_NEN = "BLACK",
+        Colorectal_NEN = "Orange",
+        Small_intestinal_NEN = "Yellow",
+        Gastric_NEN = "purple",
+        Liver = "Darkgreen",
+        CUP = "pink"),
+    Deco_type = c(alpha = "Blue",beta = "Yellow",gamma = "Orange",delta = "Purple", e13.5 = "Brown", hsc = "white"),
+    NEC_NET = c(NEC= "red", NET = "blue", "NA" = "white"),
+    Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
+    MKI67 = c(high = "White", medium = "gray", low = "black"),
+    INS = c(high = "White", low = "yellow"),
+    Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
+    Deco_similarity = c(low = "Red", medium = "Yellow", high = "Green"),
+    ImmuneScore = c(high = "White", medium = "gray", low = "Black"),
+    StromalScore = c(high = "White", medium = "gray", low = "Black"),
+    #Alpha_sim = c(low = "white", medium = "yellow", high = "blue",not_sig = "gray"),
+    #Beta_sim = c(low = "white", medium = "yellow", high = "Yellow",not_sig = "gray"),
+    #Gamma_sim = c(low = "white", medium = "yellow", high = "orange",not_sig = "gray"),
+    #Delta_sim = c(low = "white", medium = "yellow", high = "Purple",not_sig = "gray"),
+    #Ductal_sim = c(low = "white", medium = "yellow", high = "Black",not_sig = "gray"),
+    #Acinar_sim = c(low = "white", medium = "yellow", high = "Brown",not_sig = "gray"),
+    Alpha_sim = c(low = "white", medium = "yellow", high = "blue"),
+    Beta_sim = c(low = "white", medium = "Yellow", high = "darkgreen"),
+    Gamma_sim = c(low = "white", medium = "yellow", high = "orange"),
+    Delta_sim = c(low = "white", medium = "yellow", high = "Purple"),
+    Ductal_sim = c(low = "white", medium = "yellow", high = "Black"),
+    Acinar_sim = c(low = "white", medium = "yellow", high = "Brown"),
+    Progenitor_sim = c(low = "white", medium = "yellow", high = "orange",not_sig = "gray"),
+    Differentiated_sim = c(low = "white", medium = "yellow", high = "darkgreen",not_sig = "gray"),
+    HSC_sim = c(low = "white", medium = "yellow", high = "darkred",not_sig = "gray"),
+    Marker_Genes = c(high = "White", medium = "Yellow", low = "Red"),
+    Functionality = c( Unknown = "White",Functional = "green", Non_Functional="red"),
+    Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", G0 = "white"),
+    Included = c(Yes = "green", No = "red"),
+    Chemotherapy = c( Yes = "red", No = "green", Unknown = "gray"),
+    Significance_Sadanandam = c(Sig = "green", Not_sig = "red"),
+    Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White")
+)
+
 
 res_coeff = t(fit$coefficients)
 res_cor   = fit$stats
@@ -9,6 +50,8 @@ meta_data = meta_info[ rownames(res_coeff),]
 
 not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > .1]
 not_sig_samples
+
+#sig_quantiles = 
 
 alpha_sim = log( res_coeff[,"alpha"]+1)
 meta_data$Alpha_sim = rep("",length(alpha_sim))
@@ -57,7 +100,6 @@ meta_data$Ductal_sim = ductal_sim
 #meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[34])] = "medium"
 #meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[67])] = "high"
 #meta_data[not_sig_samples,"Ductal_sim"] = "not_sig"
-
 
 diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
 meta_data$Differentiated_sim = rep("low", length(diff_sim))

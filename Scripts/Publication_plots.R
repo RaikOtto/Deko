@@ -133,149 +133,7 @@ p = ggbiplot::ggbiplot(
 )
 p
 
-MKI67 = as.double( meta_data$Dec_dist)**1
-Grading = as.character(meta_data$Grading)
-#p = p + geom_point( aes(shape = meta_data$Deco_type ) )
-p = p + scale_color_manual( values = c("Black","Blue","Yellow","Purple", "Brown","Orange","Gray") )
-#p = p + guides( color=guide_legend(title="Study", size=guide_legend(title="MKI67"), shape = guide_legend(title="Grading")))
-
-#png("~/MAPTor_NET/Results/Dif_exp/Study.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-p
-#dev.off()
-
-## Figure 2 Plot 2
-
-nec_net_col_vec = meta_data$NEC_NET;nec_net_col_vec[nec_net_col_vec == "NEC"] = "Brown";nec_net_col_vec[nec_net_col_vec != "Brown"] = "Darkgreen"
-
-MEN1_status_col = meta_data$MEN1
-MEN1_status_col[MEN1_status_col <= 0] = "MEN1_wt"
-MEN1_status_col[MEN1_status_col != "MEN1_wt"] = "MEN1_mt"
-MEN1_status_col[ ( meta_data$NEC_NET  == "NET") & (MEN1_status_col == "MEN1_wt") ] = "MEN1_wt_net"
-MEN1_status_col[ ( meta_data$NEC_NET  == "NEC") & (MEN1_status_col == "MEN1_wt") ] = "MEN1_wt_nec"
-
-names(meta_data$Grading)  <- "Experimental Condition"
-size_vec = meta_data$Grading
-size_vec[ ( meta_data$Grading == "G3")  ]= 5;size_vec[size_vec != "5"]= 1
-
-p = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale =.1,
-  #var.scale = 1, 
-  labels.size = 4,
-  alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
-  #groups = as.character(df$Study),
-  #shape = as.character(df$Grading),
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p = p + geom_point( aes( size = as.integer(size_vec)), shape = c( 15 ),  color = "black", stroke = .9)
-p = p + geom_point( aes( shape = Grading, color = meta_data$Cell_type ), size = 4)
-p = p + scale_color_manual( values = c("Blue","Yellow","Purple","Black","Orange","Brown","Darkgreen","Gray") )
-#p = p + guides(color=guide_legend(title="NEC_NET"), position = "top") + guides(shape=guide_legend(title="Grading"), position = "top", size = F)
-
-#png("~/MAPTor_NET/Results/Dif_exp/Grading.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-p
-#dev.off()
-
-### Figure 2 Plot 3
-
-size_vec = meta_data$Location
-size_vec[ str_detect( as.character(size_vec), pattern = "_Met" ) ]= "1";
-size_vec[size_vec != "1"]= "3"
-
-p = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale = .75,
-  groups = as.character(meta_data$NEC_NET),
-  color = as.character(meta_data$Histology),
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p = p + geom_point( aes(colour= meta_data$Histology, size = size_vec ) )
-p = p + guides(color=guide_legend(title="Histology"), size = guide_legend(title="Type"))
-p = p + scale_color_manual( values = c("orange","pink","purple","RED","BLUE","black","yellow") )
-p = p + scale_size_manual(labels = c("Metastasis", "Primary"), values=as.integer(size_vec)*2)
-
-#png("~/MAPTor_NET/Results/Dif_exp/Histology.PCA.png", width = 1024, height = 768, units = "px", pointsize = 20)
-p
-#dev.off()
-
-
-### Figure 2 Plot 4
-
-size_vec = meta_data$Dec_dist
-size_vec[size_vec>1] = 1
-
-p = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale =.75,
-  var.scale = 2, 
-  labels.size = 8,
-  alpha = 1,
-  groups = as.character(meta_data$Subtype_Sad),
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p = p + geom_point( aes( size = as.double(size_vec), color = as.factor(meta_data$Subtype_Sad) )) #+guides(size=guide_legend(title="P_value")) +guides(color=guide_legend(title="Subtype_Sadanandam"))
-p = p + scale_color_manual( values = c("Blue","Brown","Orange","Darkgreen") )
-
-#png("~/MAPTor_NET/Results/Dif_exp/Sadanandam_signature.57.png", width = 1024, height= 768)
-p
-#dev.off()
-
-### Figure 3 Plot 1
-
-#png("~/MAPTor_NET/Results/Dif_exp/Heatmap_57.integrated.png",width=1014, height = 768)
-pheatmap::pheatmap(
-  cor_mat,
-  annotation_col = meta_data[c("MEN1","Marker_Genes","MKI67","NEC_NET","Grading","Location","Histology","Study")],
-  annotation_colors = aka3,
-  annotation_legend = T,
-  treeheight_col = 0,
-  show_colnames = T,
-  show_rownames = F,
-  gaps_row = 20
-)
-#dev.off()
-
-### Figure 3 Plot 2
-
-pheatmap::pheatmap(
-  cor_mat,
-  #annotation_col = df[c("MEN1","Marker_genes","MKI67","NEC_NET","Grading","Location","Histology","Study")],
-  annotation_colors = aka3,
-  annotation_legend = T,
-  treeheight_col = 0,
-  show_colnames = T,
-  show_rownames = F
-)
-
-############ Supplementary
-
-# Figure 1
-
-
 ### vis
-
-cor_mat_all = cor(expr)
-
-meta_data$Chemotherapy[ meta_data$Chemotherapy == "" ] = "Unknown"
-meta_data$Chemotherapy[ meta_data$Chemotherapy == "0" ] = "No"
-meta_data$Chemotherapy[ meta_data$Chemotherapy == "1" ] = "Yes"
-meta_data$Chemotherapy[ meta_data$Chemotherapy == "Missing" ] = "Unknown"
-
-pheatmap::pheatmap(
-  cor_mat_all,
-  annotation_col = meta_data[c("Included","Chemotherapy","Location","Histology","Study")],
-  #annotation_colors = aka3,
-  show_colnames = F,
-  treeheight_col = 0,
-  treeheight_row = 0
-)
 
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
@@ -380,16 +238,17 @@ g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
 
 ### survival plots ###
 
-data = meta_data[,c("Dec_dist","OS_Tissue")]
+meta_data$Diff_Type[meta_data$Diff_Type %in% c("alpha","beta","gamma","delta")]  = "Differentiated"
+data = meta_data[,c("Diff_Type","OS_Tissue","Zensur")]
+data = data[data$Diff_Type != "not_sig",]
+data$OS_Tissue = as.double(str_replace_all(data$OS_Tissue, ",","."))
 data = data[!is.na(data[,2]),]
-data$Abvg_avg = rep("",nrow(data))
-data$Abvg_avg[data$Dec_dist > median(data$Dec_dist)] = "TRUE"
-data$Abvg_avg[ data$Abvg_avg != "TRUE"] = "FALSE"
+data = data[!is.na(data[,3]),]
+colnames(data) = c("Deco_type","OS_Tissue","Status")
 
-subtype = data$Abvg_avg
-fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$Abvg_avg)
+fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$Deco_type)
 
-survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T)
+survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10)
 # Visualize with survminer
 
 cors = apply( expr_raw, MARGIN = 1, FUN = function(vec){return(cor(meta_data$Dec_dist, vec))})

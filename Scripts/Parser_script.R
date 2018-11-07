@@ -13,9 +13,9 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Lawlor.tsv",sep ="\t", header = T, row.names = 1)
-#bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Groetzinger_CTRLs.tsv",sep ="\t", header = T, row.names = 1)
-#bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, row.names = 1)
+#bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Lawlor.tsv",sep ="\t", header = T, row.names = 1)
+#bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Sadanandam_97.tsv",sep ="\t", header = T, row.names = 1)
+bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, row.names = 1)
 rownames(bam_data) = str_to_upper( rownames( bam_data) )
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
@@ -35,8 +35,8 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
-#count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
 
 colnames(count_data) = str_replace(colnames(count_data), pattern = "\\.", "_")
 colnames(count_data) = str_replace(colnames(count_data), pattern = "^X", "")
@@ -59,10 +59,10 @@ pancreasMarkers = list(
     "Beta" = marker_genes$Beta[ (marker_genes$Beta != "") & (marker_genes$Beta %in% rownames(count_data))],
     "Gamma" = marker_genes$Gamma[ (marker_genes$Gamma != "")& (marker_genes$Gamma %in% rownames(count_data))],
     "Delta" = marker_genes$Delta[ (marker_genes$Delta != "")& (marker_genes$Delta %in% rownames(count_data))],
-    "Ductal" = marker_genes$Ductal[ (marker_genes$Ductal != "")& (marker_genes$Ductal %in% rownames(count_data))],
-    "Acinar" = marker_genes$Acinar[ (marker_genes$Acinar != "")& (marker_genes$Acinar %in% rownames(count_data))]#,
-    #"E13.5" = marker_genes$E13.5[ (marker_genes$E13.5 != "")& (marker_genes$E13.5 %in% rownames(count_data))],
-    #"HSC" = marker_genes$HSC[(marker_genes$HSC != "")& (marker_genes$HSC %in% rownames(count_data))]
+    #"Ductal" = marker_genes$Ductal[ (marker_genes$Ductal != "")& (marker_genes$Ductal %in% rownames(count_data))],
+    #"Acinar" = marker_genes$Acinar[ (marker_genes$Acinar != "")& (marker_genes$Acinar %in% rownames(count_data))],
+    "E13.5" = marker_genes$E13.5[ (marker_genes$E13.5 != "")& (marker_genes$E13.5 %in% rownames(count_data))],
+    "HSC" = marker_genes$HSC[(marker_genes$HSC != "")& (marker_genes$HSC %in% rownames(count_data))]
     #E17.5 = names(E17.5),
 )
 
@@ -70,8 +70,6 @@ cands = names(subtypes)[ str_to_upper( subtypes ) %in% str_to_upper( names(pancr
 count_data = count_data[, cands]
 dim(count_data)
 count_data[1:5,1:5]
-sub_list = as.character( subtypes[ cands] )
-table( sub_list )
 
 # TPM count transformation
 
@@ -96,18 +94,7 @@ table(row_var == 0)
 table(col_var == 0)
 count_data = count_data[row_var != 0,col_var != 0]
 count_data = count_data[rowSums(count_data) >= 1,]
-#count_data = t(count_data)
 dim(count_data)
-
-### load_data
-
-#for( type in names(pancreasMarkers)){
-#    cell_type = (eval(paste(type)))
-#    genes = as.character(unlist(pancreasMarkers[cell_type]))
-#    genes = genes[genes %in% rownames(count_data)]
-#    genes = rownames(count_data)
-#    pancreasMarkers[cell_type] = list(genes)
-#}
 
 table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
 table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))

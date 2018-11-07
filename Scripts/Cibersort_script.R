@@ -1,15 +1,17 @@
 names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
-eislet = new("ExpressionSet", exprs = (as.matrix(count_data)))
-sub_list = str_to_lower(sub_list)
+eislet = new("ExpressionSet", exprs = as.matrix(count_data))
+
+sub_list = str_to_lower(subtypes)
+names(sub_list) = names(subtypes)
 fData(eislet) = data.frame( sub_list  )
 pData(eislet) = data.frame( sub_list )
 
 B = bseqsc_basis(
-  eislet,
-  pancreasMarkers,
-  clusters = 'sub_list',
-  samples = colnames(exprs(eislet)),
-  ct.scale = FALSE
+    eislet,
+    pancreasMarkers,
+    clusters = 'sub_list',
+    samples = colnames(exprs(eislet)),
+    ct.scale = FALSE
 )
 plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
 
@@ -30,6 +32,8 @@ genes_of_interest_hgnc_t$V1
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 #expr = matrix(as.double(as.character(unlist(expr_raw))), ncol = ncol(expr_raw))
+expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw))
 colnames(expr) = colnames(expr_raw)
 rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
@@ -39,8 +43,9 @@ meta_data = meta_data[as.character(rownames(cor_mat)),]
 pheatmap::pheatmap(
     #t(res_coeff),
     cor(expr),
-    #annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
-    annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET","Study")],
+    annotation_col = meta_data[c("HSC_sim","Progenitor_sim","Differentiated_sim","NEC_NET")],
+    #annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET")],
+    #annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -123,7 +128,7 @@ men1_plot
 
 #
 
-HSC_Dif = subset(vis_mat, Similarity_type %in% c("Differentiated_sim","HSC_sim"))
+#HSC_Dif = subset(vis_mat, Similarity_type %in% c("Differentiated_sim","HSC_sim"))
 plot(meta_data$Differentiated_sim, meta_data$HSC_sim)
 lm_calc = lm(meta_data$Differentiated_sim ~ meta_data$HSC_sim)
 summary(lm_calc)
