@@ -85,21 +85,25 @@ meta_data$Delta_sim = delta_sim
 #meta_data$Delta_sim[ delta_sim > quantile(delta_sim, seq(0,1,.01)[67])] = "high"
 #meta_data[not_sig_samples,"Delta_sim"] = "not_sig"
 
-acinar_sim = log( res_coeff[,"acinar"]+1)
-meta_data$Acinar_sim = rep("",length(acinar_sim))
-meta_data$Acinar_sim = acinar_sim
-#meta_data$Acinar_sim[ acinar_sim <= quantile(acinar_sim, seq(0,1,.01)[34])] = "low"
-#meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[34])] = "medium"
-#meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[67])] = "high"
-#meta_data[not_sig_samples,"Acinar_sim"] = "not_sig"
+if ("Ductal" %in% names(pancreasMarkers)){
 
-ductal_sim = log( res_coeff[,"ductal"]+1)
-meta_data$Ductal_sim = rep("",length(ductal_sim))
-meta_data$Ductal_sim = ductal_sim
-#meta_data$Ductal_sim[ ductal_sim <= quantile(ductal_sim, seq(0,1,.01)[34])] = "low"
-#meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[34])] = "medium"
-#meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[67])] = "high"
-#meta_data[not_sig_samples,"Ductal_sim"] = "not_sig"
+    acinar_sim = log( res_coeff[,"acinar"]+1)
+    meta_data$Acinar_sim = rep("",length(acinar_sim))
+    meta_data$Acinar_sim = acinar_sim
+    #meta_data$Acinar_sim[ acinar_sim <= quantile(acinar_sim, seq(0,1,.01)[34])] = "low"
+    #meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[34])] = "medium"
+    #meta_data$Acinar_sim[ acinar_sim > quantile(acinar_sim, seq(0,1,.01)[67])] = "high"
+    #meta_data[not_sig_samples,"Acinar_sim"] = "not_sig"
+    
+    ductal_sim = log( res_coeff[,"ductal"]+1)
+    meta_data$Ductal_sim = rep("",length(ductal_sim))
+    meta_data$Ductal_sim = ductal_sim
+    #meta_data$Ductal_sim[ ductal_sim <= quantile(ductal_sim, seq(0,1,.01)[34])] = "low"
+    #meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[34])] = "medium"
+    #meta_data$Ductal_sim[ ductal_sim > quantile(ductal_sim, seq(0,1,.01)[67])] = "high"
+    #meta_data[not_sig_samples,"Ductal_sim"] = "not_sig"
+
+}
 
 diff_sim = log(rowSums(res_coeff[,c("alpha","beta","gamma","delta")])+1)
 meta_data$Differentiated_sim = rep("low", length(diff_sim))
@@ -107,18 +111,21 @@ meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[34])] =
 meta_data$Differentiated_sim[ diff_sim > quantile(diff_sim, seq(0,1,.01)[67])] = "high"
 meta_data[not_sig_samples,"Differentiated_sim"] = "not_sig"
 
-prog_sim = log(res_coeff[,"e13.5"]+1)
-meta_data$Progenitor_sim = rep("low", length(prog_sim))
-meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"Progenitor_sim"] = "not_sig"
+if ( "HSC" %in% names(pancreasMarkers)){
 
-hsc_sim = log(res_coeff[,"hsc"]+1)
-meta_data$HSC_sim = rep("low", length(hsc_sim))
-meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[34])] = "medium"
-meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[67])] = "high"
-meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
+        prog_sim = log(res_coeff[,"Pancreas_Progenitor"]+1)
+        meta_data$Progenitor_sim = rep("low", length(prog_sim))
+        meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[34])] = "medium"
+        meta_data$Progenitor_sim[ prog_sim > quantile(prog_sim, seq(0,1,.01)[67])] = "high"
+        meta_data[not_sig_samples,"Progenitor_sim"] = "not_sig"
+        
+        hsc_sim = log(res_coeff[,"hsc"]+1)
+        meta_data$HSC_sim = rep("low", length(hsc_sim))
+        meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[34])] = "medium"
+        meta_data$HSC_sim[ hsc_sim > quantile(hsc_sim, seq(0,1,.01)[67])] = "high"
+        meta_data[not_sig_samples,"HSC_sim"] = "not_sig"
 
+}
 ###
 
 #absolute_mat = cbind(rowSums(res_coeff[,c("alpha","beta","gamma","delta")]), res_coeff[,"e13.5"],res_coeff[,"hsc"])
