@@ -33,10 +33,9 @@ aka3 = list(
     Marker_Genes = c(high = "White", medium = "Yellow", low = "Red"),
     Functionality = c( Unknown = "White",Functional = "green", Non_Functional="red"),
     Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", G0 = "white"),
-    Included = c(Yes = "green", No = "red"),
-    Chemotherapy = c( Yes = "red", No = "green", Unknown = "gray"),
-    Significance_Sadanandam = c(Sig = "green", Not_sig = "red"),
-    Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White")
+    Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White"),
+    Diff_Type = c( alpha = "blue", beta = "Green", gamma = "Orange", delta = "Purple"),
+    Y_Subtype = c( Alpha = "blue", Beta = "Green", Gamma = "Orange", Delta = "Purple")
 )
 
 
@@ -134,3 +133,10 @@ maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
 meta_data$Diff_Type = colnames(res_coeff)[maxi]
 meta_data[not_sig_samples,"Diff_Type"] = "not_sig"
 rownames(meta_data) = meta_data$Name
+
+meta_data$Diff_Type[meta_data$Diff_Type == "alpha"] = "Alpha"
+meta_data$Diff_Type[meta_data$Diff_Type == "beta"] = "Beta"
+meta_data$Diff_Type[meta_data$Diff_Type == "gamma"] = "Gamma"
+meta_data$Diff_Type[meta_data$Diff_Type == "delta"] = "Delta"
+meta_data$Diff_Type[meta_data$Diff_Type == "ductal"] = "Ductal"
+meta_data$Diff_Type[meta_data$Diff_Type == "acinar"] = "Acinar"

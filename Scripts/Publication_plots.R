@@ -189,31 +189,31 @@ pheatmap::pheatmap(
 
 library(ggplot2)
 
-vis_mat = meta_data[,c("Dec_dist","Neurog3")]
+meta_data$Neurog3 = rep(0,nrow(meta_data))
+meta_data$Neurog3 = as.double(expr_raw["NEUROG3", rownames(meta_data)])
+vis_mat = meta_data[,c("Name","NEC_NET","Neurog3")]
 vis_mat
-colnames(vis_mat) = c("Name","MEN1_exp","MEN1_mt_AF")
-vis_mat = reshape2::melt(vis_mat, id = c("Name","MEN1_exp","MEN1_mt_AF"))
-vis_mat$Name = factor(vis_mat$Name, levels = vis_mat$Name[order(vis_mat$MEN1_exp)] )
-
-vis_mat$MEN1_mt_AF[vis_mat$MEN1_mt_AF < .5] = 0
-vis_mat$MEN1_mt_AF[ (.5 <= vis_mat$MEN1_mt_AF) & ( vis_mat$MEN1_mt_AF < .8)] = .5
-vis_mat$MEN1_mt_AF[vis_mat$MEN1_mt_AF >= .8] = 1.0
+colnames(vis_mat) = c("Sample","Malignancy","Neurog3")
+vis_mat$Malignancy[vis_mat$Malignancy == "NEC"] = "Malignant"
+vis_mat$Malignancy[vis_mat$Malignancy != "Malignant"] = "Benign"
+vis_mat = reshape2::melt(vis_mat, id = c("Sample","Malignancy","Neurog3"))
+vis_mat$Sample = factor(vis_mat$Sample, levels = vis_mat$Sample[order(vis_mat$Neurog3)] )
 
 # Basic barplot
-label_vec = meta_data$NEC.AF8.NET[str_detect(meta_data$Histology, pattern = "Pancreatic")]
-label_vec = label_vec[order(meta_data$MEN1[str_detect(meta_data$Histology, pattern = "Pancreatic")])]
-label_vec[label_vec == "NET"] = "T"
-label_vec[label_vec != "T"] = "C"
+label_vec = vis_mat$Malignancy
+label_vec = label_vec[order(vis_mat$Neurog3)]
 col_vec = label_vec
-col_vec[col_vec == "T"] = "darkgreen"
-col_vec[col_vec != "darkgreen"] = "brown"
+col_vec[col_vec == "Benign"] = "darkgreen"
+col_vec[col_vec != "darkgreen"] = "Red"
+vis_mat["148402","Malignancy"] = "Malignant"
 
 p = ggplot( data = vis_mat)
-p = p + geom_bar(aes( x = Name, y = MEN1_exp, fill = MEN1_mt_AF ),stat="identity", colour="black")
+p = p + geom_bar(aes( x = Sample, y = Neurog3, fill = Malignancy ),stat="identity", colour="black")
 p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p = p + scale_fill_gradientn(colours = c("white","yellow","red"), breaks = c(0.0,.5,1.0))
-p = p + annotate("text", x=1:42,y = 5.7,parse=TRUE, label = label_vec, color = col_vec, size = 4.5 )
-p = p + xlab("") + ylab("MEN1 expression in log TPM") + theme(legend.position = "top")
+#p = p + scale_fill_gradientn(colours = c("white","red"), breaks = c(0.0,.5,1.0))
+p = p + scale_fill_manual(values = c("white","red"))
+#p = p + annotate("text", x=1:42,y = 5.7,parse=TRUE, label = label_vec, color = col_vec, size = 4.5 )
+p = p + xlab("") + theme(legend.position = "top") # + ylab("MEN1 expression in log TPM") 
 p
 
 # linear correlation MEN1
