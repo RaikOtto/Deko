@@ -20,19 +20,22 @@ plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
 
 ### RUN VARIANCE SELECTION FIRST
 
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Muraro.tsv",sep ="\t", header = T, stringsAsFactors = F)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+colnames(bam_data) = str_replace_all(colnames(bam_data), "\\.", "_")
 
 subtypes = meta_info[colnames(bam_data),"Subtype"]
 cands = which(!is.na(subtypes)) & (subtypes %in% c("Alpha","Beta","Gamma","Delta"))
 meta_data = meta_info[colnames(bam_data)[cands],]
 
-meta_data$Y_Subtype = as.character(subtypes[cands])
 expr_raw = bam_data[,cands]
 bam_data = bam_data[,cands]
 eset = new("ExpressionSet", exprs=as.matrix(bam_data));
 
 fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
 source("~/Deko/Scripts/Utility_script.R")
+meta_data$Y_Subtype = as.character(subtypes[cands])
+#saveRDS(fit, "~/Deko/Misc/Fit_Lawlor.rds")
+
 #meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
 
 #expr_raw = bam_data
@@ -63,34 +66,50 @@ table(stats_t$`P-value`)
 
 ###
 
+library("ROCR")
+library("caret")
+#fit = readRDS("~/Downloads/fit.RDS")
+pred_vec = meta_data$Y_Subtype == meta_data$Diff_Type
+pred_vec[pred_vec == TRUE] = 1
+pred_vec[pred_vec != 1] = 0
+pred_vec = as.double(pred_vec)
 
-expected    = paste( c(as.character( t_rel$Expected[ t_rel$Expected!= ""] )), collapse = ", ",sep = "" )
-nr_expected = length((as.character(unlist(str_split(expected,", ")))))
-print(paste(c("Expected:",nr_expected),collapse = "",sep = "") )
+#pred <- prediction(predictions = pred_vec, labels =  label_vec )
+pred <- prediction(predictions = 1-as.double(stats_t$`P-value`), labels =  pred_vec )
 
-true_positives = as.character(unlist(str_split(t_rel$True_positive,", ")))
-true_positives = true_positives[ true_positives != ""  ]
-true_positives = true_positives[ !is.na(true_positives) ]
-nr_true_positives = length(true_positives)
-print(paste(c("TP:",as.character(nr_true_positives)),collapse = "",sep = ""))
+roc.perf = performance(pred, measure = "tpr", x.measure = "fpr")
+plot(roc.perf)
+abline(a=0, b= 1)
 
-false_negatives = as.character(unlist(str_split(t_rel$False_negative,", ")))
-false_negatives = false_negatives[ false_negatives!= ""]
-false_negatives = false_negatives[ !is.na(false_negatives) ]
-nr_false_negatives = length( false_negatives )
-print(paste(c("FN: ",as.character(nr_false_negatives)),collapse = "",sep = ""))
+opt.cut = function(roc.perf, pred){
+    cut.ind = mapply(FUN=function(x, y, p){
+        d = (x - 0)^2 + (y-1)^2
+        ind = which(d == min(d))
+        c(sensitivity = y[[ind]], specificity = 1-x[[ind]], 
+          cutoff = p[[ind]])
+    }, roc.perf@x.values, roc.perf@y.values, pred@cutoffs)
+}
+print(opt.cut(roc.perf, pred))
 
-false_positives = t_rel$False_positive[t_rel$False_positive!= ""]
-nr_false_positive = length((as.character(unlist(str_split(false_positives,",")))))
-print(paste(c("FP: ",nr_false_positive),collapse = "",sep = ""))
+# View confusion matrix overall
+result <- confusionMatrix( as.factor(meta_data$Diff_Type), meta_data$Subtype)
+result 
 
-nr_true_negatives  = nrow(t_rel)**2 - nrow(t_rel) - nr_false_negatives
+# F1 value
+result$byClass[7] 
 
-Sensitivity = round(nr_true_positives / (nr_true_positives + nr_false_negatives),3) * 100
-print(paste(c("Sensitivity: ",Sensitivity),collapse = "",sep = ""))
-
-PPV = round( nr_true_positives / ( nr_true_positives + nr_false_positive ),3) * 100
-print(paste(c("PPV: ",PPV),collapse = "",sep = ""))
-
-F1 = round( (2* nr_true_positives) / ((2*nr_true_positives) + nr_false_positive + nr_false_negatives) ,3) * 100
-print(paste(c("F1: ",F1),collapse = "",sep = ""))
+f1_score <- function(predicted, expected, positive.class="1") {
+    predicted <- factor(as.character(predicted), levels=unique(as.character(expected)))
+    expected  <- as.factor(expected)
+    cm = as.matrix(table(expected, predicted))
+    
+    precision <- diag(cm) / colSums(cm)
+    recall <- diag(cm) / rowSums(cm)
+    f1 <-  ifelse(precision + recall == 0, 0, 2 * precision * recall / (precision + recall))
+    
+    #Assuming that F1 is zero when it's not possible compute it
+    f1[is.na(f1)] <- 0
+    
+    #Binary F1 or Multi-class macro-averaged F1
+    ifelse(nlevels(expected) == 2, f1[positive.class], mean(f1))
+}
