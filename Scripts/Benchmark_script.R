@@ -20,49 +20,36 @@ plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
 
 ### RUN VARIANCE SELECTION FIRST
 
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Muraro.tsv",sep ="\t", header = T, stringsAsFactors = F)
 colnames(bam_data) = str_replace_all(colnames(bam_data), "\\.", "_")
 
 subtypes = meta_info[colnames(bam_data),"Subtype"]
 cands = which(!is.na(subtypes)) & (subtypes %in% c("Alpha","Beta","Gamma","Delta"))
-meta_data = meta_info[colnames(bam_data)[cands],]
 
 expr_raw = bam_data[,cands]
 bam_data = bam_data[,cands]
 eset = new("ExpressionSet", exprs=as.matrix(bam_data));
 
-fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
-source("~/Deko/Scripts/Utility_script.R")
-meta_data$Y_Subtype = as.character(subtypes[cands])
-#saveRDS(fit, "~/Deko/Misc/Fit_Lawlor.rds")
+#fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
 
-#meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
+fit = readRDS("~/Deko/Misc/fit_baron.RDS")
+fit = readRDS("~/Deko/Misc/Fit_Muraro.rds")
+fit = readRDS("~/Deko/Misc/Fit_Segerstolpe.rds")
 
-#expr_raw = bam_data
-#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-
-pheatmap::pheatmap(
-    t(res_coeff),
-    #cor(expr),
-    annotation_col = meta_data[c("Y_Subtype","Diff_Type")],
-    #annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET")],
-    #annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET")],
-    annotation_colors = aka3,
-    annotation_legend = T,
-    treeheight_col = 0,
-    treeheight_row = 0,
-    show_colnames = F,
-    show_rownames = T,
-    #color = colorRampPalette(rev(brewer.pal(n = 7, name = "YlOrRd")))(length(breaksList)),
-    cluster_cols = T, cluster_rows = F
-)
+meta_data = meta_info[names(fit$stats[,1]),]
+#source("~/Deko/Scripts/Utility_script.R")
+meta_data$Y_Subtype = as.character(meta_data[names(fit$stats[,1]),"Subtype"])
+#saveRDS(fit, "~/Deko/Misc/Fit_Muraro.rds")
 
 table(meta_data[,c("Y_Subtype","Diff_Type")])
 
 ### p_value
 
 stats_t = as.data.frame(res_cor)
-table(stats_t$`P-value`)
+
+#stats_t_glob <<- stats_t
+stats_t_glob <<- rbind(stats_t_glob,stats_t)
+dim(stats_t_glob)
 
 ###
 
@@ -92,7 +79,7 @@ opt.cut = function(roc.perf, pred){
 print(opt.cut(roc.perf, pred))
 
 # View confusion matrix overall
-result <- confusionMatrix( as.factor(meta_data$Diff_Type), meta_data$Subtype)
+result <- confusionMatrix( as.factor(meta_data$Diff_Type), as.factor(meta_data$Subtype))
 result 
 
 # F1 value
@@ -113,3 +100,4 @@ f1_score <- function(predicted, expected, positive.class="1") {
     #Binary F1 or Multi-class macro-averaged F1
     ifelse(nlevels(expected) == 2, f1[positive.class], mean(f1))
 }
+231+1+263+2+22+8+1+18

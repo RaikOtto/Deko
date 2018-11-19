@@ -35,8 +35,8 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
-#count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv",sep ="\t", header = T, stringsAsFactors = F)
+count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
 
 colnames(count_data) = str_replace(colnames(count_data), pattern = "\\.", "_")
 colnames(count_data) = str_replace(colnames(count_data), pattern = "^X", "")
@@ -44,6 +44,7 @@ count_data[1:5,1:5]
 
 subtypes = meta_info[colnames(count_data),"Subtype"]
 names(subtypes) = meta_info[colnames(count_data),"Name"]
+
 
 marker_genes = read.table(
     "~/Deko/Misc/Baron_pancreas_marker.tsv",
@@ -58,15 +59,16 @@ pancreasMarkers = list(
     "Alpha" = marker_genes$Alpha[ (marker_genes$Alpha %in% rownames(count_data))],
     "Beta" = marker_genes$Beta[ (marker_genes$Beta != "") & (marker_genes$Beta %in% rownames(count_data))],
     "Gamma" = marker_genes$Gamma[ (marker_genes$Gamma != "")& (marker_genes$Gamma %in% rownames(count_data))],
-    "Delta" = marker_genes$Delta[ (marker_genes$Delta != "")& (marker_genes$Delta %in% rownames(count_data))]#,
+    "Delta" = marker_genes$Delta[ (marker_genes$Delta != "")& (marker_genes$Delta %in% rownames(count_data))],
     #"Ductal" = marker_genes$Ductal[ (marker_genes$Ductal != "")& (marker_genes$Ductal %in% rownames(count_data))],
     #"Acinar" = marker_genes$Acinar[ (marker_genes$Acinar != "")& (marker_genes$Acinar %in% rownames(count_data))]#,
-    #"Pancreatic_Progenitor" = marker_genes$E13.5[ (marker_genes$E13.5 != "")& (marker_genes$E13.5 %in% rownames(count_data))],
-    #"HSC" = marker_genes$HSC[(marker_genes$HSC != "")& (marker_genes$HSC %in% rownames(count_data))]
+    "Progenitor" = marker_genes$Progenitor[ (marker_genes$Progenitor != "")& (marker_genes$Progenitor %in% rownames(count_data))],
+    "HESC" = marker_genes$HESC[(marker_genes$HESC != "")& (marker_genes$HESC %in% rownames(count_data))]
     #E17.5 = names(E17.5),
 )
 
 cands = names(subtypes)[ str_to_upper( subtypes ) %in% str_to_upper( names(pancreasMarkers))]
+length(cands)
 count_data = count_data[, cands]
 subtypes = subtypes[cands]
 dim(count_data)
@@ -98,7 +100,12 @@ count_data = count_data[rowSums(count_data) >= 1,]
 dim(count_data)
 
 table(as.character(unlist(pancreasMarkers)) %in% rownames(count_data))
-table( !( as.character(unlist(pancreasMarkers)) %in% rownames(count_data) ))
+for(marker in names(pancreasMarkers)){
+    genes = as.character(unlist(pancreasMarkers[marker]))
+    genes = genes[genes %in% rownames(count_data)]
+    pancreasMarkers[marker] = list(genes)
+}
+
 
 #write.table(c_data,"~/ArtDeco/inst/Data/Expression_data/Training_test_data_six_differentiation_stages.tsv",sep = "\t", quote = F)
 #saveRDS(B,"~/ArtDeco/inst/Models/Four_differentiation_stages_Progenitor_HSC.RDS")
