@@ -154,14 +154,10 @@ for (nr_fit in 1:length(fits)){
     }
 }
 
-res_coeff = meta_data[,c("Alpha_sim_scalar","Beta_sim_scalar","Gamma_sim_scalar","Delta_sim_scalar","Prog_sim_scalar","Hsc_sim_scalar")]
-colnames(res_coeff) = c("Alpha","Beta", "Gamma","Delta","Progenitor","HESC")
-p_value_mat = meta_data[,c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Prog_sim","Hsc_sim")]
-
-maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
-meta_data$Differentiation_type = colnames(res_coeff)[maxi]
-not_sig_samples = p_value_mat[meta_data$Name,]
-for(i in 1:length(meta_data$Differentiation_type)){
-    if( p_value_mat[i,maxi[i]] == "not_sig" )
-        meta_data[i,"Differentiation_type"] = "not_sig"
-}
+#maxi = apply( res_coeff , FUN = which.max, MARGIN = 1 )
+#meta_data$Differentiation_type = colnames(res_coeff)[maxi]
+#not_sig_samples = p_value_mat[meta_data$Name,]
+#for(i in 1:length(meta_data$Differentiation_type)){
+#    if( p_value_mat[i,maxi[i]] == "not_sig" )
+#        meta_data[i,"Differentiation_type"] = "not_sig"
+#}

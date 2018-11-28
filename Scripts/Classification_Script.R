@@ -40,7 +40,7 @@ pheatmap::pheatmap(
     #t(res_coeff),
     cor(expr),
     #annotation_col = meta_data[c("HESC_sim","Progenitor_sim","Differentiated_sim_three","NEC_NET")],
-    annotation_col = meta_data[c("Hsc_sim","Progenitor_sim","Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","NEC_NET")],
+    annotation_col = meta_data[c("Hsc_sim","Progenitor_sim","Delta_sim","Gamma_sim","Beta_sim","Alpha_sim","NEC_NET")],
     #annotation_col = meta_data[c("Differentiation_type","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
