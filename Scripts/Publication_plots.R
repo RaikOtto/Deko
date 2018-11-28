@@ -238,7 +238,7 @@ g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
 
 ### survival plots ###
 
-meta_data$Diff_Type[meta_data$Diff_Type %in% c("alpha","beta","gamma","delta")]  = "Differentiated"
+meta_data$Diff_Type[meta_data$Diff_Type %in% c("Alpha","Beta","Gamma","Delta")]  = "Differentiated"
 data = meta_data[,c("Diff_Type","OS_Tissue","Zensur")]
 data = data[data$Diff_Type != "not_sig",]
 data$OS_Tissue = as.double(str_replace_all(data$OS_Tissue, ",","."))
@@ -249,7 +249,3 @@ colnames(data) = c("Deco_type","OS_Tissue","Status")
 fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$Deco_type)
 
 survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10)
-# Visualize with survminer
-
-cors = apply( expr_raw, MARGIN = 1, FUN = function(vec){return(cor(meta_data$Dec_dist, vec))})
-h = (sort(cors))[1:10]

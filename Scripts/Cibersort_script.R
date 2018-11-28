@@ -134,3 +134,12 @@ men1_plot = men1_plot + geom_bar(stat="identity", position=position_dodge(), fil
 men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 #men1_plt = men1_plot  +  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank())
 men1_plot + coord_cartesian(ylim = c(9,10.5)) + theme_bw()
+
+meta_info$Differentiated_sim = rep("",nrow(meta_info))
+meta_info[rownames(meta_data),"Differentiated_sim"] = meta_data$Differentiated_sim
+meta_info$Progenitor_sim = rep("",nrow(meta_info))
+meta_info[rownames(meta_data),"Progenitor_sim"] = meta_data$Progenitor_sim
+meta_info$HESC_sim = rep("",nrow(meta_info))
+meta_info[rownames(meta_data),"HESC_sim"] = meta_data$HESC_sim
+
+#write.table(meta_info, "~/Deko/Misc/Meta_information.tsv", sep ="\t", quote = F, row.names = F)

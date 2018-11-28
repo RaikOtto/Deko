@@ -35,7 +35,7 @@ dim(bam_data)
 #dim(bam_data)
 #bam_data[1:5,1:5]
 
-#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
 count_data = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Segerstolpe.tsv",sep ="\t", header = T, stringsAsFactors = F)
 
 colnames(count_data) = str_replace(colnames(count_data), pattern = "\\.", "_")
