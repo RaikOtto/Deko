@@ -1,26 +1,18 @@
-names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
-eislet = new("ExpressionSet", exprs = as.matrix(count_data))
-
-sub_list = str_to_lower(subtypes)
-names(sub_list) = names(subtypes)
-fData(eislet) = data.frame( sub_list  )
-pData(eislet) = data.frame( sub_list )
-names(pancreasMarkers)[!(names(pancreasMarkers) %in% sub_list)]
-
-B = bseqsc_basis(
-    eislet,
-    pancreasMarkers,
-    clusters = 'sub_list',
-    samples = colnames(exprs(eislet)),
-    ct.scale = FALSE
-)
-plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
-
 ### RUN VARIANCE SELECTION FIRST
 
 eset = new("ExpressionSet", exprs=as.matrix(bam_data));
 
-fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
+B_differentiated = readRDS("~/ArtDeco/inst/Models/Four_differentiation_stages.RDS")
+B_differentiated_six = readRDS("~/ArtDeco/inst/Models/Six_differentiation_stages.RDS")
+B_undifferentiated = readRDS("~/ArtDeco/inst/Models/Four_differentiation_stages_Progenitor_HSC.RDS")
+
+nr_permutations = 100
+fit_differentiated = bseqsc_proportions(eset, B_differentiated, verbose = FALSE, absolute = T, log = F, perm = nr_permutations)
+fit_differentiated_six = bseqsc_proportions(eset, B_differentiated_six, verbose = FALSE, absolute = T, log = F, perm = nr_permutations)
+fit_undifferentiated = bseqsc_proportions(eset, B_undifferentiated, verbose = FALSE, absolute = T, log = F, perm = nr_permutations)
+
+fits = list(fit_differentiated, fit_differentiated_six, fit_undifferentiated)
+meta_data <<- meta_info[colnames(eset),]
 
 source("~/Deko/Scripts/Utility_script.R")
 #meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
@@ -47,9 +39,9 @@ meta_data = meta_data[as.character(rownames(cor_mat)),]
 pheatmap::pheatmap(
     #t(res_coeff),
     cor(expr),
-    annotation_col = meta_data[c("HESC_sim","Progenitor_sim","Differentiated_sim_three","NEC_NET")],
-    #annotation_col = meta_data[c("Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","Ductal_sim","Acinar_sim","NEC_NET")],
-    #annotation_col = meta_data[c("Differentiated_sim","NEC_NET")],
+    #annotation_col = meta_data[c("HESC_sim","Progenitor_sim","Differentiated_sim_three","NEC_NET")],
+    annotation_col = meta_data[c("Hsc_sim","Progenitor_sim","Alpha_sim","Beta_sim","Gamma_sim","Delta_sim","NEC_NET")],
+    #annotation_col = meta_data[c("Differentiation_type","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
