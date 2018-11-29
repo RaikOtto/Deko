@@ -1,17 +1,18 @@
 library("stringr")
 library("limma")
 
-#meta_data = meta_info[colnames(count_data),]
+meta_data = meta_info[colnames(count_data),]
 meta_data[1:5,1:5]
 
-groups = meta_data$Diff_Type
-groups[groups == "hesc"] = "CASE"
+groups = meta_data$Subtype
+table(groups)
+groups[groups == "Progenitor"] = "CASE"
 groups[groups != "CASE"] = "CTRL"
 design <- model.matrix(~0 + groups)
-colnames(design) = c("hesc", "Not_hesc")
+colnames(design) = c("Progenitor", "Not_Progenitor")
 
 vfit <- lmFit(count_data,design)
-contr.matrix = makeContrasts( contrast = hesc - Not_hesc,  levels = design )
+contr.matrix = makeContrasts( contrast = Progenitor - Not_Progenitor,  levels = design )
 vfit <- contrasts.fit( vfit, contrasts = contr.matrix)
 efit <- eBayes(vfit)
 
@@ -30,4 +31,4 @@ result_t = result_t[order(result_t$Log_FC,decreasing = T),]
 #result_t$ABS_FC = abs(result_t$Log_FC)
 result_t = result_t[order(result_t$Log_FC, decreasing = T),]
 
-#write.table("~/Deko//Results/Dif_Exp/Dif_exp_hesc_vs_Not_hesc_Segerstolpe_scRNA.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
+#write.table("~/Deko/Results/Dif_Exp/Dif_exp_Progenitor_vs_Not_Progenitor_Differentiated_Lawlor_Progenitor_Stanescu_scRNA.tsv", x = result_t, sep = "\t", quote = F, row.names = F)
