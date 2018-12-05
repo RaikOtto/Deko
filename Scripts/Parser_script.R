@@ -18,6 +18,8 @@ bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normal
 rownames(bam_data) = str_to_upper( rownames( bam_data) )
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
+bam_data = bam_data[,colnames(bam_data) %in% meta_info$Name]
+dim(bam_data)
 
 meta_data <<- meta_info[colnames(bam_data),]
 eset = new("ExpressionSet", exprs=as.matrix(bam_data));
@@ -37,10 +39,3 @@ dim(bam_data)
 #bam_data = bam_data[, ( colnames(bam_data) %in% include_list )]
 #dim(bam_data)
 #bam_data[1:5,1:5]
-
-#count_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.tsv",sep ="\t", header = T, stringsAsFactors = F)
-count_data = read.table("~/Deko/Data/Human_Mouse_HSC/Differentiated_Segerstolpe_Progenitor_Stanescu_ISC.tsv",sep ="\t", header = T, stringsAsFactors = F)
-
-colnames(count_data) = str_replace(colnames(count_data), pattern = "\\.", "_")
-colnames(count_data) = str_replace(colnames(count_data), pattern = "^X", "")
-count_data[1:5,1:5]

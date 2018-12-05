@@ -15,12 +15,12 @@ colnames(expr) = colnames(expr_raw)
 rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 cor_mat = cor(expr[,]);pcr = prcomp(t(cor_mat))
 
-meta_data = meta_data[as.character(rownames(cor_mat)),]
+meta_data = meta_info[as.character(rownames(cor_mat)),]
 pheatmap::pheatmap(
     #t(res_coeff),
     cor_mat,
-    annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","NEC_NET")],
-    #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Delta_sim","Gamma_sim","Beta_sim","Alpha_sim")],
+    annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
+    #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Delta_sim","Gamma_sim","Beta_sim","Alpha_sim","Grading","Subtype")],
     #annotation_col = meta_data[c("Differentiation_type","NEC_NET")],
     annotation_colors = aka3,
     annotation_legend = T,
@@ -58,7 +58,7 @@ meta_data = meta_data[rownames(pcr$x),]
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = .75,
-    groups = meta_data[,"Hisc_sim"],
+    groups = meta_data[,"Grading"],
     ellipse = TRUE,
     circle = TRUE,
     var.axes = F#,labels = meta_data$Name
@@ -165,3 +165,8 @@ colnames(data) = c("Deco_type","OS_Tissue","Status")
 fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$Deco_type)
 
 survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10)
+
+meta_info$Differentiation_Type = rep("",nrow(meta_info))
+meta_info[rownames(meta_data),"Differentiation_Type"] = meta_data$Differentiation_type
+
+#write.table(meta_info,"~/Deko/Misc/Meta_information.tsv",sep = "\t", quote = F, row.names = F)

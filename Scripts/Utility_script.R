@@ -7,7 +7,7 @@ for (nr_fit in 1:length(fits)){
     res_coeff[ is.na(res_coeff) ] = 0.0
     res_cor[ is.na(res_cor) ] = 0.0
     
-    p_value_threshold = 0.5
+    p_value_threshold = 0.05
     not_sig_samples = rownames(res_cor)[res_cor[,"P-value"] > p_value_threshold]
     not_sig_samples
     
@@ -92,7 +92,7 @@ for (nr_fit in 1:length(fits)){
         
         maxi <<- apply(  res_coeff, FUN = which.max, MARGIN = 1 )
         meta_data$Differentiation_type = colnames(res_coeff)[maxi]
-        meta_data$Differentiation_type[ meta_data$Differentiation_type %in% c("alpha","beta","gamma","delta")] = "Differentiated"
+        meta_data$Differentiation_type[ meta_data$Differentiation_type %in% c("alpha","Alpha","beta","Beta","gamma","Gamma","delta","Gamma")] = "Differentiated"
         meta_data$Differentiation_type[ meta_data$Differentiation_type %in% c("progenitor")] = "Progenitor"
         meta_data$Differentiation_type[ meta_data$Differentiation_type %in% c("hisc")] = "HISC"
     }

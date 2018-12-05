@@ -23,7 +23,7 @@ rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 rownames(bam_data_2)[rownames(bam_data_2) == "INS1"] = "INS"
 bam_data_2[1:5,1:5]
 
-# ISC
+# HISC
 
 bam_data_3 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_3) = str_replace_all(colnames(bam_data_3) , pattern = "^X", "")
@@ -53,4 +53,5 @@ new_mat[1:5,1:5]
 
 row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN = 1))
 new_mat = new_mat[row_var >= 1,]
-#write.table(new_mat, "~/Deko/Data/Human_Mouse_HSC//Differentiated_Segerstolpe_Progenitor_Stanescu_ISC.tsv", sep ="\t", quote =F , row.names = T)
+new_mat[1:5,1:5]
+#write.table(new_mat, "~/Deko/Data/Merged_Segerstolpe_Prog_Hisc.tsv", sep ="\t", quote =F , row.names = T)
