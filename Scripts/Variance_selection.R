@@ -8,11 +8,13 @@ gene_ids = row.names(expr_raw)
 hgnc_list = as.character( mapIds(
   org.Hs.eg.db,
   keys = gene_ids,
-  #keys = "ENSG00000118271",
   column="SYMBOL",
   keytype="ENSEMBL",
   multiVals="first"
 ) )
+
+
+
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
 hgnc_list = hgnc_list[!is.na(hgnc_list)]
 hgnc_list_uni = as.character( unique(hgnc_list) )
