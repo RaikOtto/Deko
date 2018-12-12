@@ -19,10 +19,10 @@ meta_data = meta_info[as.character(rownames(cor_mat)),]
 pheatmap::pheatmap(
     #t(res_coeff),
     cor_mat,
-    annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
-    #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Delta_sim","Gamma_sim","Beta_sim","Alpha_sim","Grading","Subtype")],
+    #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
+    annotation_col = meta_data[,c("delta_similarity","gamma_similarity","beta_similarity","alpha_similarity")],
     #annotation_col = meta_data[c("Differentiation_type","NEC_NET")],
-    annotation_colors = aka3,
+    annotation_colors = Graphics_parameter,
     annotation_legend = T,
     treeheight_col = 0,
     treeheight_row = 0,

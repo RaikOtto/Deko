@@ -51,9 +51,9 @@ train_deconvolution_model = function(
     expression_training_mat = expression_training_mat[row_var != 0,col_var != 0]
     expression_training_mat = expression_training_mat[rowSums(expression_training_mat) >= 1,]
     
-    source("~/Deko/Scripts/Dif_exp_script.R")
+    source("~/Deko/Scripts/Marker_gene_identification.R")
     for( subtype in unique(subtype_vector) ){
-        Marker_Gene_List[[subtype]] = return_differentially_expressed_genes(
+        Marker_Gene_List[[subtype]] = identify_marker_genes(
             expression_training_mat,
             subtype_vector,
             subtype,

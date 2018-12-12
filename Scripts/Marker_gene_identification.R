@@ -1,7 +1,7 @@
 library("stringr")
 library("limma")
 
-return_differentially_expressed_genes = function(
+identify_marker_genes = function(
     expression_training_mat,
     label_vector,
     label,

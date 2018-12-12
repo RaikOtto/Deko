@@ -13,13 +13,28 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-bam_data = read.table("~/Deko/Data/Merged_Dif_Baron_Hisc_Haber.tsv",sep ="\t", header = T, row.names = 1)
-#bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Sadanandam_97.tsv",sep ="\t", header = T, row.names = 1)
-rownames(bam_data) = str_to_upper( rownames( bam_data) )
+bam_data = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Groetzinger_57.tsv",sep ="\t", header = T, row.names = 1)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
-bam_data = bam_data[,colnames(bam_data) %in% meta_info$Name]
-dim(bam_data)
 
 meta_data <<- meta_info[colnames(bam_data),]
+
+bam_data = bam_data[,str_to_lower(meta_data$Subtype) %in% c("alpha","beta","gamma","delta","acinar","ductal")]
+meta_data <<- meta_info[colnames(bam_data),]
 subtype_vector = str_to_lower(meta_data$Subtype)
+table(subtype_vector)
+sum(table(subtype_vector))
+dim(bam_data)
+
+expression_training_mat = bam_data
+
+#meta_data = Determine_differentiation_stage("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv")
+meta_data = Determine_differentiation_stage(bam_Data)
+
+visualization_data = read.table("~/Deko/Data/Visualization_PANnen.tsv", sep ="\t", stringsAsFactors = F)
+colnames(expression_data) = str_replace_all(colnames(expression_data),"^X","")
+expression_data[1:5,1:5]
+ARTDECO::create_heatmap_differentiation_stages(
+    expression_data = visualization_data,
+    
+)
