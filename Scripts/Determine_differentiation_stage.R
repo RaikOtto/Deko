@@ -1,3 +1,4 @@
+model_path = "~/Deko/Models/Alpha_Beta_Gamma_Delta_Lawlor.RDS"
 
 ### RUN VARIANCE SELECTION FIRST
 
@@ -42,5 +43,5 @@ eset = new("ExpressionSet", exprs=as.matrix(bam_data));
 
 fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
 
-source("~/Deko/Scripts/Utility_script.R")
+source("~/Deko/Scripts/Utility.R")
 #meta_data$Diff_Type =  c("Differentiated","Progenitor","HSC")[maxi]
