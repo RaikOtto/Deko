@@ -100,4 +100,131 @@ f1_score <- function(predicted, expected, positive.class="1") {
     #Binary F1 or Multi-class macro-averaged F1
     ifelse(nlevels(expected) == 2, f1[positive.class], mean(f1))
 }
-231+1+263+2+22+8+1+18
+
+###
+library(DeconRNASeq)
+library(stringr)
+
+basis_t = read.table("~/Deko/Data/Merged_Dif_Baron_Prog_Stanescu_Hisc_Haber.tsv",sep ="\t",stringsAsFactors = F)
+basis_t = read.table("~/Deko/Data/Merge_mat_HSC_Stanescu_Baron.tsv",sep ="\t",stringsAsFactors = F)
+colnames(basis_t) = str_replace_all(colnames(basis_t),pattern = "\\.","_")
+meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+meta_data = meta_info[colnames(basis_t),]
+subtypes = meta_data$Subtype
+table(subtypes)
+
+dim(basis_t)
+#basis_t = basis_t[,which(subtypes %in% c("Alpha","Beta","Gamma","Delta"))]
+dim(basis_t)
+
+rownames(meta_info) = meta_info$Name
+meta_data = meta_info[colnames(basis_t),]
+basis_t = basis_t[,!is.na(meta_data$Subtype)]
+subtypes = meta_data$Subtype[!is.na(meta_data$Subtype)]
+table(subtypes)
+length(subtypes)
+dim(basis_t)
+
+signature_genes = c()
+for ( subtype in unique(subtypes)){
+    signature_genes = c(signature_genes,
+        identify_marker_genes(
+            expression_training_mat = basis_t,
+            subtype_vector = subtypes,
+            subtype = subtype,
+            nr_marker_genes = 100
+        )
+    )
+}
+
+basis_t = basis_t = basis_t[signature_genes,]
+
+signatures = apply(basis_t,MARGIN=1,FUN = function(vec){
+    measurements = aggregate(
+        as.double(vec),
+        by = list(subtypes),
+        FUN = mean
+    )
+    return(measurements[,2])
+    }
+)
+signatures = as.data.frame(t(signatures))
+colnames(signatures) = levels(factor(subtypes))
+signatures[1:5,]
+
+query_data = read.table("~/Deko/Data/PANnen_Test_Data.tsv",sep ="\t",stringsAsFactors = F,header = T,row.names= 1)
+query_data[1:5,1:5]
+
+res = DeconRNASeq(
+    query_data,
+    signatures,
+    proportions = NULL,
+    checksig = FALSE,
+    known.prop = FALSE,
+    use.scale = TRUE,
+    fig = FALSE
+)
+
+deco_res = res$out.all
+rownames(deco_res) = colnames(query_data)
+
+deco_res = as.data.frame(deco_res)
+deco_res = apply(deco_res, MARGIN = 1, FUN = function(vec){return(log(vec+1))})
+annotation_data = t(deco_res)
+annotation_data[1:5,]
+old_colnames = colnames(annotation_data)
+
+max_val = apply(annotation_data, MARGIN = 1, FUN = which.max)
+
+#colnames(annotation_data) = c("alpha_similarity","beta_similarity","delta_similarity","gamma_similarity")
+colnames(annotation_data) = c("alpha_similarity","beta_similarity","delta_similarity","gamma_similarity","stem_cell_similaritry","progenitor_simimilarity")
+
+annotation_data = as.data.frame(annotation_data)
+Differentiatedness = apply(annotation_data[,c("alpha_similarity","beta_similarity","delta_similarity","gamma_similarity")],MARGIN = 1, FUN = sum)
+annotation_data$Differentiatedness = Differentiatedness
+
+annotation_data_scaled = t(apply(annotation_data, FUN = scale, MARGIN = 1))
+colnames(annotation_data_scaled) = colnames(annotation_data)
+
+annotation_data[,"Max_sim"] = rep("",nrow(annotation_data))
+annotation_data[,"Max_sim"] = old_colnames[max_val]
+
+###
+
+transcriptome_file_path = system.file(
+    "/Data/Expression_data/Visualization_PANnen.tsv",
+    package="artdeco")
+baseline = "relative"
+deconvolution_results = deconvolution_results_relative
+Graphics_parameters = c("")
+meta_data = deconvolution_results
+    
+create_heatmap_differentiation_stages(
+    visualization_data_path,
+    deconvolution_results_relative
+)
+
+annotation_columns = c(
+    "Differentiation_Stages_Subtypes",
+    "Differentiation_Stages_Aggregated",
+    "Differentiatedness"
+)
+
+create_heatmap_differentiation_stages(
+    visualization_data_path,
+    deconvolution_results_absolute
+)
+
+pheatmap::pheatmap(
+    correlation_matrix,
+    annotation_col = annotation_data,
+    annotation_colors = Graphics_parameters,
+    annotation_legend = TRUE,
+    treeheight_col = 0,
+    treeheight_row = 0,
+    show_colnames = TRUE,
+    show_rownames = FALSE
+)
