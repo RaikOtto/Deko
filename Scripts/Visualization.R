@@ -9,20 +9,44 @@ genes_of_interest_hgnc_t$V1
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#expr_raw = read.table("~/Deko/Data/Visualization_PANnen.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw))
 colnames(expr) = colnames(expr_raw)
 rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 cor_mat = cor(expr[,]);pcr = prcomp(t(cor_mat))
 
-meta_data = meta_info[as.character(rownames(cor_mat)),]
+#meta_data = meta_info[as.character(rownames(cor_mat)),]
+
+vis_mat = meta_data[,c(
+    "Differentiated_similarity",
+    "Progenitor_similarity",
+    "Stem_cell_similarity"
+)]
+vis_mat = meta_data[,c(
+    "alpha_similarity_relative",
+    "beta_similarity_relative",
+    "gamma_similarity_relative",
+    "delta_similarity_relative",
+    "progenitor_similarity_relative",
+    "stem_cell_similarity_relative"
+)]
+vis_mat = meta_data[,c(
+    "alpha_similarity_absolute",
+    "beta_similarity_absolute",
+    "gamma_similarity_absolute",
+    "delta_similarity_absolute",
+    "progenitor_similarity_absolute",
+    "stem_cell_similarity_absolute"
+)]
+colnames(vis_mat) = str_replace(colnames(vis_mat),pattern = "(_absolute)|(_relative)","")
+
 pheatmap::pheatmap(
     #t(res_coeff),
     cor_mat,
     #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
-    annotation_col = meta_data[,c("delta_similarity","gamma_similarity","beta_similarity","alpha_similarity")],
-    #annotation_col = meta_data[c("Differentiation_type","NEC_NET")],
-    annotation_colors = Graphics_parameter,
+    annotation_col = vis_mat,
+    annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
     treeheight_row = 0,

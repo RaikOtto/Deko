@@ -1,22 +1,9 @@
-library("org.Hs.eg.db")
-### hgnc
+expr_raw = bam_data_1
 
-expr_raw = bam_data
-
-gene_ids = row.names(expr_raw)
-
-hgnc_list = as.character( mapIds(
-  org.Hs.eg.db,
-  keys = gene_ids,
-  column="SYMBOL",
-  keytype="ENSEMBL",
-  multiVals="first"
-) )
-
-
-
+hgnc_list = row.names(expr_raw)
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
 hgnc_list = hgnc_list[!is.na(hgnc_list)]
+hgnc_list = str_replace_all(rownames(expr_raw),pattern= "(\\.)|(-)|(_)","")
 hgnc_list_uni = as.character( unique(hgnc_list) )
 
 max_list = as.integer( sapply( hgnc_list_uni, FUN = function(gene){
@@ -35,7 +22,5 @@ rownames(expr_raw) = hgnc_list[max_list]
 dim(expr_raw)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 rownames(expr_raw) = str_to_upper(rownames(expr_raw))
-expr_raw[1:5,1:5]
 
-bam_data = expr_raw
-#write.table(expr_raw,"~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Zhang.tsv",sep="\t",quote =F , row.names = T)
+bam_data_1 = expr_raw

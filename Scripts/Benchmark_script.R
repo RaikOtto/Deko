@@ -20,7 +20,7 @@ plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
 
 ### RUN VARIANCE SELECTION FIRST
 
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Muraro.tsv",sep ="\t", header = T, stringsAsFactors = F)
+bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, stringsAsFactors = F)
 colnames(bam_data) = str_replace_all(colnames(bam_data), "\\.", "_")
 
 subtypes = meta_info[colnames(bam_data),"Subtype"]
@@ -112,7 +112,7 @@ meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-meta_data = meta_info[colnames(basis_t),]
+meta_data = meta_info[colnames(bam_data),]
 subtypes = meta_data$Subtype
 table(subtypes)
 

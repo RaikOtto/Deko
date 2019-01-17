@@ -1,3 +1,5 @@
+library(bseqsc)
+
 expression_training_mat = read.table(
     "~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Lawlor.Alpha.Beta.Gamma.Delta.tsv",
     sep ="\t",
@@ -40,7 +42,7 @@ print("Finished extracting marker genes for subtypes")
 
 training_mat_bseq = new(
     "ExpressionSet",
-    exprs = as.matrix(expression_training_mat)
+    exprs = as.matrix(bam_data_1)
 )
 fData(training_mat_bseq) = data.frame( subtype_vector )
 pData(training_mat_bseq) = data.frame( subtype_vector )
@@ -49,7 +51,8 @@ Basis = bseqsc_basis(
     training_mat_bseq,
     Marker_Gene_List,
     clusters = 'subtype_vector',
-    samples = colnames(exprs(training_mat_bseq)),
+    samples = colnames(training_mat_bseq),
+    log = F,
     ct.scale = FALSE
 )
 
