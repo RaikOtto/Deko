@@ -2,8 +2,8 @@ library("stringr")
 
 # scRNA integration
 
-#bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human_2.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
-bam_data_1 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Segerstolpe.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+#bam_data_1 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 bam_data_1[1:5,1:5]
@@ -13,19 +13,18 @@ dim(bam_data_1)
 # variance selection
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-
 rownames(meta_info) = meta_info$Name
 meta_data = meta_info[colnames(bam_data_1),]
-meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
-#bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
+#meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
+bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
 
 meta_data = meta_info[colnames(bam_data_1),]
 #rownames(bam_data_1) = str_replace_all(rownames(bam_data_1),pattern= "(\\.)|(-)|(_)","")
 dim(bam_data_1)
 table(meta_data$Subtype)
-meta_data$Subtype = "HISC"
+#meta_data$Subtype = "HISC"
 
-all_subs = which(meta_data$Subtype == "Beta")
+all_subs = which(meta_data$Subtype == "Ductal")
 red_subs = sample(all_subs,300, replace = F)
 exclude = all_subs[!( all_subs %in% red_subs)]
 index = 1:ncol(bam_data_1)
@@ -63,9 +62,9 @@ length(merge_genes)
 
 new_mat = as.data.frame(
     cbind(
-        bam_data_1[merge_genes,],
-        bam_data_2[merge_genes,],
-        bam_data_3[merge_genes,]
+        bam_data_1[merge_genes,]#,
+#        bam_data_2[merge_genes,],
+#        bam_data_3[merge_genes,]
     )
 )
 rownames(new_mat) = merge_genes
@@ -85,5 +84,5 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron_Progenitor_Stanescu_HESC_Yan.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
 #write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron_full.tsv", sep ="\t", quote =F , row.names = T)

@@ -74,12 +74,13 @@ colnames(t) = str_replace_all(colnames(t),pattern ="\\.","_")
 colnames(t) = str_replace_all(colnames(t),pattern ="^X","")
 meta_data = meta_info[colnames(t),]
 subtype_vector = str_to_lower(meta_data$Subtype)
+table(subtype_vector)
 
 add_deconvolution_training_model(
     transcriptome_data_path = scRNA_file_path,
     model_name = model_name,
     str_to_lower(subtype_vector),
     training_p_value_threshold = 0.05,
-    training_nr_permutations = 100,
-    training_nr_marker_genes = 100
+    training_nr_permutations = 0,
+    training_nr_marker_genes = 800
 )
