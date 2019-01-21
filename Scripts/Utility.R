@@ -1,5 +1,5 @@
 
-prepare_result_matrix_relative = function(
+prepare_result_matrix_freestyle = function(
     meta_data,
     scale_values = TRUE,
     p_value_threshold = 0.05

@@ -27,42 +27,23 @@ colnames(bam_data) = str_replace_all(colnames(bam_data), "^X", "")
 eset = new("ExpressionSet", exprs=as.matrix(bam_data[,]));
 
 transcriptome_file_path = "~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv"
-
-B_differentiated = readRDS("~/artdeco/inst/Models/Alpha_Beta_Gamma_Delta_Segerstolpe.RDS")[[1]]
-#B_undifferentiated = readRDS("~/artdeco/inst/Models/Progenitor_Stanescu_HESC_Yan_HISC_Haber.RDS")[[1]]
-B_undifferentiated = readRDS("~/artdeco/inst/Models/Progenitor_Stanescu_HESC_Yan.RDS")[[1]]
+#transcriptome_file_path = "~/Deko/Data/TPMs.81_Samples.Groetzinger_Scarpa.tsv"
 
 nr_permutations = 200
-fit_differentiated = bseqsc_proportions(eset, B_differentiated, verbose = TRUE, absolute = T, perm = nr_permutations, log = F)
-#fit_differentiated_six = bseqsc_proportions(eset, B_differentiated_six, verbose = FALSE, absolute = T, log = F, perm = nr_permutations)
-fit_undifferentiated = bseqsc_proportions(
-    eset,
-    B_undifferentiated,
-    verbose = TRUE,
-    absolute = T,
-    log = F,
-    perm = nr_permutations
+Determine_differentiation_stage(
+    transcriptome_file_path
 )
 
-meta_data = meta_info[colnames(exprs(eset)),c("NEC_NET","OS_Tissue")]
-fits_coeff =list(fit_differentiated$coefficients,fit_undifferentiated$coefficients)
-fits_stats =list(fit_differentiated$stats,fit_undifferentiated$stats)
-
-meta_data = prepare_result_matrix_freestyle(
-    meta_data,
-    scale_values = F,
-    p_value_threshold = 0.03
-)
-
-vis_mat = meta_data[,c(
+vis_mat = deconvolution_result[,c(
     "Differentiatedness",
     "Progenitor_similarity",
     "HISC_similarity",
+    #"HESC_similarity",
     "Differentiation_score",
-    "De_differentiation_score"
+    "De_differentiation_score",
+    "Correlation_de_differentiated"
     #"HESC_similarity",
 )]
-
 pheatmap::pheatmap(
     #t(res_coeff),
     cor_mat,
@@ -93,12 +74,14 @@ quantile_normalisation <- function(df){
 }
 
 meta_data = deconvolution_result_relative
-meta_data = deconvolution_result_absolute
-vis_mat = meta_data[,c(
+meta_data = meta_info[colnames((bam_data)),]
+vis_mat = deconvolution_result_absolute
+vis_mat = deconvolution_result_absolute[,c(
     "Alpha_similarity",
     "Beta_similarity",
     "Gamma_similarity",
     "Delta_similarity",
-    "Differentiatedness",
     "Differentiation_score"
 )]
+vis_mat$NEC_NET = meta_info[colnames(bam_data),"NEC_NET"]
+vis_mat$Location = meta_info[colnames(bam_data),"Location"]

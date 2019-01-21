@@ -7,13 +7,11 @@ aka3 = list(
         Liver = "Darkgreen",
         CUP = "pink"),
     Deco_type = c(alpha = "Blue",beta = "Yellow",gamma = "Orange",delta = "Purple", e13.5 = "Brown", hsc = "white"),
-    NEC_NET = c(NEC= "red", NET = "blue", "NA" = "white"),
+    NEC_NET = c(NEC= "red", NET = "blue", Unknown = "white"),
     Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
     MKI67 = c(high = "White", medium = "gray", low = "black"),
-    INS = c(high = "White", low = "yellow"),
     Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
     Deco_similarity = c(low = "Red", medium = "Yellow", high = "Green"),
-    ImmuneScore = c(high = "White", medium = "gray", low = "Black"),
     StromalScore = c(high = "White", medium = "gray", low = "Black"),
     Alpha_similarity = c(low = "white", high = "blue",not_sig = "gray"),
     Beta_similarity = c(low = "white", high = "darkgreen",not_sig = "gray"),
@@ -30,7 +28,6 @@ aka3 = list(
     Functionality = c( Unknown = "White",Functional = "green", Non_Functional="red"),
     Grading = c( G1 = "Green",G2 = "Yellow", G3 = "Red", G0 = "white"),
     Subtype_Sadanandam = c(Norm = "darkgreen", Insulinoma = "Blue", MLP = "Orange", Intermediate = "brown", Unknown = "White"),
-    #Differentiation_type = c( Differentiated = "green", Progenitor = "orange", HESC = "brown", not_sig = "gray")
     Differentiation_type = c( Alpha = "blue", Beta ="green", Gamma = "Orange", Delta = "Purple", Progenitor = "Yellow", HESC = "brown", not_sig = "gray"),
     De_differentiatedness = c(low = "red", medium = "white", high = "green"),
     Differentiatedness = c(low = "white", high = "darkgreen"),
@@ -41,5 +38,12 @@ aka3 = list(
         stem_cell = "red",
         progenitor     = "orange",
         Not_significant= "gray"
-    )
+    ),Location = c(
+        Primary = "red",
+        Liver_Met = "Darkgreen",
+        Control = "White",
+        Lymph_node_Met = "Yellow",
+        Peritoneum_Met = "Black",
+        Spleen_Met = "Cyan",
+        Lung_Met = "Blue")
 )
