@@ -45,7 +45,7 @@ pheatmap::pheatmap(
     #t(res_coeff),
     cor_mat,
     #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
-    annotation_col = vis_mat,
+    annotation_col = deconvolution_results["Subtype"],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -179,18 +179,15 @@ g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
 ### survival plots ###
 
 #meta_data$Diff_Type[meta_data$Diff_Type %in% c("Alpha","Beta","Gamma","Delta")]  = "Differentiated"
-meta_data[rownames(vis_mat),"Differentiatedness"] = vis_mat$Differentiatedness
-meta_data$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
-data = meta_data[,c("Differentiatedness","OS_Tissue","Zensur")]
+
+meta_data = meta_info[rownames(vis_mat),]
+vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
+vis_mat$Zensur = meta_data$Zensur
+data = vis_mat[,c("hisc","OS_Tissue","Zensur")]
 data = data[ !is.na(data$OS_Tissue),]
 
-colnames(data) = c("Differentiatedness","OS_Tissue","Status")
+colnames(data) = c("hisc_similarity","OS_Tissue","Status")
 
-fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$Differentiatedness)
+fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$hisc_similarity)
 
 survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10)
-
-meta_info$Differentiation_Type = rep("",nrow(meta_info))
-meta_info[rownames(meta_data),"Differentiation_Type"] = meta_data$Differentiation_type
-
-#write.table(meta_info,"~/Deko/Misc/Meta_information.tsv",sep = "\t", quote = F, row.names = F)

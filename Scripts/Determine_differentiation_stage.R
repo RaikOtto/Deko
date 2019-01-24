@@ -65,7 +65,7 @@ pheatmap::pheatmap(
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Progenitor_Stanescu_HESC_Yan.tsv"
+scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron_Progenitor.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 

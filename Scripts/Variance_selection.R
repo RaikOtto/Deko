@@ -1,4 +1,4 @@
-expr_raw = bam_data_1
+expr_raw = bam_data_2
 
 hgnc_list = row.names(expr_raw)
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
@@ -23,4 +23,4 @@ dim(expr_raw)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 rownames(expr_raw) = str_to_upper(rownames(expr_raw))
 
-bam_data_1 = expr_raw
+bam_data_2 = expr_raw

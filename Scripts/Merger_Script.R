@@ -2,7 +2,7 @@ library("stringr")
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Segerstolpe.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human_2.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 #bam_data_1 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
@@ -24,7 +24,7 @@ dim(bam_data_1)
 table(meta_data$Subtype)
 #meta_data$Subtype = "HISC"
 
-all_subs = which(meta_data$Subtype == "Ductal")
+all_subs = which(meta_data$Subtype == "Delta")
 red_subs = sample(all_subs,300, replace = F)
 exclude = all_subs[!( all_subs %in% red_subs)]
 index = 1:ncol(bam_data_1)
@@ -33,7 +33,7 @@ bam_data_1 = bam_data_1[,index]
 
 # Stanescu
 
-bam_data_2 = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Stanescu.tsv" , sep ="\t" ,header = T, stringsAsFactors = F )
+bam_data_2 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, stringsAsFactors = F ,row.names = 1)
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 
 #rownames(bam_data_2) = str_replace_all(rownames(bam_data_2),pattern= "(\\.)|(-)|(_)","")
@@ -62,9 +62,9 @@ length(merge_genes)
 
 new_mat = as.data.frame(
     cbind(
-        bam_data_1[merge_genes,]#,
-#        bam_data_2[merge_genes,],
-#        bam_data_3[merge_genes,]
+#        bam_data_1[merge_genes,],
+        bam_data_2[merge_genes,],
+        bam_data_3[merge_genes,]
     )
 )
 rownames(new_mat) = merge_genes
@@ -84,5 +84,5 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron_full.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductyl_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat, "~/Deko/Data/HISC_HESC.tsv", sep ="\t", quote =F , row.names = T)
