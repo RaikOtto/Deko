@@ -3,8 +3,10 @@ expr_raw = bam_data_2
 hgnc_list = row.names(expr_raw)
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
 hgnc_list = hgnc_list[!is.na(hgnc_list)]
-hgnc_list = str_replace_all(rownames(expr_raw),pattern= "(\\.)|(-)|(_)","")
+#hgnc_list = str_replace_all( hgnc_list,pattern= "(\\.)|(-)|(_)","")
+hgnc_list = str_to_upper(hgnc_list)
 hgnc_list_uni = as.character( unique(hgnc_list) )
+hgnc_list_uni = str_to_upper(hgnc_list_uni)
 
 max_list = as.integer( sapply( hgnc_list_uni, FUN = function(gene){
   

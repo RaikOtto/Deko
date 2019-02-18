@@ -24,12 +24,12 @@ vis_mat = meta_data[,c(
     "Stem_cell_similarity"
 )]
 vis_mat = meta_data[,c(
-    "alpha_similarity_relative",
-    "beta_similarity_relative",
-    "gamma_similarity_relative",
-    "delta_similarity_relative",
-    "progenitor_similarity_relative",
-    "stem_cell_similarity_relative"
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "acinar",
+    "ductal"
 )]
 vis_mat = meta_data[,c(
     "alpha_similarity_absolute",
@@ -42,10 +42,8 @@ vis_mat = meta_data[,c(
 colnames(vis_mat) = str_replace(colnames(vis_mat),pattern = "(_absolute)|(_relative)","")
 
 pheatmap::pheatmap(
-    #t(res_coeff),
     cor_mat,
-    #annotation_col = meta_data[c("Hisc_sim","Prog_sim","Differentiated_sim","Grading","NEC_NET")],
-    annotation_col = deconvolution_results["Subtype"],
+    annotation_col = vis_mat[,c("alpha","beta","gamma","delta","acinar","ductal")],
     annotation_colors = aka3,
     annotation_legend = T,
     treeheight_col = 0,
@@ -182,11 +180,14 @@ g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
 
 meta_data = meta_info[rownames(vis_mat),]
 vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
+vis_mat$OS_Tissue[is.na(vis_mat$OS_Tissue)] = 1
+vis_mat$Grading = meta_data$Grading
 vis_mat$Zensur = meta_data$Zensur
+
 data = vis_mat[,c("hisc","OS_Tissue","Zensur")]
 data = data[ !is.na(data$OS_Tissue),]
-
 colnames(data) = c("hisc_similarity","OS_Tissue","Status")
+data = data[data$hisc_similarity!="not_significant",]
 
 fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$hisc_similarity)
 
