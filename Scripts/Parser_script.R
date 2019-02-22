@@ -1,6 +1,6 @@
-library("bseqsc")
 library("stringr")
-library("grid")     ## Need to attach (and not just load) grid package
+library("biomaRt")
+library("org.Hs.eg.db")
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
@@ -10,33 +10,61 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 ###
 
-bam_data = read.table(
-    "~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",
-    sep ="\t",
-    header = T
+input_files = list.files("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/Raw/",full.names = T,pattern = ".txt")
+input_files_names = list.files("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/Raw/",full.names = F, pattern = ".txt")
+input_files_names = str_replace_all(input_files_names,pattern = "_counts.txt","")
+
+i_file = read.table(input_files[1],sep="\t",row.names = 1, header = T, stringsAsFactors = F)
+i_file = as.data.frame(i_file[,1])
+
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+entrez = rownames(i_file)
+hgnc_entrez_mapping = getBM(
+    attributes = c('entrezgene', 'hgnc_symbol'), 
+    filters = 'entrezgene', 
+    values = entrez, 
+    mart = ensembl
 )
-colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
-colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
-bam_data[1:5,1:5]
 
-meta_data <<- meta_info[colnames(bam_data),]
-#write.table(expr,"~/Downloads/Visualization_PANnen.tsv", sep = "\t", quote = F, row.names = T)
+hgnc_entrez_mapping[1:100,]
+mapping = match(
+    as.integer(rownames(i_file)),
+    as.integer(hgnc_entrez_mapping[,1]),
+    nomatch = 0
+)
 
-# training stuff
-#add_deconvolution_training_model(training_data = "~/Deko/Data/Merged_Segerstolpe_Prog_Hisc.tsv",model_name = "Alpha_Beta_Gamma_Delta_SSegerstolpe_Progenitor_Stanescu_Hisc_Haber")
+hgnc_list = str_to_upper(hgnc_entrez_mapping[
+    mapping,
+    2
+])
 
-meta_data$Subtype = str_to_lower(meta_data$Subtype)
-meta_data$Subtype[ meta_data$Subtype == "hisc"] = "hsc"
-table(meta_data$Subtype)
-bam_data = bam_data[,str_to_lower(meta_data$Subtype) %in% c("alpha","beta","gamma","delta","progenitor","hsc")]
-meta_data <<- meta_info[colnames(bam_data),]
-meta_data$Subtype = str_to_lower(meta_data$Subtype)
-meta_data$Subtype[ meta_data$Subtype == "hisc"] = "hsc"
-subtype_vector = str_to_lower(meta_data$Subtype)
-table(subtype_vector)
-sum(table(subtype_vector))
-dim(bam_data)
+for( i_file_next in input_files[2:length(input_files)]){
+    i_file_new = read.table(i_file_next,sep="\t",row.names = 1, header = T, stringsAsFactors = F)
+    #print(i_file_new[10309,])
+    i_file = cbind(
+        i_file,
+        as.integer(i_file_new[,1])
+    )
+}
+dim(i_file)
+summary(as.integer(i_file[10309,]))
+i_file = as.matrix(i_file,ncol=212)
+colnames(i_file) = input_files_names
+i_file = as.data.frame(i_file)
+i_file[1:5,1:5]
+#i_file_save = i_file
 
-expression_training_mat = bam_data
+# variance selection
 
+as.integer(i_file[rownames(i_file) == "INS",])
+summary(as.integer(i_file[rownames(i_file) == "INS",]))
 
+row_names = rownames(i_file)
+col_names = colnames(i_file)
+i_file = matrix(as.integer(as.character(unlist(i_file))),ncol=length(col_names))
+
+colnames(i_file) = col_names
+rownames(i_file) = row_names
+i_file[1:5,1:5]
+
+write.table(i_file,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",sep ="\t",quote = F, row.names = T)

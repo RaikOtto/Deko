@@ -212,3 +212,89 @@ pheatmap::pheatmap(
     show_colnames = TRUE,
     show_rownames = FALSE
 )
+
+###
+
+library("ggplot2")
+
+res_hisc_1
+res_hisc_2
+
+res_both_1
+res_both_2
+
+res_hisc_2$Var.prop
+res_both_2$Var.prop
+
+# deconvolution_results_baron_wiedemann = deconvolution_results
+# deconvolution_results_GSE73338_full = deconvolution_results
+
+vis_mat
+data_mat = reshape2::melt(deconvolution_results )
+
+data_mat = deconvolution_results[,c("Grading","MKI67")]
+data_mat$Sample = rownames(data_mat)
+data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$MKI67)] )
+data_mat$MKI67 = data_mat$MKI67 + 1
+
+color_vec = data_mat$Grading
+color_vec[color_vec == "G1"] = "green"
+color_vec[color_vec == "G2"] = "yellow"
+color_vec[color_vec == "G3"] = "red"
+color_vec = color_vec[order(data_mat$MKI67)]
+
+men1_plot = ggplot( data_mat, aes ( x = Sample,  y = MKI67))
+men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
+men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+men1_plot = men1_plot + scale_fill_manual( values = c("darkgreen","yellow","red"))
+men1_plot
+
+ggplot(data_mat,aes( x = Grading, y = MKI67, fill = Grading )) + geom_boxplot( )
+
+### ratio
+
+deconvolution_results$Ratio_numeric = as.double(vis_mat[rownames(deconvolution_results),"Ratio_numeric"])
+data_mat = deconvolution_results[,c("Grading","Ratio_numeric")]
+colnames(data_mat) = c("Grading","Gene_Expression")
+data_mat$Sample = rownames(data_mat)
+data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$Gene_Expression)] )
+#data_mat$Gene_Expression = data_mat$Gene_Expression + 1
+
+color_vec = data_mat$Grading
+color_vec[color_vec == "G1"] = "green"
+color_vec[color_vec == "G2"] = "yellow"
+color_vec[color_vec == "G3"] = "red"
+color_vec = color_vec[order(data_mat$Gene_Expression)]
+
+men1_plot = ggplot( data_mat_2, aes ( x = Sample,  y = Gene_Expression))
+men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
+men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+men1_plot + scale_fill_manual( values = c("darkgreen","red"))
+
+bin_width = 10
+data_mat_2 = data_mat
+data_mat_2$Grading[data_mat_2$Grading %in% c("G1","G2")] = "G1_G2"
+ggplot(data_mat_2,aes( x = Grading, y = Gene_Expression, fill = Grading )) + geom_boxplot( )
+
+    geom_histogram(data=subset(data_mat,Grading == 'G3'),fill = "red", alpha = 0.5,position="dodge", bins = bin_width) +
+    geom_histogram(data=subset(data_mat,Grading == 'G2'),fill = "yellow", alpha = 0.5,position="dodge", bins = bin_width) +
+    geom_histogram(data=subset(data_mat,Grading == 'G1'),fill = "green", alpha = 0.5,position="dodge", bins = bin_width)
+
+
+### ROC curve
+    
+#deconvolution_results_wiedenmann_scarpa = deconvolution_results
+#deconvolution_results_GSE73338 = deconvolution_results
+    
+library("ROCR")
+
+target_labels = deconvolution_results$Grading
+target_labels[target_labels %in% c("G1","G2")] = 0
+target_labels[target_labels %in% c("G3")] = 1
+prediction_vector = deconvolution_results$Ratio_numeric
+prediction_vector = prediction_vector - min(prediction_vector)
+prediction_vector = prediction_vector / max(prediction_vector)
+
+pred <- prediction(prediction_vector, target_labels)
+perf <- performance(pred, measure = "tpr", x.measure = "fpr") 
+plot(perf, col=rainbow(10))
