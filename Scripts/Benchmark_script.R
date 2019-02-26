@@ -1,300 +1,274 @@
-names(pancreasMarkers) = str_to_lower(names(pancreasMarkers))
-eislet = new("ExpressionSet", exprs = as.matrix(count_data))
+### benchmark runs
 
-sub_list = str_to_lower(subtypes)
-names(sub_list) = names(subtypes)
-fData(eislet) = data.frame( sub_list  )
-pData(eislet) = data.frame( sub_list )
-
-B = readRDS("~/ArtDeco/inst/Models/Four_differentiation_stages.RDS")
-"
-B = bseqsc_basis(
-eislet,
-pancreasMarkers,
-clusters = 'sub_list',
-samples = colnames(exprs(eislet)),
-ct.scale = FALSE
-)
-plotBasis(B, pancreasMarkers, Colv = NA, Rowv = NA, layout = '_', col = 'Blues')
-"
-
-### RUN VARIANCE SELECTION FIRST
-
-bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", header = T, stringsAsFactors = F)
-colnames(bam_data) = str_replace_all(colnames(bam_data), "\\.", "_")
-
-subtypes = meta_info[colnames(bam_data),"Subtype"]
-cands = which(!is.na(subtypes)) & (subtypes %in% c("Alpha","Beta","Gamma","Delta"))
-
-expr_raw = bam_data[,cands]
-bam_data = bam_data[,cands]
-eset = new("ExpressionSet", exprs=as.matrix(bam_data));
-
-#fit = bseqsc_proportions(eset, B, verbose = TRUE, absolute = T, log = F, perm = 100)
-
-fit = readRDS("~/Deko/Misc/fit_baron.RDS")
-fit = readRDS("~/Deko/Misc/Fit_Muraro.rds")
-fit = readRDS("~/Deko/Misc/Fit_Segerstolpe.rds")
-
-meta_data = meta_info[names(fit$stats[,1]),]
-#source("~/Deko/Scripts/Utility_script.R")
-meta_data$Y_Subtype = as.character(meta_data[names(fit$stats[,1]),"Subtype"])
-#saveRDS(fit, "~/Deko/Misc/Fit_Muraro.rds")
-
-table(meta_data[,c("Y_Subtype","Diff_Type")])
-
-### p_value
-
-stats_t = as.data.frame(res_cor)
-
-#stats_t_glob <<- stats_t
-stats_t_glob <<- rbind(stats_t_glob,stats_t)
-dim(stats_t_glob)
-
-###
-
-library("ROCR")
-library("caret")
-#fit = readRDS("~/Downloads/fit.RDS")
-pred_vec = meta_data$Y_Subtype == meta_data$Diff_Type
-pred_vec[pred_vec == TRUE] = 1
-pred_vec[pred_vec != 1] = 0
-pred_vec = as.double(pred_vec)
-
-#pred <- prediction(predictions = pred_vec, labels =  label_vec )
-pred <- prediction(predictions = 1-as.double(stats_t$`P-value`), labels =  pred_vec )
-
-roc.perf = performance(pred, measure = "tpr", x.measure = "fpr")
-plot(roc.perf)
-abline(a=0, b= 1)
-
-opt.cut = function(roc.perf, pred){
-    cut.ind = mapply(FUN=function(x, y, p){
-        d = (x - 0)^2 + (y-1)^2
-        ind = which(d == min(d))
-        c(sensitivity = y[[ind]], specificity = 1-x[[ind]], 
-          cutoff = p[[ind]])
-    }, roc.perf@x.values, roc.perf@y.values, pred@cutoffs)
-}
-print(opt.cut(roc.perf, pred))
-
-# View confusion matrix overall
-result <- confusionMatrix( as.factor(meta_data$Diff_Type), as.factor(meta_data$Subtype))
-result 
-
-# F1 value
-result$byClass[7] 
-
-f1_score <- function(predicted, expected, positive.class="1") {
-    predicted <- factor(as.character(predicted), levels=unique(as.character(expected)))
-    expected  <- as.factor(expected)
-    cm = as.matrix(table(expected, predicted))
-    
-    precision <- diag(cm) / colSums(cm)
-    recall <- diag(cm) / rowSums(cm)
-    f1 <-  ifelse(precision + recall == 0, 0, 2 * precision * recall / (precision + recall))
-    
-    #Assuming that F1 is zero when it's not possible compute it
-    f1[is.na(f1)] <- 0
-    
-    #Binary F1 or Multi-class macro-averaged F1
-    ifelse(nlevels(expected) == 2, f1[positive.class], mean(f1))
-}
-
-###
-library(DeconRNASeq)
+library(devtools)
+load_all("~/artdeco")
 library(stringr)
+library("MuSiC")
+library("xbioc")
 
-bam_data = read.table("~/Deko/Data/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t",stringsAsFactors = F,header = T,row.names= 1)
-colnames(bam_data) =
-    str_replace(colnames(bam_data), pattern = "^X", "")
+path_transcriptome_files = c(
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv",6)
+)
 
-basis_t = read.table("~/Deko/Data/Progenitor_Stanescu_HISC_Haber.tsv",sep ="\t",stringsAsFactors = F)
+path_visualization_files = c(
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv",6),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv",6)
+)
 
-colnames(basis_t) = str_replace_all(colnames(basis_t),pattern = "\\.","_")
+models_exokrine = c(
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Progenitor_Stanescu_HISC_Haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Progenitor_Stanescu_HISC_Haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Progenitor_Stanescu_HISC_Haber"))
+)
+models_endocrine = c(
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Baron_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Progenitor_Stanescu_HISC_Haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Segerstolpe_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Progenitor_Stanescu_HISC_Haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Lawlor_progenitor_stanescu_hisc_haber")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Progenitor_Stanescu_HISC_Haber"))
+)
+
+benchmark_results_t_ori = data.frame(
+    "Dataset_query" = as.character(),
+    "Dataset_training" = as.character(),
+    "P_val_cor_ratio_numerical_mki67" = as.double(),
+    "P_val_cor_ductal_numerical_mki67" = as.double(),
+    "P_val_cor_hisc_numerical_mki67" = as.double(),
+    "P_val_cor_ratio_categorical_mki67" = as.double(),
+    "P_val_cor_ductal_categorical_mki67" = as.double(),
+    "P_val_cor_hisc_categorical_mki67" = as.double(),
+    "P_val_chisq_ratio_categorical_grading_categorical" = as.double(),
+    "P_val_chisq_ductal_categorical_grading_categorical" = as.double(),
+    "P_val_chisq_hisc_categorical_grading_categorical" = as.double(),
+    "Anova_G1_G2_Ratio" = as.double(),
+    "Anova_G1_G3_Ratio" = as.double(),
+    "Anova_G2_G3_Ratio" = as.double(),
+    "Anova_G1_G2_Ductal" = as.double(),
+    "Anova_G1_G3_Ductal" = as.double(),
+    "Anova_G2_G3_Ductal" = as.double(),
+    "Anova_G1_G2_hisc" = as.double(),
+    "Anova_G1_G3_hisc" = as.double(),
+    "Anova_G2_G3_hisc" = as.double()
+)
+
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-meta_data = meta_info[colnames(basis_t),]
-subtypes = meta_data$Subtype
-table(subtypes)
+source("~/Deko/Scripts/Visualization_colors.R")
+genes_of_interest_hgnc_t = read.table("~/Deko/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t$V1
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = sad_genes[ sad_genes != ""]
 
-dim(basis_t)
-#basis_t = basis_t[,which(subtypes %in% c("Alpha","Beta","Gamma","Delta"))]
-dim(basis_t)
+expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+meta_data = meta_info[colnames(expr_raw),]
+#meta_data = meta_data[which(meta_data$Location == "Primary"),]
+#meta_data = meta_data[which(meta_data$Grading != ""),]
+#meta_data = meta_data[which(meta_data$KI67 > 0),]
+#meta_data = meta_data[which(meta_data$Location == "pancreas"),]
+expr_raw = expr_raw[,rownames(meta_data)]
+expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 
-basis_t = basis_t[,!is.na(meta_data$Subtype)]
-subtypes = meta_data$Subtype[!is.na(meta_data$Subtype)]
-table(subtypes)
-length(subtypes)
-dim(basis_t)
+run_benchmark = function(
+    dataset_query,
+    dataset_training,
+    algorithm,
+    path_transcriptome_file,
+    path_visualization_file,
+    path_benchmark_files
+){
 
-signature_genes = c()
-for ( subtype in unique(subtypes)){
-    signature_genes = c(signature_genes,
-        identify_marker_genes(
-            expression_training_mat = basis_t,
-            subtype_vector = subtypes,
-            subtype = subtype,
-            nr_marker_genes = 100
-        )
+    # prep
+    
+    transcriptome_data = read.table(path_transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+    colnames(transcriptome_data) = str_replace_all(colnames(transcriptome_data),pattern="^X","")
+    meta_data = meta_info[colnames(transcriptome_data),]
+    if( !nrow(meta_data) == ncol(transcriptome_data))
+        stop("Inconclusive meta data and transcriptome file dimensions")
+    row_names = as.character(rownames(transcriptome_data))
+    col_names = as.character(colnames(transcriptome_data))
+    transcriptome_data = matrix(as.integer(as.character(unlist(transcriptome_data))),ncol = length(col_names))
+    rownames(transcriptome_data) = row_names
+    colnames(transcriptome_data) = col_names
+    
+    visualization_data = read.table(path_visualization_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+    colnames(visualization_data) = str_replace_all(colnames(visualization_data),pattern="^X","")
+
+    deconvolution_results = Determine_differentiation_stage(
+        transcriptome_data = transcriptome_data,
+        deconvolution_algorithm = str_to_lower(algorithm),
+        models = dataset_training,
+        nr_permutations = 1000,
+        output_file = ""
     )
+    
+    if (!(""%in% meta_data[rownames(deconvolution_results),"Grading"]))
+        deconvolution_results[,"Grading"] = meta_data[rownames(deconvolution_results),"Grading"]
+    
+    #deconvolution_results$Confidence_score_dif = log(deconvolution_results$Confidence_score_dif+1)
+    
+    ki_index = which(rownames(transcriptome_data) == "MKI67")
+    if( length(ki_index) != 0 ){
+
+        deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
+        deconvolution_results[,"MKI67"] = log(as.double(transcriptome_data[ki_index[1],])+1)
+        
+    } else {
+        
+        deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
+    }
+    
+    deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4
+    deconvolution_results$Confidence_score_dif[which(is.infinite(as.double(deconvolution_results$Confidence_score_dif)))] = 0
+
+    ### results parsing
+    
+    vis_mat = create_heatmap_differentiation_stages(
+        visualization_data,
+        deconvolution_results,
+        #high_threshold = 10,
+        confidence_threshold = .9,
+        show_colnames = F,
+        aggregate_differentiated_stages = F
+    )
+    
+    cor_1 = cor.test((deconvolution_results[rownames(vis_mat),"MKI67"]),(vis_mat$Ratio_numeric))
+    cor_1_p_value = cor_1$p.value
+    if (length(deconvolution_results$ductal) > 0){
+        cor_2 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal))
+        cor_2_p_value = cor_2$p.value
+    } else {cor_2_p_value = 1.0}
+    cor_3 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc))
+    cor_3_p_value = cor_3$p.value
+    cor_4 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$Ratio))))
+    cor_4_p_value = cor_4$p.value
+    if (length(vis_mat$ductal) > 0){
+        cor_5 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$ductal))))
+        cor_5_p_value = cor_5$p.value
+    } else {
+        cor_5_p_value = 1.0
+    }
+    cor_6 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$hisc))))
+    cor_6_p_value = cor_6$p.value
+    
+    if ( length(vis_mat$Grading) > 0){
+    
+            cor_7 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$Ratio))))
+            cor_7_p_value = cor_7$p.value
+            
+            if (length(vis_mat$ductal) > 0){
+                cor_8 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$ductal))))
+                cor_8_p_value = cor_8$p.value
+            } else {
+                cor_8_p_value = 1.0
+            }
+            cor_9 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))))
+            cor_9_p_value = cor_9$p.value
+            
+            cor_10 = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) )
+            cor_10_p_value = as.double(TukeyHSD(cor_10)$`as.factor(as.character(vis_mat$Grading))`[,4])
+            
+            if (length(deconvolution_results[rownames(vis_mat),"ductal"]) > 0){
+                cor_11 = aov(as.double(deconvolution_results[rownames(vis_mat),"ductal"]) ~ as.factor(as.character(vis_mat$Grading)) )
+                cor_11_p_value = as.double(TukeyHSD(cor_11)$`as.factor(as.character(vis_mat$Grading))`[,4])
+            } else {
+                cor_11_p_value = c(1.0,1.0,1.0)
+            }
+            cor_12 = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) )
+            cor_12_p_value = as.double(TukeyHSD(cor_12)$`as.factor(as.character(vis_mat$Grading))`[,4])
+    } else {
+        cor_7_p_value = cor_8_p_value = cor_9_p_value = 1
+        cor_10_p_value = cor_11_p_value = cor_12_p_value = rep(1,3)
+    }
+    
+    identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
+    if (str_detect(dataset_training[2], "HISC")){
+        dataset_training_label = paste(identifier,"hisc",sep="_")
+    } else {
+        dataset_training_label = identifier
+    }
+    
+    results_vec = c(
+        dataset_query,
+        dataset_training_label,
+        cor_1_p_value,
+        cor_2_p_value,
+        cor_3_p_value,
+        cor_4_p_value,
+        cor_5_p_value,
+        cor_6_p_value,
+        cor_7_p_value,
+        cor_8_p_value,
+        cor_9_p_value,
+        cor_10_p_value,
+        cor_11_p_value,
+        cor_12_p_value
+    )
+    
+    benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+    benchmark_results_t = rbind(benchmark_results_t,results_vec)
+    colnames(benchmark_results_t) = colnames(benchmark_results_t_ori)
+    
+    write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F)
+    
 }
 
-basis_t = basis_t = basis_t[signature_genes,]
+algorithm = "bseqsc"
+type = "endocrine"
+benchmark_results_t = benchmark_results_t_ori
+path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 
-signatures = apply(basis_t,MARGIN=1,FUN = function(vec){
-    measurements = aggregate(
-        as.double(vec),
-        by = list(subtypes),
-        FUN = mean
-    )
-    return(measurements[,2])
+for( i in 1:length(path_transcriptome_files)){
+    
+    if (!file.exists(path_benchmark_files))
+        write.table(benchmark_results_t,path_benchmark_files,sep="\t",quote=F,row.names= F)
+    
+    dataset_query = tail(as.character(unlist(str_split(path_transcriptome_files[i],pattern = "/"))),1)
+    dataset_query = str_replace_all(dataset_query,".tsv","")
+    
+    if (type == "exocrine") {
+        models = models_exokrine
+    } else if  (type == "endocrine") {
+        models = models_endocrine
     }
-)
-signatures = as.data.frame(t(signatures))
-colnames(signatures) = levels(factor(subtypes))
-signatures[1:5,]
-
-res = DeconRNASeq(
-    bam_data,
-    signatures,
-    proportions = NULL,
-    checksig = FALSE,
-    known.prop = FALSE,
-    use.scale = TRUE,
-    fig = FALSE
-)
-
-deco_res = res$out.all
-rownames(deco_res) = colnames(query_data)
-
-deco_res = as.data.frame(deco_res)
-deco_res = apply(deco_res, MARGIN = 1, FUN = function(vec){return(log(vec+1))})
-annotation_data = t(deco_res)
-annotation_data[1:5,]
-old_colnames = colnames(annotation_data)
-
-max_val = apply(annotation_data, MARGIN = 1, FUN = which.max)
-
-colnames(annotation_data) = c("Alpha_similarity","Beta_similarity","Delta_similarity","Gamma_similarity")
-colnames(annotation_data) = c("Progenitor_similarity","HISC_similarity")
-#colnames(annotation_data) = c("alpha_similarity","beta_similarity","delta_similarity","gamma_similarity","stem_cell_similaritry","progenitor_simimilarity")
-
-annotation_data = as.data.frame(annotation_data)
-
-Differentiatedness = apply(annotation_data[,c("Alpha_similarity","Beta_similarity","Delta_similarity","Gamma_similarity")],MARGIN = 1, FUN = sum)
-annotation_data$Differentiatedness = Differentiatedness
-
-De_differentiatedness = apply(annotation_data[,c("Progenitor_similarity","HISC_similarity")],MARGIN = 1, FUN = sum)
-annotation_data$De_differentiatedness = De_differentiatedness
-
-annotation_data[,"Max_sim"] = rep("",nrow(annotation_data))
-annotation_data[,"Max_sim"] = old_colnames[max_val]
-
-###
-
-Graphics_parameters = c("")
-
-create_heatmap_differentiation_stages(
-    "~/Deko/Data/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",
-    annotation_data
-)
-
-pheatmap::pheatmap(
-    correlation_matrix,
-    annotation_col = annotation_data,
-    annotation_colors = Graphics_parameters,
-    annotation_legend = TRUE,
-    treeheight_col = 0,
-    treeheight_row = 0,
-    show_colnames = TRUE,
-    show_rownames = FALSE
-)
-
-###
-
-library("ggplot2")
-
-res_hisc_1
-res_hisc_2
-
-res_both_1
-res_both_2
-
-res_hisc_2$Var.prop
-res_both_2$Var.prop
-
-# deconvolution_results_baron_wiedemann = deconvolution_results
-# deconvolution_results_GSE73338_full = deconvolution_results
-
-vis_mat
-data_mat = reshape2::melt(deconvolution_results )
-
-data_mat = deconvolution_results[,c("Grading","MKI67")]
-data_mat$Sample = rownames(data_mat)
-data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$MKI67)] )
-data_mat$MKI67 = data_mat$MKI67 + 1
-
-color_vec = data_mat$Grading
-color_vec[color_vec == "G1"] = "green"
-color_vec[color_vec == "G2"] = "yellow"
-color_vec[color_vec == "G3"] = "red"
-color_vec = color_vec[order(data_mat$MKI67)]
-
-men1_plot = ggplot( data_mat, aes ( x = Sample,  y = MKI67))
-men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
-men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-men1_plot = men1_plot + scale_fill_manual( values = c("darkgreen","yellow","red"))
-men1_plot
-
-ggplot(data_mat,aes( x = Grading, y = MKI67, fill = Grading )) + geom_boxplot( )
-
-### ratio
-
-deconvolution_results$Ratio_numeric = as.double(vis_mat[rownames(deconvolution_results),"Ratio_numeric"])
-data_mat = deconvolution_results[,c("Grading","Ratio_numeric")]
-colnames(data_mat) = c("Grading","Gene_Expression")
-data_mat$Sample = rownames(data_mat)
-data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$Gene_Expression)] )
-#data_mat$Gene_Expression = data_mat$Gene_Expression + 1
-
-color_vec = data_mat$Grading
-color_vec[color_vec == "G1"] = "green"
-color_vec[color_vec == "G2"] = "yellow"
-color_vec[color_vec == "G3"] = "red"
-color_vec = color_vec[order(data_mat$Gene_Expression)]
-
-men1_plot = ggplot( data_mat_2, aes ( x = Sample,  y = Gene_Expression))
-men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
-men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-men1_plot + scale_fill_manual( values = c("darkgreen","red"))
-
-bin_width = 10
-data_mat_2 = data_mat
-data_mat_2$Grading[data_mat_2$Grading %in% c("G1","G2")] = "G1_G2"
-ggplot(data_mat_2,aes( x = Grading, y = Gene_Expression, fill = Grading )) + geom_boxplot( )
-
-    geom_histogram(data=subset(data_mat,Grading == 'G3'),fill = "red", alpha = 0.5,position="dodge", bins = bin_width) +
-    geom_histogram(data=subset(data_mat,Grading == 'G2'),fill = "yellow", alpha = 0.5,position="dodge", bins = bin_width) +
-    geom_histogram(data=subset(data_mat,Grading == 'G1'),fill = "green", alpha = 0.5,position="dodge", bins = bin_width)
-
-
-### ROC curve
     
-#deconvolution_results_wiedenmann_scarpa = deconvolution_results
-#deconvolution_results_GSE73338 = deconvolution_results
+    dataset_training = as.character(unlist(models[((i-1) %% 6) + 1]))
     
-library("ROCR")
+    path_transcriptome_file = path_transcriptome_files[i]
+    path_visualization_file = path_visualization_files[i]
+    
+    print(i)
+    
+    benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+    
+    if (nrow(benchmark_results_t) >= i)
+        next(paste0("Skipping ",i))
 
-target_labels = deconvolution_results$Grading
-target_labels[target_labels %in% c("G1","G2")] = 0
-target_labels[target_labels %in% c("G3")] = 1
-prediction_vector = deconvolution_results$Ratio_numeric
-prediction_vector = prediction_vector - min(prediction_vector)
-prediction_vector = prediction_vector / max(prediction_vector)
-
-pred <- prediction(prediction_vector, target_labels)
-perf <- performance(pred, measure = "tpr", x.measure = "fpr") 
-plot(perf, col=rainbow(10))
+    run_benchmark(
+        dataset_query = dataset_query,
+        dataset_training = dataset_training,
+        algorithm = algorithm,
+        path_transcriptome_file = path_transcriptome_file,
+        path_visualization_file = path_visualization_file,
+        path_benchmark_files = path_benchmark_files
+    )
+}

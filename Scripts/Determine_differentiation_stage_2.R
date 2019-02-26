@@ -16,35 +16,41 @@ sad_genes = sad_genes[ sad_genes != ""]
 
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-#grading = meta_info[colnames(expr_raw),"Grading"]
-#expr_raw = expr_raw[,!is.na(grading)]
 meta_data = meta_info[colnames(expr_raw),]
-#meta_data = meta_data[which(meta_data$Location == "Primary"),]
+#meta_data = meta_data[which(meta_data$Location == "pancreas"),]
+#meta_data = meta_data[which(meta_data$Location == "Primary"),] # GSE73338
 #meta_data = meta_data[which(meta_data$Grading != ""),]
 #meta_data = meta_data[which(meta_data$KI67 > 0),]
 #meta_data = meta_data[which(meta_data$Location == "pancreas"),]
 expr_raw = expr_raw[,rownames(meta_data)]
 expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 
-#write.table(expr,visualization_data_path,sep="\t",quote=F)
 #write.table(expr_raw,path_transcriptome_file,sep="\t",quote=F)
+#write.table(expr,visualization_data_path,sep="\t",quote=F)
 
-path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv"
-#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.Grading.tsv"
-#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.Primary.ki67.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv"
+path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv"
+
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
-visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv"
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.Grading.vis.tsv"
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.Primary.ki67.vis.tsv"
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv"
+visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv"
 
 visualization_data = read.table(visualization_data_path, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
 transcriptome_file = read.table(path_transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+meta_data = meta_info[colnames(transcriptome_file),]
 row_names = as.character(rownames(transcriptome_file))
 col_names = as.character(colnames(transcriptome_file))
 transcriptome_file = matrix(as.integer(as.character(unlist(transcriptome_file))),ncol = length(col_names))
@@ -54,16 +60,16 @@ colnames(visualization_data) = str_replace(colnames(visualization_data), pattern
 colnames(transcriptome_file) = str_replace(colnames(transcriptome_file), pattern = "^X", "")
 
 selected_models = c(
-    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber"
+    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
+    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber"
     #"Alpha_Beta_Gamma_Delta_Baron",
     #"Alpha_Beta_Gamma_Delta_Baron_progenitor_stanescu_hisc_haber"
     #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe",
     #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe_progenitor_stanescu_hisc_haber"
     #"Alpha_Beta_Gamma_Delta_Segerstolpe",
     #"Alpha_Beta_Gamma_Delta_Segerstolpe_progenitor_stanescu_hisc_haber"
-    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor",
-    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber"
+    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor",
+    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber"
     #"Alpha_Beta_Gamma_Delta_Lawlor",
     #"Alpha_Beta_Gamma_Delta_Lawlor_progenitor_stanescu_hisc_haber"
     #"Progenitor_Stanescu_HISC_Haber"
@@ -108,7 +114,7 @@ selected_models
 
 ###
 
-cor_t = cor.test((deconvolution_results[,"MKI67"]),(vis_mat$Ratio_numeric));cor_t$p.value
+cor_t = cor.test((deconvolution_results[rownames(vis_mat),"MKI67"]),(vis_mat$Ratio_numeric));cor_t$p.value
 cor_t = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal));cor_t$p.value
 cor_t = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc));cor_t$p.value
 chi_t = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$Ratio))));chi_t$p.value
@@ -119,10 +125,13 @@ chi_t = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.
 chi_t = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))));chi_t$p.value
 
 anova_res = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
-anova_res = aov(as.double(deconvolution_results$ductal) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
-anova_res = aov(as.double(deconvolution_results$hisc) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
+anova_res = aov(as.double(deconvolution_results[rownames(vis_mat),"ductal"]) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
+anova_res = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
 
- aov(as.double(deconvolution_results$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
+Grading_G1_G2 = vis_mat$Grading
+Grading_G1_G2[Grading_G1_G2 %in% c("G1","G2")] = "G1_G2"
+anova_res = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(Grading_G1_G2)) );TukeyHSD(anova_res)
+aov(as.double(deconvolution_results$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) );TukeyHSD(anova_res)
 
 #
 car::leveneTest(as.double(vis_mat$Ratio_numeric)~grading)

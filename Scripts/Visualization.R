@@ -192,3 +192,149 @@ data = data[data$hisc_similarity!="not_significant",]
 fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Status ) ~ data$hisc_similarity)
 
 survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10)
+
+###
+
+#### DeconRNASeq
+
+res = DeconRNASeq(
+    bam_data,
+    signatures,
+    proportions = NULL,
+    checksig = FALSE,
+    known.prop = FALSE,
+    use.scale = TRUE,
+    fig = FALSE
+)
+
+deco_res = res$out.all
+rownames(deco_res) = colnames(query_data)
+
+deco_res = as.data.frame(deco_res)
+deco_res = apply(deco_res, MARGIN = 1, FUN = function(vec){return(log(vec+1))})
+annotation_data = t(deco_res)
+annotation_data[1:5,]
+old_colnames = colnames(annotation_data)
+
+### ROCR
+
+library("ggplot2")
+
+res_hisc_1
+res_hisc_2
+
+res_both_1
+res_both_2
+
+res_hisc_2$Var.prop
+res_both_2$Var.prop
+
+# deconvolution_results_baron_wiedemann = deconvolution_results
+# deconvolution_results_GSE73338_full = deconvolution_results
+
+vis_mat
+data_mat = reshape2::melt(deconvolution_results )
+
+data_mat = deconvolution_results[,c("Grading","MKI67")]
+data_mat$Sample = rownames(data_mat)
+data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$MKI67)] )
+data_mat$MKI67 = data_mat$MKI67 + 1
+
+color_vec = data_mat$Grading
+color_vec[color_vec == "G1"] = "green"
+color_vec[color_vec == "G2"] = "yellow"
+color_vec[color_vec == "G3"] = "red"
+color_vec = color_vec[order(data_mat$MKI67)]
+
+men1_plot = ggplot( data_mat, aes ( x = Sample,  y = MKI67))
+men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
+men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+men1_plot = men1_plot + scale_fill_manual( values = c("darkgreen","yellow","red"))
+men1_plot
+
+ggplot(data_mat,aes( x = Grading, y = MKI67, fill = Grading )) + geom_boxplot( )
+
+### ratio
+
+deconvolution_results$Ratio_numeric = as.double(vis_mat[rownames(deconvolution_results),"Ratio_numeric"])
+data_mat = deconvolution_results[,c("Grading","Ratio_numeric")]
+colnames(data_mat) = c("Grading","Gene_Expression")
+data_mat$Sample = rownames(data_mat)
+data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$Gene_Expression)] )
+#data_mat$Gene_Expression = data_mat$Gene_Expression + 1
+
+color_vec = data_mat$Grading
+color_vec[color_vec == "G1"] = "green"
+color_vec[color_vec == "G2"] = "yellow"
+color_vec[color_vec == "G3"] = "red"
+color_vec = color_vec[order(data_mat$Gene_Expression)]
+
+men1_plot = ggplot( data_mat_2, aes ( x = Sample,  y = Gene_Expression))
+men1_plot = men1_plot + geom_bar( aes(fill = Grading), stat = "identity")
+men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+men1_plot + scale_fill_manual( values = c("darkgreen","red"))
+
+bin_width = 10
+data_mat_2 = data_mat
+data_mat_2$Grading[data_mat_2$Grading %in% c("G1","G2")] = "G1_G2"
+ggplot(data_mat_2,aes( x = Grading, y = Gene_Expression, fill = Grading )) + geom_boxplot( )
+
+geom_histogram(data=subset(data_mat,Grading == 'G3'),fill = "red", alpha = 0.5,position="dodge", bins = bin_width) +
+    geom_histogram(data=subset(data_mat,Grading == 'G2'),fill = "yellow", alpha = 0.5,position="dodge", bins = bin_width) +
+    geom_histogram(data=subset(data_mat,Grading == 'G1'),fill = "green", alpha = 0.5,position="dodge", bins = bin_width)
+
+
+### ROC curve
+
+#deconvolution_results_wiedenmann_scarpa = deconvolution_results
+#deconvolution_results_GSE73338 = deconvolution_results
+
+library("ROCR")
+library("ggplot2")
+
+target_labels = deconvolution_results$Grading
+target_labels[target_labels %in% c("G1","G2")] = 0
+target_labels[target_labels %in% c("G3")] = 1
+
+prediction_vector_ratio = as.double(vis_mat[rownames(deconvolution_results),"Ratio_numeric"])
+#prediction_vector_ratio = prediction_vector_ratio - min(prediction_vector_ratio)
+#prediction_vector_ratio = prediction_vector_ratio / max(prediction_vector_ratio)
+pred_ratio = prediction(prediction_vector_ratio, target_labels)
+perf_ratio = performance(pred_ratio, measure = "tpr", x.measure = "fpr")
+auc_ratio = performance(pred_ratio, measure = "auc", x.measure = "fpr") 
+
+prediction_vector_mki67 = as.double(deconvolution_results[,"MKI67"])
+prediction_vector_mki67 = prediction_vector_mki67 - min(prediction_vector_mki67)
+prediction_vector_mki67 = prediction_vector_mki67 / max(prediction_vector_mki67)
+pred_mki67 <- prediction(prediction_vector_mki67, target_labels)
+perf_mki67 = performance(pred_mki67, measure = "tpr", x.measure = "fpr") 
+
+tpr_mki67 = as.double(as.character(unlist(perf_mki67@y.values)))
+tpr_mki67 = round(tpr_mki67 * 100,0)
+tpr_ratio = as.double(as.character(unlist(perf_ratio@y.values)))
+tpr_ratio = round(tpr_ratio * 100,0)
+
+fpr_mki67 = as.double(as.character(unlist(perf_mki67@x.values)))
+fpr_mki67 = round(fpr_mki67 * 100,0)
+fpr_ratio = as.double(as.character(unlist(perf_ratio@x.values)))
+fpr_ratio = round(fpr_ratio * 100,0)
+
+#perf <- performance(pred, measure = "tpr", x.measure = "fpr") 
+
+method_indicator = c(
+    rep("mki67",length(tpr_mki67)),
+    rep("ratio",length(tpr_ratio))
+)
+
+roc_mat = data.frame(
+    "tpr" = c(tpr_mki67,tpr_ratio),
+    "fpr" = c(fpr_mki67,fpr_ratio),
+    "method" = method_indicator
+)
+
+roc_plot = ggplot(
+    data = roc_mat,
+    aes( x = fpr, y = tpr)
+)
+roc_plot = roc_plot + geom_line(aes(color = method))
+roc_plot
