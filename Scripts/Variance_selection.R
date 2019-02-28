@@ -1,4 +1,4 @@
-#expr_raw = i_file
+expr_raw = bam_data_1
 
 hgnc_list = row.names(expr_raw)
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
@@ -46,4 +46,4 @@ length(hgnc_list_uni)
 summary(as.integer(expr_raw["INS",]))
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
-#i_file = expr_raw
+bam_data_1 = expr_raw

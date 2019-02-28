@@ -14,11 +14,18 @@ genes_of_interest_hgnc_t$V1
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1)
+expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 meta_data = meta_info[colnames(expr_raw),]
-#meta_data = meta_data[which(meta_data$Location == "pancreas"),]
+#col_names = colnames(expr_raw)
+#row_names = rownames(expr_raw)
+#expr_raw = as.double(as.character(unlist(expr_raw)))
+#expr_raw = matrix(expr_raw,ncol = length(col_names))
+#colnames(expr_raw) = col_names
+#rownames(expr_raw) = row_names
 #meta_data = meta_data[which(meta_data$Location == "Primary"),] # GSE73338
+#meta_data = meta_data[which(meta_data$Subtype == "Primary"),]# GSE98894
+#meta_data = meta_data[which(meta_data$Location == "pancreas"),]# GSE98894
 #meta_data = meta_data[which(meta_data$Grading != ""),]
 #meta_data = meta_data[which(meta_data$KI67 > 0),]
 #meta_data = meta_data[which(meta_data$Location == "pancreas"),]
@@ -28,55 +35,56 @@ expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sa
 #write.table(expr_raw,path_transcriptome_file,sep="\t",quote=F)
 #write.table(expr,visualization_data_path,sep="\t",quote=F)
 
-#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
+path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv"
+#path_transcriptome_file = "~/Deko/Data/Wiedenmann_Scarpa_GSE73338.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv"
-path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv"
 
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv"
+visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Wiedenmann_Scarpa_GSE73338.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv"
-visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv"
 
 visualization_data = read.table(visualization_data_path, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
-transcriptome_file = read.table(path_transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
-meta_data = meta_info[colnames(transcriptome_file),]
-row_names = as.character(rownames(transcriptome_file))
-col_names = as.character(colnames(transcriptome_file))
-transcriptome_file = matrix(as.integer(as.character(unlist(transcriptome_file))),ncol = length(col_names))
-rownames(transcriptome_file) = row_names
-colnames(transcriptome_file) = col_names
+transcriptome_data = read.table(path_transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+meta_data = meta_info[colnames(transcriptome_data),]
+row_names = as.character(rownames(transcriptome_data))
+col_names = as.character(colnames(transcriptome_data))
+transcriptome_data = matrix(as.integer(as.character(unlist(transcriptome_data))),ncol = length(col_names))
+rownames(transcriptome_data) = row_names
+colnames(transcriptome_data) = col_names
 colnames(visualization_data) = str_replace(colnames(visualization_data), pattern = "^X", "")
-colnames(transcriptome_file) = str_replace(colnames(transcriptome_file), pattern = "^X", "")
+colnames(transcriptome_data) = str_replace(colnames(transcriptome_data), pattern = "^X", "")
 
 selected_models = c(
     #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber"
+
     #"Alpha_Beta_Gamma_Delta_Baron",
-    #"Alpha_Beta_Gamma_Delta_Baron_progenitor_stanescu_hisc_haber"
+
     #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe",
-    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe_progenitor_stanescu_hisc_haber"
+
     #"Alpha_Beta_Gamma_Delta_Segerstolpe",
-    #"Alpha_Beta_Gamma_Delta_Segerstolpe_progenitor_stanescu_hisc_haber"
-    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor",
-    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber"
-    #"Alpha_Beta_Gamma_Delta_Lawlor",
-    #"Alpha_Beta_Gamma_Delta_Lawlor_progenitor_stanescu_hisc_haber"
-    #"Progenitor_Stanescu_HISC_Haber"
+
+    #"Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor",
+
+    "Alpha_Beta_Gamma_Delta_Lawlor",
+    "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"
 )
 
 deconvolution_results = Determine_differentiation_stage(
-    transcriptome_file = transcriptome_file,
+    transcriptome_data = transcriptome_data,
     deconvolution_algorithm = "music",
     models = selected_models,
     nr_permutations = 1000,
@@ -91,10 +99,10 @@ if (!(""%in% meta_info[rownames(deconvolution_results),"Grading"]))
 ki_index = which(rownames(transcriptome_file) == "MKI67")
 if( length(ki_index) != 0 ){
     deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
-    deconvolution_results[,"MKI67"] = log(as.double(transcriptome_file[ki_index[1],])+1)
+    deconvolution_results[,"MKI67"] = log(as.double(transcriptome_file[ki_index[1],rownames(deconvolution_results)])+1)
     #deconvolution_results[,"MKI67"] = as.double(transcriptome_file[ki_index[1],])
 } else {
-    deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
+    deconvolution_results[,"MKI67"] = as.double(meta_data[rownames(deconvolution_results),"KI67"])
 }
 
 deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4

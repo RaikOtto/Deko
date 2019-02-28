@@ -6,43 +6,41 @@ library(stringr)
 library("MuSiC")
 library("xbioc")
 
+
+models_ductal = c(
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
+)
+models_hisc = c(
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+)
+nr_models = length(models_ductal)
+
 path_transcriptome_files = c(
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv",6)
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",nr_models),
+    rep("~/Deko/Data/Wiedenmann_Scarpa_GSE73338.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv",nr_models)
 )
 
 path_visualization_files = c(
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv",6),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv",6)
-)
-
-models_exokrine = c(
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Progenitor_Stanescu_HISC_Haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Progenitor_Stanescu_HISC_Haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Progenitor_Stanescu_HISC_Haber"))
-)
-models_endocrine = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Baron_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Progenitor_Stanescu_HISC_Haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Segerstolpe_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Progenitor_Stanescu_HISC_Haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Lawlor_progenitor_stanescu_hisc_haber")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Progenitor_Stanescu_HISC_Haber"))
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv",nr_models),
+    rep("~/Deko/Data/Wiedenmann_Scarpa_GSE73338.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv",nr_models)
 )
 
 benchmark_results_t_ori = data.frame(
@@ -81,10 +79,6 @@ sad_genes = sad_genes[ sad_genes != ""]
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 meta_data = meta_info[colnames(expr_raw),]
-#meta_data = meta_data[which(meta_data$Location == "Primary"),]
-#meta_data = meta_data[which(meta_data$Grading != ""),]
-#meta_data = meta_data[which(meta_data$KI67 > 0),]
-#meta_data = meta_data[which(meta_data$Location == "pancreas"),]
 expr_raw = expr_raw[,rownames(meta_data)]
 expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 
@@ -137,6 +131,12 @@ run_benchmark = function(
         deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
     }
     
+    if (str_detect( path_transcriptome_file,pattern = "Wiedenmann_Scarpa_GSE73338")){
+        mki_67_wiedenmann = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",sep="\t",header = T)
+        colnames(mki_67_wiedenmann) = str_replace_all(colnames(mki_67_wiedenmann),pattern="^X","")
+        deconvolution_results[colnames(mki_67_wiedenmann),"MKI67"] = as.double(mki_67_wiedenmann["MKI67",])
+    }
+    
     deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4
     deconvolution_results$Confidence_score_dif[which(is.infinite(as.double(deconvolution_results$Confidence_score_dif)))] = 0
 
@@ -157,8 +157,10 @@ run_benchmark = function(
         cor_2 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal))
         cor_2_p_value = cor_2$p.value
     } else {cor_2_p_value = 1.0}
-    cor_3 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc))
-    cor_3_p_value = cor_3$p.value
+    if (length(deconvolution_results$hisc) > 0){
+        cor_3 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc))
+        cor_3_p_value = cor_3$p.value
+    } else {cor_3_p_value = 1.0}
     cor_4 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$Ratio))))
     cor_4_p_value = cor_4$p.value
     if (length(vis_mat$ductal) > 0){
@@ -167,8 +169,11 @@ run_benchmark = function(
     } else {
         cor_5_p_value = 1.0
     }
-    cor_6 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$hisc))))
-    cor_6_p_value = cor_6$p.value
+    if(length(vis_mat$hisc) > 0){
+        cor_6 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$hisc))))
+        cor_6_p_value = cor_6$p.value
+    } else {cor_6_p_value = 1.0}
+    
     
     if ( length(vis_mat$Grading) > 0){
     
@@ -181,8 +186,10 @@ run_benchmark = function(
             } else {
                 cor_8_p_value = 1.0
             }
-            cor_9 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))))
-            cor_9_p_value = cor_9$p.value
+            if(length(vis_mat$hisc) > 0){
+                cor_9 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))))
+                cor_9_p_value = cor_9$p.value
+            } else {cor_9_p_value = 1.0}
             
             cor_10 = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) )
             cor_10_p_value = as.double(TukeyHSD(cor_10)$`as.factor(as.character(vis_mat$Grading))`[,4])
@@ -193,8 +200,10 @@ run_benchmark = function(
             } else {
                 cor_11_p_value = c(1.0,1.0,1.0)
             }
-            cor_12 = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) )
-            cor_12_p_value = as.double(TukeyHSD(cor_12)$`as.factor(as.character(vis_mat$Grading))`[,4])
+            if(length(vis_mat$hisc) > 0){
+                cor_12 = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) )
+                cor_12_p_value = as.double(TukeyHSD(cor_12)$`as.factor(as.character(vis_mat$Grading))`[,4])
+            } else {cor_12_p_value = c(1.0,1.0,1.0)}
     } else {
         cor_7_p_value = cor_8_p_value = cor_9_p_value = 1
         cor_10_p_value = cor_11_p_value = cor_12_p_value = rep(1,3)
@@ -232,8 +241,8 @@ run_benchmark = function(
     
 }
 
-algorithm = "bseqsc"
-type = "endocrine"
+algorithm = "music"
+type = "ductal"
 benchmark_results_t = benchmark_results_t_ori
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 
@@ -245,13 +254,13 @@ for( i in 1:length(path_transcriptome_files)){
     dataset_query = tail(as.character(unlist(str_split(path_transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
     
-    if (type == "exocrine") {
-        models = models_exokrine
-    } else if  (type == "endocrine") {
-        models = models_endocrine
+    if (type == "ductal") {
+        models = models_ductal
+    } else if  (type == "hisc") {
+        models = models_hisc
     }
     
-    dataset_training = as.character(unlist(models[((i-1) %% 6) + 1]))
+    dataset_training = as.character(unlist(models[((i-1) %% 3) + 1]))
     
     path_transcriptome_file = path_transcriptome_files[i]
     path_visualization_file = path_visualization_files[i]

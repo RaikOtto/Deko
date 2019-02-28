@@ -15,28 +15,24 @@ input_files_names = list.files("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/
 input_files_names = str_replace_all(input_files_names,pattern = "_counts.txt","")
 
 i_file = read.table(input_files[1],sep="\t",row.names = 1, header = T, stringsAsFactors = F)
-i_file = as.data.frame(i_file[,1])
 
 ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
 entrez = rownames(i_file)
-hgnc_entrez_mapping = getBM(
-    attributes = c('entrezgene', 'hgnc_symbol'), 
-    filters = 'entrezgene', 
-    values = entrez, 
-    mart = ensembl
-)
+hgnc_entrez_mapping = read.table("~/Deko/Misc/hgnc_entrez_mapping.csv",sep ="\t",header = T,stringsAsFactors = F)
+hgnc_entrez_mapping[1:5,]
+#hgnc_entrez_mapping = getBM(
+#    attributes = c('entrezgene', 'hgnc_symbol'), 
+#    filters = 'entrezgene', 
+#    values = entrez, 
+#    mart = ensembl
+#)
+#hgnc_entrez_mapping[1:100,]
 
-hgnc_entrez_mapping[1:100,]
 mapping = match(
-    as.integer(rownames(i_file)),
-    as.integer(hgnc_entrez_mapping[,1]),
-    nomatch = 0
+    as.character(rownames(i_file)),
+    as.character(hgnc_entrez_mapping$ENTREZ)
 )
-
-hgnc_list = str_to_upper(hgnc_entrez_mapping[
-    mapping,
-    2
-])
+hgnc_list = str_to_upper(hgnc_entrez_mapping$HGNC_Symbol[mapping])
 
 for( i_file_next in input_files[2:length(input_files)]){
     i_file_new = read.table(i_file_next,sep="\t",row.names = 1, header = T, stringsAsFactors = F)
@@ -47,8 +43,8 @@ for( i_file_next in input_files[2:length(input_files)]){
     )
 }
 dim(i_file)
-summary(as.integer(i_file[10309,]))
-i_file = as.matrix(i_file,ncol=212)
+as.integer(i_file[10309,])
+i_file = as.matrix(i_file,ncol=ncol(i_file))
 colnames(i_file) = input_files_names
 i_file = as.data.frame(i_file)
 i_file[1:5,1:5]
@@ -58,13 +54,5 @@ i_file[1:5,1:5]
 
 as.integer(i_file[rownames(i_file) == "INS",])
 summary(as.integer(i_file[rownames(i_file) == "INS",]))
-
-row_names = rownames(i_file)
-col_names = colnames(i_file)
-i_file = matrix(as.integer(as.character(unlist(i_file))),ncol=length(col_names))
-
-colnames(i_file) = col_names
-rownames(i_file) = row_names
-i_file[1:5,1:5]
 
 write.table(i_file,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",sep ="\t",quote = F, row.names = T)

@@ -2,7 +2,7 @@ library("stringr")
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_human.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 #bam_data_1 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
@@ -31,40 +31,31 @@ index = 1:ncol(bam_data_1)
 index = index[!( index %in% exclude)]
 bam_data_1 = bam_data_1[,index]
 
-# Stanescu
-
-bam_data_2 = read.table("~/Deko/Data/Mouse_progenitor_pancreas_scRNA/Stanescu.tsv" , sep ="\t" ,header = T, stringsAsFactors = F ,row.names = 1)
-rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
-
-#rownames(bam_data_2) = str_replace_all(rownames(bam_data_2),pattern= "(\\.)|(-)|(_)","")
-rownames(bam_data_2)[rownames(bam_data_2) == "INS1"] = "INS"
-dim(bam_data_2)
-
 # HISC
 
-bam_data_3 = read.table("~/Deko/Data/Human_Mouse_HSC/Haber.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-colnames(bam_data_3) = str_replace_all(colnames(bam_data_3) , pattern = "^X", "")
-rownames(bam_data_3) = str_to_upper(rownames(bam_data_3))
-#rownames(bam_data_3) = str_replace_all(rownames(bam_data_3),pattern= "(\\.)|(-)|(_)","")
-rownames(bam_data_3)[rownames(bam_data_3) %in% c("INS-IGF2","INSIGF2") ] = "INS"
-bam_data_3[1:5,1:5]
+bam_data_2 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
+rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
+rownames(bam_data_2)[rownames(bam_data_2) %in% c("INS1") ] = "INS"
+bam_data_2[1:5,1:5]
 
-meta_data = meta_info[colnames(bam_data_3),]
-bam_data_3 = bam_data_3[, meta_data$Subtype %in% c("HISC")]
-dim(bam_data_3)
+meta_data = meta_info[colnames(bam_data_2),]
+bam_data_2 = bam_data_2[, meta_data$Subtype %in% c("HISC")]
+dim(bam_data_2)
 
 ### integrate
 
 merge_genes = intersect(rownames(bam_data_1),rownames(bam_data_2))
 #merge_genes = rownames(bam_data_1)
-merge_genes = intersect(merge_genes, rownames(bam_data_3))
 length(merge_genes)
+table("INS" %in% rownames(bam_data_1))
+table("INS" %in% rownames(bam_data_2))
+table("INS" %in% merge_genes)
 
 new_mat = as.data.frame(
     cbind(
         bam_data_1[merge_genes,],
-        bam_data_2[merge_genes,],
-        bam_data_3[merge_genes,]
+        bam_data_2[merge_genes,]
     )
 )
 rownames(new_mat) = merge_genes
@@ -84,5 +75,4 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_progenitor_stanescu_hisc_haber.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(new_mat, "~/Deko/Data/HISC_HESC.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat[,], "~/Deko/Data/Wiedenmann_Scarpa_GSE73338.tsv", sep ="\t", quote =F , row.names = T)

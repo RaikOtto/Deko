@@ -65,7 +65,7 @@ pheatmap::pheatmap(
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor_progenitor_stanescu_hisc_haber.tsv"
+scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 
@@ -77,8 +77,16 @@ meta_data = meta_info[colnames(t),]
 subtype_vector = str_to_lower(meta_data$Subtype)
 table(subtype_vector)
 
+transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
+
+add_deconvolution_training_model_NMF(
+    transcriptome_data = transcriptome_data,
+    model_name = model_name,
+    subtype_vector = subtype_vector
+)
+
 add_deconvolution_training_model_bseqsc(
-    transcriptome_data_path = scRNA_file_path,
+    transcriptome_data = transcriptome_data,
     model_name = model_name,
     str_to_lower(subtype_vector),
     training_p_value_threshold = 0.05,
@@ -87,7 +95,7 @@ add_deconvolution_training_model_bseqsc(
 )
 
 add_deconvolution_training_model_music(
-    transcriptome_data_path = scRNA_file_path,
+    transcriptome_data = transcriptome_data,
     model_name = model_name,
     subtype_vector
 )
