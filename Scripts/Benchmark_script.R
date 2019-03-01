@@ -115,7 +115,7 @@ run_benchmark = function(
         output_file = ""
     )
     
-    if (!(""%in% meta_data[rownames(deconvolution_results),"Grading"]))
+    if (!("" %in% meta_data[rownames(deconvolution_results),"Grading"]))
         deconvolution_results[,"Grading"] = meta_data[rownames(deconvolution_results),"Grading"]
     
     #deconvolution_results$Confidence_score_dif = log(deconvolution_results$Confidence_score_dif+1)
@@ -146,7 +146,7 @@ run_benchmark = function(
         visualization_data,
         deconvolution_results,
         #high_threshold = 10,
-        confidence_threshold = .9,
+        confidence_threshold = 1.0,
         show_colnames = F,
         aggregate_differentiated_stages = F
     )
@@ -241,7 +241,7 @@ run_benchmark = function(
     
 }
 
-algorithm = "music"
+algorithm = "bseqsc"
 type = "ductal"
 benchmark_results_t = benchmark_results_t_ori
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
