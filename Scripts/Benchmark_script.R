@@ -241,8 +241,8 @@ run_benchmark = function(
     
 }
 
-algorithm = "bseqsc"
-type = "ductal"
+algorithm = "music"
+type = "hisc"
 benchmark_results_t = benchmark_results_t_ori
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 

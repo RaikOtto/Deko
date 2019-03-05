@@ -3,7 +3,7 @@ load_all("~/artdeco/")
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe.tsv"
+scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 

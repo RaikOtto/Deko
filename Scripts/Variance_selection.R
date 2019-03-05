@@ -47,3 +47,4 @@ summary(as.integer(expr_raw["INS",]))
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
 bam_data_1 = expr_raw
+
