@@ -142,6 +142,18 @@ run_benchmark = function(
 
     ### results parsing
     
+    graphics_path = paste("~/Deko/Results/Images",algorithm, sep ="/")
+    model_name = paste0(
+        c(
+            dataset_query,
+            paste(dataset_training,sep="_"),
+            "pdf"
+        ),
+        collapse = "."
+    )
+    graphics_path = paste(graphics_path,model_name,sep = "/")
+    
+    #pdf(graphics_path,onefile = TRUE)#,width="1024px",height="768px")
     vis_mat = create_heatmap_differentiation_stages(
         visualization_data,
         deconvolution_results,
@@ -150,25 +162,24 @@ run_benchmark = function(
         show_colnames = F,
         aggregate_differentiated_stages = F
     )
+    #dev.off()
     
     cor_1 = cor.test((deconvolution_results[rownames(vis_mat),"MKI67"]),(vis_mat$Ratio_numeric))
     cor_1_p_value = cor_1$p.value
-    if (length(deconvolution_results$ductal) > 0){
-        cor_2 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal))
-        cor_2_p_value = cor_2$p.value
-    } else {cor_2_p_value = 1.0}
+    cor_2 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal))
+    cor_2_p_value = cor_2$p.value
+
     if (length(deconvolution_results$hisc) > 0){
         cor_3 = cor.test((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc))
         cor_3_p_value = cor_3$p.value
     } else {cor_3_p_value = 1.0}
+    
     cor_4 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$Ratio))))
     cor_4_p_value = cor_4$p.value
-    if (length(vis_mat$ductal) > 0){
-        cor_5 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$ductal))))
-        cor_5_p_value = cor_5$p.value
-    } else {
-        cor_5_p_value = 1.0
-    }
+    
+    cor_5 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$ductal))))
+    cor_5_p_value = cor_5$p.value
+
     if(length(vis_mat$hisc) > 0){
         cor_6 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$hisc))))
         cor_6_p_value = cor_6$p.value
@@ -176,30 +187,28 @@ run_benchmark = function(
     
     
     if ( length(vis_mat$Grading) > 0){
+        
+            # categorical
     
             cor_7 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$Ratio))))
             cor_7_p_value = cor_7$p.value
             
-            if (length(vis_mat$ductal) > 0){
-                cor_8 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$ductal))))
-                cor_8_p_value = cor_8$p.value
-            } else {
-                cor_8_p_value = 1.0
-            }
+            cor_8 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$ductal))))
+            cor_8_p_value = cor_8$p.value
+
             if(length(vis_mat$hisc) > 0){
                 cor_9 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))))
                 cor_9_p_value = cor_9$p.value
             } else {cor_9_p_value = 1.0}
             
+            # anova
+            
             cor_10 = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) )
             cor_10_p_value = as.double(TukeyHSD(cor_10)$`as.factor(as.character(vis_mat$Grading))`[,4])
             
-            if (length(deconvolution_results[rownames(vis_mat),"ductal"]) > 0){
-                cor_11 = aov(as.double(deconvolution_results[rownames(vis_mat),"ductal"]) ~ as.factor(as.character(vis_mat$Grading)) )
-                cor_11_p_value = as.double(TukeyHSD(cor_11)$`as.factor(as.character(vis_mat$Grading))`[,4])
-            } else {
-                cor_11_p_value = c(1.0,1.0,1.0)
-            }
+            cor_11 = aov(as.double(deconvolution_results[rownames(vis_mat),"ductal"]) ~ as.factor(as.character(vis_mat$Grading)) )
+            cor_11_p_value = as.double(TukeyHSD(cor_11)$`as.factor(as.character(vis_mat$Grading))`[,4])
+
             if(length(vis_mat$hisc) > 0){
                 cor_12 = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) )
                 cor_12_p_value = as.double(TukeyHSD(cor_12)$`as.factor(as.character(vis_mat$Grading))`[,4])
