@@ -8,7 +8,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Lawlor.tsv"
+scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Segerstolpe.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 
