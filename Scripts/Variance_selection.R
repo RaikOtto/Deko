@@ -1,4 +1,4 @@
-expr_raw = bam_data_1
+expr_raw = bam_data_2
 
 hgnc_list = row.names(expr_raw)
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
@@ -47,4 +47,3 @@ summary(as.integer(expr_raw["INS",]))
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
 bam_data_1 = expr_raw
-

@@ -8,7 +8,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Segerstolpe.tsv"
+scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 
@@ -22,13 +22,6 @@ table(subtype_vector)
 
 transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
 
-add_deconvolution_training_model_NMF(
-    transcriptome_data = transcriptome_data,
-    model_name = model_name,
-    subtype_vector = subtype_vector,
-    parallel_processes = 8
-)
-
 add_deconvolution_training_model_bseqsc(
     transcriptome_data = transcriptome_data,
     model_name = model_name,
@@ -38,8 +31,16 @@ add_deconvolution_training_model_bseqsc(
     training_nr_marker_genes = 800
 )
 
+
 add_deconvolution_training_model_music(
     transcriptome_data = transcriptome_data,
     model_name = model_name,
     subtype_vector
+)
+
+add_deconvolution_training_model_NMF(
+    transcriptome_data = transcriptome_data,
+    model_name = model_name,
+    subtype_vector = subtype_vector,
+    parallel_processes = 8
 )

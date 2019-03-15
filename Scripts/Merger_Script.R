@@ -2,14 +2,20 @@ library("stringr")
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_6.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_4.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
-bam_data_1[1:5,1:5]
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
-dim(bam_data_1)
+summary(as.double(bam_data_1["INS",]))
 
 # variance selection
+
+col_names = colnames(bam_data_1)
+row_names = rownames(bam_data_1)
+bam_data_1 = matrix(as.double(as.character(unlist(bam_data_1))),ncol = ncol(bam_data_1))
+rownames(bam_data_1) = row_names
+colnames(bam_data_1) = col_names
+summary(bam_data_1["INS",])
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
@@ -37,8 +43,6 @@ table("CELA3A" %in% rownames(bam_data_2)) # acinar
 table("PTP" %in% rownames(bam_data_2)) # acinar
 table("TMSB4X" %in% rownames(bam_data_2)) # ductal
 
-bam_data_2[1:5,1:5]
-
 meta_data = meta_info[colnames(bam_data_2),]
 bam_data_2 = bam_data_2[, meta_data$Subtype %in% c("HISC")]
 dim(bam_data_2)
@@ -51,6 +55,7 @@ length(merge_genes)
 table("INS" %in% rownames(bam_data_1))
 table("GCG" %in% rownames(bam_data_1))
 table("PPY" %in% merge_genes)
+table("SST" %in% merge_genes)
 
 new_mat = as.data.frame(
     cbind(
@@ -72,6 +77,6 @@ dim(new_mat)
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
 dim(new_mat)
 new_mat[1:5,1:5]
-#write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv", sep ="\t", quote =F , row.names = T)

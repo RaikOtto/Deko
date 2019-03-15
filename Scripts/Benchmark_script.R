@@ -22,9 +22,7 @@ nr_models = length(models_ductal)
 path_transcriptome_files = c(
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",nr_models),
-    rep("~/Deko/Data/Wiedenmann_Scarpa_GSE73338.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv",nr_models),
@@ -34,304 +32,24 @@ path_transcriptome_files = c(
 path_visualization_files = c(
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv",nr_models),
-    rep("~/Deko/Data/Wiedenmann_Scarpa_GSE73338.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.Primary.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv",nr_models)
 )
 
-benchmark_results_t_ori = data.frame(
-    "Dataset_query" = as.character(),
-    "Dataset_training" = as.character(),
-    "P_val_cor_ratio_numerical_mki67" = as.double(),
-    "P_val_cor_ductal_numerical_mki67" = as.double(),
-    "P_val_cor_hisc_numerical_mki67" = as.double(),
-    "P_val_cor_ratio_categorical_mki67" = as.double(),
-    "P_val_cor_ductal_categorical_mki67" = as.double(),
-    "P_val_cor_hisc_categorical_mki67" = as.double(),
-    "P_val_chisq_ratio_categorical_grading_categorical" = as.double(),
-    "P_val_chisq_ductal_categorical_grading_categorical" = as.double(),
-    "P_val_chisq_hisc_categorical_grading_categorical" = as.double(),
-    "Anova_G1_G2_Ratio" = as.double(),
-    "Anova_G1_G3_Ratio" = as.double(),
-    "Anova_G2_G3_Ratio" = as.double(),
-    "Anova_G1_G2_Ductal" = as.double(),
-    "Anova_G1_G3_Ductal" = as.double(),
-    "Anova_G2_G3_Ductal" = as.double(),
-    "Anova_G1_G2_hisc" = as.double(),
-    "Anova_G1_G3_hisc" = as.double(),
-    "Anova_G2_G3_hisc" = as.double()
-)
-
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-source("~/Deko/Scripts/Visualization_colors.R")
-genes_of_interest_hgnc_t = read.table("~/Deko/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
-genes_of_interest_hgnc_t$V1
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
-sad_genes = sad_genes[ sad_genes != ""]
+source("~/Deko/Scripts/Benchmark.R")
 
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-meta_data = meta_info[colnames(expr_raw),]
-expr_raw = expr_raw[,rownames(meta_data)]
-expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
-
-run_benchmark = function(
-    dataset_query,
-    dataset_training,
-    algorithm,
-    path_transcriptome_file,
-    path_visualization_file,
-    path_benchmark_files
-){
-    
-    ### prep
-    
-    transcriptome_data = read.table(path_transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
-    colnames(transcriptome_data) = str_replace_all(colnames(transcriptome_data),pattern="^X","")
-    meta_data = meta_info[colnames(transcriptome_data),]
-    if( !nrow(meta_data) == ncol(transcriptome_data))
-        stop("Inconclusive meta data and transcriptome file dimensions")
-    row_names = as.character(rownames(transcriptome_data))
-    col_names = as.character(colnames(transcriptome_data))
-    transcriptome_data = matrix(as.integer(as.character(unlist(transcriptome_data))),ncol = length(col_names))
-    rownames(transcriptome_data) = row_names
-    colnames(transcriptome_data) = col_names
-    
-    visualization_data = read.table(path_visualization_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
-    colnames(visualization_data) = str_replace_all(colnames(visualization_data),pattern="^X","")
-    
-    name_query_data = tail(as.character(unlist(str_split(path_transcriptome_file,pattern ="/"))),1)
-    name_query_data = str_replace_all(name_query_data,pattern =".tsv","")
-    
-    name_training_data = tail(as.character(unlist(str_split(dataset_training,pattern ="_"))),1)
-    
-    name_algorithm_datatype = tail(as.character(unlist(str_split(path_benchmark_files,pattern ="/"))),1)
-    name_algorithm_datatype = str_replace_all(name_algorithm_datatype,pattern ="(.tsv)|(Benchmark_results.)","")
-    name_algorithm = head(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
-    name_datatype = tail(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
-    
-    ###
-    
-    deconvolution_results = Determine_differentiation_stage(
-        transcriptome_data = transcriptome_data,
-        deconvolution_algorithm = str_to_lower(algorithm),
-        models = dataset_training,
-        nr_permutations = 1000,
-        output_file = ""
-    )
-    
-    if (!("" %in% meta_data[rownames(deconvolution_results),"Grading"]))
-        deconvolution_results[,"Grading"] = meta_data[rownames(deconvolution_results),"Grading"]
-    
-    #deconvolution_results$Confidence_score_dif = log(deconvolution_results$Confidence_score_dif+1)
-    
-    ki_index = which(rownames(transcriptome_data) == "MKI67")
-    if( length(ki_index) != 0 ){
-        
-        deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
-        deconvolution_results[,"MKI67"] = log(as.double(transcriptome_data[ki_index[1],])+1)
-        
-    } else {
-        
-        deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
-    }
-    
-    if (str_detect( path_transcriptome_file,pattern = "Wiedenmann_Scarpa_GSE73338")){
-        mki_67_wiedenmann = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",sep="\t",header = T)
-        colnames(mki_67_wiedenmann) = str_replace_all(colnames(mki_67_wiedenmann),pattern="^X","")
-        deconvolution_results[colnames(mki_67_wiedenmann),"MKI67"] = as.double(mki_67_wiedenmann["MKI67",])
-    }
-    
-    deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4
-    deconvolution_results$Confidence_score_dif[which(is.infinite(as.double(deconvolution_results$Confidence_score_dif)))] = 0
-    
-    ### results parsing
-    
-    graphics_path_heatmap = paste("~/Deko/Results/Images",algorithm, sep ="/")
-    graphics_path_heatmap = paste(graphics_path_heatmap,"Heatmap", sep ="/")
-    if (! dir.exists(graphics_path_heatmap))
-        dir.create(graphics_path_heatmap)
-    graphics_path_heatmap = paste(graphics_path_heatmap,name_datatype, sep ="/")
-    if (! dir.exists(graphics_path_heatmap))
-        dir.create(graphics_path_heatmap)
-    graphics_path_heatmap = paste(graphics_path_heatmap,name_query_data, sep ="/")
-    if (! dir.exists(graphics_path_heatmap))
-        dir.create(graphics_path_heatmap)
-    graphics_path_heatmap = paste(graphics_path_heatmap,paste0(name_training_data,".pdf"),sep = "/")
-    
-    pdf(graphics_path_heatmap,onefile = TRUE)#,width="1024px",height="768px")
-    vis_mat = create_heatmap_differentiation_stages(
-        visualization_data,
-        deconvolution_results,
-        #high_threshold = 10,
-        confidence_threshold = 1.0,
-        show_colnames = F,
-        aggregate_differentiated_stages = FALSE
-    )
-    dev.off()
-    
-    graphics_path_pca = paste("~/Deko/Results/Images",algorithm, sep ="/")
-    graphics_path_pca = paste(graphics_path_pca,"PCA", sep ="/")
-    graphics_path_pca = paste(graphics_path_pca,name_datatype, sep ="/")
-    if (! dir.exists(graphics_path_pca))
-        dir.create(graphics_path_pca)
-    graphics_path_pca = paste(graphics_path_pca,name_query_data, sep ="/")
-    if (! dir.exists(graphics_path_pca))
-        dir.create(graphics_path_pca)
-    graphics_path_pca = paste(graphics_path_pca,paste0(name_training_data,".pdf"),sep = "/")
-    
-    pdf(graphics_path_pca,onefile = TRUE)#,width="1024px",height="768px")
-    create_PCA_differentiation_stages(
-        visualization_data = visualization_data,
-        deconvolution_results = deconvolution_results
-    )
-    dev.off()
-    
-    cor_1 = cor((deconvolution_results[rownames(vis_mat),"MKI67"]),(vis_mat$Ratio_numeric))
-    cor_1_p_value = cor_1#cor_1$p.value
-    cor_2 = cor((deconvolution_results[,"MKI67"]),(deconvolution_results$ductal))
-    cor_2_p_value = cor_2#cor_2$p.value
-    
-    if (length(deconvolution_results$hisc) > 0){
-        cor_3 = cor((deconvolution_results[,"MKI67"]),(deconvolution_results$hisc))
-        cor_3_p_value = cor_3#cor_3$p.value
-    } else {cor_3_p_value = 1.0}
-    
-    cor_4 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$Ratio))))
-    cor_4_p_value = cor_4$p.value
-    
-    cor_5 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$ductal))))
-    cor_5_p_value = cor_5$p.value
-    
-    if(length(vis_mat$hisc) > 0){
-        cor_6 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$MKI67)),as.factor(as.character(vis_mat$hisc))))
-        cor_6_p_value = cor_6$p.value
-    } else {cor_6_p_value = 1.0}
-    
-    
-    if ( length(vis_mat$Grading) > 0){
-        
-        # categorical
-        
-        cor_7 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$Ratio))))
-        cor_7_p_value = cor_7$p.value
-        
-        cor_8 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$ductal))))
-        cor_8_p_value = cor_8$p.value
-        
-        if(length(vis_mat$hisc) > 0){
-            cor_9 = suppressWarnings(chisq.test(as.factor(as.character(vis_mat$Grading)),as.factor(as.character(vis_mat$hisc))))
-            cor_9_p_value = cor_9$p.value
-        } else {cor_9_p_value = 1.0}
-        
-        # anova
-        
-        cor_10 = aov(as.double(vis_mat$Ratio_numeric) ~ as.factor(as.character(vis_mat$Grading)) )
-        cor_10_p_value = as.double(TukeyHSD(cor_10)$`as.factor(as.character(vis_mat$Grading))`[,4])
-        
-        cor_11 = aov(as.double(deconvolution_results[rownames(vis_mat),"ductal"]) ~ as.factor(as.character(vis_mat$Grading)) )
-        cor_11_p_value = as.double(TukeyHSD(cor_11)$`as.factor(as.character(vis_mat$Grading))`[,4])
-        
-        if(length(vis_mat$hisc) > 0){
-            cor_12 = aov(as.double(deconvolution_results[rownames(vis_mat),"hisc"]) ~ as.factor(as.character(vis_mat$Grading)) )
-            cor_12_p_value = as.double(TukeyHSD(cor_12)$`as.factor(as.character(vis_mat$Grading))`[,4])
-        } else {cor_12_p_value = c(1.0,1.0,1.0)}
-    } else {
-        cor_7_p_value = cor_8_p_value = cor_9_p_value = 1
-        cor_10_p_value = cor_11_p_value = cor_12_p_value = rep(1,3)
-    }
-    
-    identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
-    if (str_detect(dataset_training[2], "HISC")){
-        dataset_training_label = paste(identifier,"hisc",sep="_")
-    } else {
-        dataset_training_label = identifier
-    }
-    
-    results_vec = c(
-        dataset_query,
-        dataset_training_label,
-        cor_1_p_value,
-        cor_2_p_value,
-        cor_3_p_value,
-        cor_4_p_value,
-        cor_5_p_value,
-        cor_6_p_value,
-        cor_7_p_value,
-        cor_8_p_value,
-        cor_9_p_value,
-        cor_10_p_value,
-        cor_11_p_value,
-        cor_12_p_value
-    )
-    
-    benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
-    benchmark_results_t = rbind(benchmark_results_t,results_vec)
-    colnames(benchmark_results_t) = colnames(benchmark_results_t_ori)
-    
-    ### mki-67
-    
-    if( length(ki_index) != 0 ){
-        
-        graphics_path_mki67 = paste("~/Deko/Results/Images",algorithm, sep ="/")
-        graphics_path_mki67 = paste(graphics_path_mki67,"MKI67", sep ="/")
-        if (! dir.exists(graphics_path_mki67))
-            dir.create(graphics_path_mki67)
-        graphics_path_mki67 = paste(graphics_path_mki67,name_datatype, sep ="/")
-        if (! dir.exists(graphics_path_mki67))
-            dir.create(graphics_path_mki67)
-        graphics_path_mki67 = paste(graphics_path_mki67,name_query_data, sep ="/")
-        if (! dir.exists(graphics_path_mki67))
-            dir.create(graphics_path_mki67)
-        graphics_path_mki67 = paste(graphics_path_mki67,paste0(name_training_data,".pdf"),sep = "/")
-        
-        vis_mat = vis_mat[rownames(deconvolution_results),]
-        scale_mat = data.frame(
-            "MKI67" = deconvolution_results$MKI67,
-            "Ratio" = vis_mat$Ratio_numeric
-        )
-        
-        pdf(graphics_path_mki67,onefile = TRUE)#,width="1024px",height="768px")
-        
-        lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Ratio) # Fit linear model
-        summary(lm.model)
-        correlation = round(cor(scale_mat$MKI67, scale_mat$Ratio),2)
-        
-        # Extract fitted coefficients from model object
-        b0 <- lm.model$coefficients[1]
-        b1 <- lm.model$coefficients[2]
-        
-        g_bench = ggplot(
-            data = scale_mat,
-            aes( y =  Ratio,x = MKI67))
-        g_bench = g_bench + geom_point( aes( size = 4))
-        g_bench = g_bench + geom_smooth(method = "lm")
-        g_bench = g_bench +  annotate( "text", x = 2, y = 2, label = as.character(correlation), size =10)
-        plot(g_bench)
-        dev.off()
-    }
-    
-    # output 
-    
-    write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F)
-}
-
-algorithm = "bseqsc"
+algorithm = "nmf"
 type = "hisc"
-benchmark_results_t = benchmark_results_t_ori
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 
 for( i in 1:length(path_transcriptome_files)){
-    
-    if (!file.exists(path_benchmark_files))
-        write.table(benchmark_results_t,path_benchmark_files,sep="\t",quote=F,row.names= F)
     
     dataset_query = tail(as.character(unlist(str_split(path_transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
@@ -349,10 +67,12 @@ for( i in 1:length(path_transcriptome_files)){
     
     print(i)
     
-    benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
-    
-    if (nrow(benchmark_results_t) >= i)
-        next(paste0("Skipping ",i))
+    if (file.exists(path_benchmark_files)){
+        benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+        
+        if (nrow(benchmark_results_t) >= i)
+            next(paste0("Skipping ",i))
+    }
     
     run_benchmark(
         dataset_query = dataset_query,
