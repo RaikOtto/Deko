@@ -25,7 +25,7 @@ transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
 add_deconvolution_training_model_bseqsc(
     transcriptome_data = transcriptome_data,
     model_name = model_name,
-    str_to_lower(subtype_vector),
+    subtype_vector =  str_to_lower(subtype_vector),
     training_p_value_threshold = 0.05,
     training_nr_permutations = 0,
     training_nr_marker_genes = 800

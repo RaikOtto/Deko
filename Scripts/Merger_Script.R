@@ -1,5 +1,10 @@
 library("stringr")
 
+# prep
+
+meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+
 # scRNA integration
 
 bam_data_1 = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_4.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
@@ -17,8 +22,6 @@ rownames(bam_data_1) = row_names
 colnames(bam_data_1) = col_names
 summary(bam_data_1["INS",])
 
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
 meta_data = meta_info[colnames(bam_data_1),]
 #meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
 bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
@@ -80,3 +83,35 @@ new_mat[1:5,1:5]
 #write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Baron.tsv", sep ="\t", quote =F , row.names = T)
 #write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", quote =F , row.names = T)
 write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv", sep ="\t", quote =F , row.names = T)
+
+### splitter
+
+# scRNA integration
+
+bam_data_1 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/TPMs.Not_normalized.Controls_Groetzinger_Scarpa.89S.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
+colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
+rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
+summary(as.double(bam_data_1["INS",]))
+
+meta_data = meta_info[colnames(bam_data_1),]
+table(meta_data$Histology)
+
+meta_data = meta_data[meta_data$Histology == "Pancreatic_NEN",]
+bam_data_1 = bam_data_1[,meta_data$Name]
+dim(bam_data_1)
+meta_data = meta_data[meta_data$Location != "Control",]
+bam_data_1 = bam_data_1[,meta_data$Name]
+dim(bam_data_1)
+
+meta_data_wiedenmann = meta_data[meta_data$Study == "Groetzinger",]
+bam_data_wiedenmann = bam_data_1[,meta_data_wiedenmann$Name]
+meta_data_wiedenmann = meta_data_wiedenmann[meta_data_wiedenmann$Grading != "G0",]
+dim(bam_data_wiedenmann)
+#write.table(bam_data_wiedenmann,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann.41.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+
+meta_data_scarpa = meta_data[meta_data$Study == "Scarpa",]
+bam_data_scarpa = bam_data_1[,meta_data_scarpa$Name]
+dim(bam_data_scarpa)
+
+write.table(bam_data_scarpa,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Scarpa.29_samples.pancreatic_NEN.tsv",sep="\t",row.names = T, col.names= T,quote=F)

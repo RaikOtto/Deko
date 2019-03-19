@@ -35,16 +35,18 @@ expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sa
 #write.table(expr_raw,path_transcriptome_file,sep="\t",quote=F)
 #write.table(expr,visualization_data_path,sep="\t",quote=F)
 
-#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
-#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv"
+path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.41.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.24_samples.pancreatic_NEN.tsv"
+#path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.29_samples.pancreatic_NEN.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv"
 #path_transcriptome_file = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.vis.tsv"
-#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.vis.tsv"
+visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.41.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.24_samples.pancreatic_NEN.vis.tsv"
+#visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.29_samples.pancreatic_NEN.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv"
 #visualization_data_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv"

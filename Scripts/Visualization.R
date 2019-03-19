@@ -12,6 +12,18 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
+### lm plot
+
+lm.model <- lm(deconvolution_results$MKI67 ~ deconvolution_results$ductal) # Fit linear model
+summary(lm.model)
+correlation = round(cor(deconvolution_results$MKI67, deconvolution_results$ductal),2)
+cor.test(deconvolution_results$MKI67, deconvolution_results$ductal)
+
+g_bench = ggplot( aes(y =  MKI67,x = ductal ), data = deconvolution_results)
+g_bench = g_bench + geom_point( aes( size = 4)) + scale_size(guide="none")
+g_bench = g_bench + geom_smooth(method = "lm")
+g_bench = g_bench +  annotate( "text", x = 2, y = 2, label = as.character(correlation), size =10)
+plot(g_bench)
 
 ### survival plots ###
 
@@ -86,11 +98,6 @@ bin_width = 10
 #data_mat_2 = data_mat
 #data_mat_2$Grading[data_mat_2$Grading %in% c("G1","G2")] = "G1_G2"
 ggplot(data_mat,aes( x = Grading, y = Gene_Expression, fill = Grading )) + geom_boxplot( )
-
-geom_histogram(data=subset(data_mat,Grading == 'G3'),fill = "red", alpha = 0.5,position="dodge", bins = bin_width) +
-    geom_histogram(data=subset(data_mat,Grading == 'G2'),fill = "yellow", alpha = 0.5,position="dodge", bins = bin_width) +
-    geom_histogram(data=subset(data_mat,Grading == 'G1'),fill = "green", alpha = 0.5,position="dodge", bins = bin_width)
-
 
 ### ROC curve
 
