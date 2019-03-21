@@ -45,6 +45,7 @@ run_benchmark = function(
     ki_index = which(rownames(transcriptome_data) == "MKI67")
     
     ###
+    
     deconvolution_results = Determine_differentiation_stage(
         transcriptome_data = transcriptome_data,
         deconvolution_algorithm = str_to_lower(algorithm),

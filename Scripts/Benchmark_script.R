@@ -25,25 +25,21 @@ models_mixed = c(
 nr_models = length(models_ductal)
 
 path_transcriptome_files = c(
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.41.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.24_samples.pancreatic_NEN.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.29_samples.pancreatic_NEN.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.Scarpa.tsv",nr_models), # 69
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.tsv",nr_models), #40
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.tsv",nr_models), # 29
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/Sadanandam.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.tsv",nr_models)
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/Alvarez.tsv",nr_models)
 )
 
 path_visualization_files = c(
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.41.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.24_samples.pancreatic_NEN.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.29_samples.pancreatic_NEN.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.ki67.Grading.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.Scarpa.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Scarpa.vis.tsv",nr_models),
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/Sadanandam.vis.tsv",nr_models),
     rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.vis.tsv",nr_models),
-    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.Primary.Pancreas.vis.tsv",nr_models)
+    rep("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/Alvarez.vis.tsv",nr_models)
 )
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
@@ -52,8 +48,8 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko/Scripts/Benchmark.R")
 
-algorithm = "bseqsc"
-type = "mixed"
+algorithm = "nmf"
+type = "hisc"
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 high_threshold = 66
 low_threshold = 33
