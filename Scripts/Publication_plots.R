@@ -1,4 +1,6 @@
 library("stringr")
+library("grid")
+
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord = pheatmap:::find_coordinates(length(coln), gaps)
   x = coord$coord - 0.5 * coord$size
@@ -6,13 +8,11 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.ENSEMBL.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-expr_raw[1:5,1:5]
+#expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.ENSEMBL.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+#expr_raw[1:5,1:5]
 
 ### Prep
-
-library("grid")
 
 meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 colnames(meta_info) = str_replace_all(colnames(meta_info), pattern = "\\+AF8","")
