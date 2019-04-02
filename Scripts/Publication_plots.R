@@ -47,8 +47,8 @@ aka3 = list(
     Gastric_NEN = "purple",
     Liver = "Darkgreen",
     CUP = "pink"),
-  #Location = c(Primary = "purple",Liver_Met = "#D55E00",Control = "White",Lymph_node_Met = "Yellow",Peritoneum_Met = "Black",Spleen_Met = "Cyan",Lung_Met = "Blue"),
-  Location = c(Primary = "white", Metastasis = "black"),
+  Location = c(Primary = "purple",Liver_Met = "#D55E00",Control = "White",Lymph_node_Met = "Yellow",Peritoneum_Met = "Black",Spleen_Met = "Cyan",Lung_Met = "Blue"),
+  #Location = c(Primary = "white", Metastasis = "black"),
   NEC_NET = c(NEC= "red", NET = "blue", Unknown = "gray"),
   Study = c(Groetzinger = "brown", Scarpa = "darkgreen"),
   MKI67 = c(high = "White", medium = "gray", low = "black"),
@@ -90,11 +90,11 @@ cor_mat = cor(expr);pcr = prcomp(t(cor_mat))
 
 # Plot 1
 
-meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
-meta_data$Grading[meta_data$Grading == ""] = "G0"
+#meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
+#meta_data$Grading[meta_data$Grading == ""] = "G0"
 pheatmap::pheatmap(
   cor_mat,
-  annotation_col = meta_data[c("Grading", "Location","Study")],
+  annotation_col = meta_data[c("Location")],
   annotation_colors = aka3,
   show_rownames = F,
   show_colnames = T,
@@ -108,17 +108,6 @@ pheatmap::pheatmap(
 
 # Plot 2
 
-pheatmap::pheatmap(
-  cor_mat,
-  annotation_col = meta_data[c("Grading","Location","Histology","Study")],
-  annotation_colors = aka3,
-  show_rownames = F,
-  show_colnames = T,
-  treeheight_col = 0,
-  legend = F,
-  fontsize_col = 7
-)
-
 ## Figure 2
 
 # Plot 1
@@ -126,7 +115,7 @@ pheatmap::pheatmap(
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = .75,
-    groups = as.character(meta_data$Study),
+    #groups = as.character(meta_data$Study),
     #shape = as.character(meta_data$Grading),
     ellipse = TRUE,
     circle = TRUE,

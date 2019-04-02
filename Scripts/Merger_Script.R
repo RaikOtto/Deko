@@ -87,7 +87,7 @@ write.table(new_mat[,], "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_B
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann_Scarpa_combined.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -104,15 +104,40 @@ dim(bam_data_1)
 
 ###
 
-meta_data_wiedenmann = meta_data[meta_data$Study == "Groetzinger",]
-bam_data_wiedenmann = bam_data_1[,meta_data_wiedenmann$Name]
-dim(bam_data_wiedenmann)
-table(meta_data_wiedenmann$Grading)
-#write.table(bam_data_wiedenmann,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
 
-meta_data_scarpa = meta_data[meta_data$Study == "Scarpa",]
-bam_data_scarpa = bam_data_1[,meta_data_scarpa$Name]
-dim(bam_data_scarpa)
-table(meta_data_scarpa$Grading)
+bam_data = read.table("~/Deko/Data/Bench_data/Missaglia.S75.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
+colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
+rownames(bam_data) = str_to_upper(rownames(bam_data))
+bam_data = as.data.frame(bam_data)
+dim(bam_data)
+summary(as.double(bam_data["INS",])) # sanity check
 
-#write.table(bam_data_scarpa,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Scarpa.29.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+meta_data = meta_info[colnames(bam_data),]
+table(meta_data$Grading)
+dim(meta_data)
+#table(meta_data$Grading)
+#meta_data = meta_data[meta_data$Histology == "Pancreatic_NEN",]
+meta_data = meta_data[meta_data$Subtype == "Primary",]
+#meta_data = meta_data[meta_data$Location == "pancreas",]
+#meta_data = meta_data[meta_data$Grading %in% c("G1","G2","G3"),]
+bam_data = bam_data[,meta_data$Name]
+dim(bam_data)
+table(meta_data$Grading)
+
+#write.table(bam_data,"~/Deko/Data/Bench_data/Alverez.S75.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+
+### parse GSE73339
+
+mapping_t = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/Mapping_table.tsv",sep = "\t",header = T,stringsAsFactors = F)
+mapping_t = as.data.frame(mapping_t)
+rownames(mapping_t) = mapping_t$ID
+mapping_t[1:5,1:2]
+
+table(rownames(bam_data) %in% mapping_t$ID)
+mapping_t = mapping_t[rownames(bam_data),]
+bam_data = bam_data[rownames(mapping_t),]
+hgnc_list = mapping_t$HGNC
+hgnc_list = str_replace_all(hgnc_list,pattern = " ","")
