@@ -14,7 +14,7 @@ genes_of_interest_hgnc_t$V1
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 
-path_transcriptome_file = "~/Deko/Data/Bench_data/Alverez.S105.tsv"
+path_transcriptome_file = "~/Deko/Data/Bench_data/Fadista.tsv"
 visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
 
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)

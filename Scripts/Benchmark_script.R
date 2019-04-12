@@ -34,7 +34,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko/Scripts/Benchmark.R")
 
-algorithm = "bseqsc"
+algorithm = "music"
 type = "hisc"
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 high_threshold = 66

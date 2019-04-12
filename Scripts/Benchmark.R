@@ -196,7 +196,7 @@ run_benchmark = function(
             fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$hisc)
 
             pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
-                print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
+                print(survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T, censor.size = 10))
             dev.off()
         
         } else {
@@ -437,7 +437,8 @@ run_benchmark = function(
     
     if (
         (length(vis_mat$Grading) > 0) &
-        (length(ki_index) != 0)
+        (length(ki_index) != 0) &
+        (length(unique(vis_mat$Grading)) > 1)
     ) {
         
         # anova 1
@@ -489,7 +490,10 @@ run_benchmark = function(
 
     # anova ductal versus grading
     
-    if (length(vis_mat$Grading) > 0) {
+    if (
+        (length(vis_mat$Grading) > 0) & 
+        (length(unique(vis_mat$Grading)) > 1)
+    ) {
         
         # anova 2 ductal
         
@@ -540,7 +544,8 @@ run_benchmark = function(
     
     if (
         (length(deconvolution_results$hisc) > 0) &
-        (length(vis_mat$Grading) > 0)
+        (length(vis_mat$Grading) > 0) &
+        (length(unique(vis_mat$Grading)) > 1)
     ){
         
         # anova 3
@@ -592,7 +597,10 @@ run_benchmark = function(
     
     # anova ratio versus grading
     
-    if (length(vis_mat$Grading) > 0) {
+    if (
+        (length(vis_mat$Grading) > 0) & 
+        (length(unique(vis_mat$Grading)) > 1)
+    ) {
         
         ## annova 4
 

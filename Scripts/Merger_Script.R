@@ -105,9 +105,10 @@ dim(bam_data_1)
 ###
 
 meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Meta_info.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 
-bam_data = read.table("~/Deko/Data/Bench_data/Missaglia.S75.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
 colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
 rownames(bam_data) = str_to_upper(rownames(bam_data))
@@ -119,15 +120,15 @@ meta_data = meta_info[colnames(bam_data),]
 table(meta_data$Grading)
 dim(meta_data)
 #table(meta_data$Grading)
-#meta_data = meta_data[meta_data$Histology == "Pancreatic_NEN",]
-meta_data = meta_data[meta_data$Subtype == "Primary",]
-#meta_data = meta_data[meta_data$Location == "pancreas",]
-#meta_data = meta_data[meta_data$Grading %in% c("G1","G2","G3"),]
+meta_data = meta_data[meta_data$Study == "Groetzinger",]
+meta_data = meta_data[meta_data$Histology == "Pancreatic_NEN",]
+meta_data = meta_data[meta_data$Grading %in% c("G0"),]
 bam_data = bam_data[,meta_data$Name]
 dim(bam_data)
 table(meta_data$Grading)
 
-#write.table(bam_data,"~/Deko/Data/Bench_data/Alverez.S75.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+#write.table(meta_data,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann_selection_meta_data.tsv",sep="\t",row.names = T, col.names= T,quote=F)
+write.table(bam_data,"~/Deko/Data/Bench_data/Controls.S11.tsv",sep="\t",row.names = T, col.names= T,quote=F)
 
 ### parse GSE73339
 
