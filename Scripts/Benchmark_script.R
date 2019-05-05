@@ -4,7 +4,7 @@ library(devtools)
 load_all("~/artdeco")
 library(stringr)
 library("MuSiC")
-library("xbioc")
+#library("xbioc")
 
 
 models_ductal = c(
@@ -34,7 +34,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko/Scripts/Benchmark.R")
 
-algorithm = "music"
+algorithm = "bseqsc"
 type = "hisc"
 path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 high_threshold = 66

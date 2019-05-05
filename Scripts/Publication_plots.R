@@ -8,9 +8,48 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-## Figure 1
+meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-# Plot 1
+#source("~/Deko/Scripts/Visualization_colors.R")
+genes_of_interest_hgnc_t = read.table("~/Deko/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t[,1]
+genes_of_interest_hgnc_t$V1
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[35,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = sad_genes[ sad_genes != ""]
+
+path_transcriptome_file = "~/Deko/Data/Bench_data/MAPTor_NET.S57.tsv"
+visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
+
+expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+
+meta_data = meta_info[colnames(expr_raw),]
+#meta_data_2 = rbind(meta_data_2,meta_data)
+meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
+expr_raw = expr_raw[,rownames(meta_data)]
+#meta_data[colnames(expr_raw),"mki_67"] = log(as.double(expr_raw["MKI67",])+1)
+#meta_data$mki_67[ which(meta_data$mki_67 > mean(meta_data$mki_67))] = "high"
+#meta_data$mki_67[meta_data$mki_67 != "high"] = "low"
+expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
+expr[1:5,1:5]
+dim(expr)
+
+correlation_matrix = cor(expr)
+pcr = prcomp(t(correlation_matrix))
+
+p = ggbiplot::ggbiplot(
+    pcr,
+    obs.scale = 1,
+    groups = meta_data$NEC_NET,
+    ellipse = TRUE,
+    circle = TRUE,
+    #labels = rownames(meta_data)
+    var.axes = F#,
+)
+p
+## Figure 1
 
 #meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
 #meta_data$Grading[meta_data$Grading == ""] = "G0"
@@ -102,38 +141,22 @@ p = p + geom_bar(stat="identity", position=position_dodge())
 p + geom_errorbar(aes(),  position = "dodge")
 
 
-# linear correlation MEN1
+# Figure 4
 
-vis_mat_2 = subset(vis_mat, MEN1_mt_AF > 0)
-lm.model <- lm( vis_mat_2$MEN1_exp ~ vis_mat_2$MEN1_mt_AF) # Fit linear model
-summary(lm.model)
-cor(vis_mat_2$MEN1_exp , vis_mat_2$MEN1_mt_AF)
+data_t = read.table("~/Deko/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",header = T)
+data_t$Dataset = factor(data_t$Dataset, levels = c("Scarpa","MAPtor-NET","Wiedenmann","Sadanandam"))
+data_t$Measurement = factor(data_t$Measurement,levels = c("Sensitivity","Specificity","F1","ROC"))
+#data_t$P_value = -1*log(data_t$P_value)
+data_t = subset(data_t, Dataset != "Missaglia")
+data_t$Value = data_t$Value*100
 
-# Extract fitted coefficients from model object
-b0 <- lm.model$coefficients[1]
-b1 <- lm.model$coefficients[2]
+p = ggplot( data = data_t,aes( x = Dataset, y = as.double(Value), fill =Proportion) )
+p = p + geom_bar(stat="identity", position=position_dodge())
+p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+#p = p + annotate("text", x=1:57,y = 5.5,parse=TRUE, label = label_vec, color = col_vec, size = 4.5 )
+p = p + xlab("") + ylab("Sensitivity") + theme(legend.position = "top")
+p + facet_wrap(~Measurement)+scale_fill_manual(values=c("orange", "black", "darkgreen"))
 
-g_bench = ggplot(
-  data = vis_mat_2,
-  aes( y =  MEN1_mt_AF,x = MEN1_exp)
-)
-g_bench = g_bench + geom_point( )
-g_bench = g_bench + geom_smooth(method = "lm")
-
-g_bench + xlab("MEN1 expression")+ ylab("MEN1 mutation AF")
-
-### MEN1 exp t-test
-
-### chr 5
-
-vis_mat = deconvolution_results[,c("MKI67","ductal","Grading")]
-vis_mat = reshape2::melt(vis_mat)
-colnames(vis_mat) = c("Grading","Type","Value")
-
-men1_plot = ggplot( vis_mat, aes ( x = Grading,  y = Value, fill = Type))
-men1_plot = men1_plot + geom_boxplot( aes())
-men1_plot = men1_plot + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-men1_plot
 
 ### survival plots ###
 
@@ -152,3 +175,48 @@ fit = survival::survfit( survival::Surv( meta_data$OS_Tissue ) ~ cell_type)
 
 survminer::ggsurvplot(fit, data = meta_data, risk.table = T, pval = T)
 # Visualize with survminer
+
+### prediction NEC NET
+
+mki_67 = deconvolution_results[rownames(meta_data),"MKI67"]
+ductal = deconvolution_results[rownames(meta_data),"ductal"]
+hisc = deconvolution_results[rownames(meta_data),"hisc"]
+nec_net = meta_data$NEC_NET
+target_vector = nec_net
+target_vector[target_vector=="NEC"] = 0
+target_vector[target_vector != 0] = 1
+
+t_data = data.frame(
+    "mki_67" = mki67,
+    "nec_net" = nec_net,
+    "ductal" = ductal,
+    "hisc" = hisc
+)
+
+rf_fit <- glm(
+    nec_net ~ hisc, data = t_data, family=binomial(link="logit")
+)
+predicted <- plogis(predict(rf_fit, t_data))  # predicted scores
+optCutOff <- optimalCutoff(target_vector, predicted)[1] 
+sensitivity = round(InformationValue::sensitivity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
+specificity = round(InformationValue::specificity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
+
+## Figure 1
+
+estimate_t = read.table("~/Deko/Results/MAPTor-NET.estimate.tsv",skip = 2,header = T)
+colnames(estimate_t) = str_replace_all(colnames(estimate_t),pattern = "^X","")
+rownames(estimate_t) = estimate_t$NAME
+estimate_t = estimate_t[,c(-1,-2)]
+estimate_t = estimate_t[-4,]
+
+pheatmap::pheatmap(
+    estimate_t,
+    annotation_col = meta_data[c("Study")],
+    annotation_colors = aka3,
+    show_rownames = T,
+    show_colnames = T,
+    #treeheight_col = 0,
+    #legend = F,
+    #fontsize_col = 7,
+    clustering_method = "average"
+)

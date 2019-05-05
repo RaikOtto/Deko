@@ -1,14 +1,23 @@
 ###
 
 deconvolution_results$NEC_NET = meta_data[rownames(deconvolution_results),"NEC_NET"]
-deconvolution_results_selection = subset(deconvolution_results, Grading == "G2")
-vis_mat = deconvolution_results_selection[,c("NEC_NET","ductal","hisc","MKI67")]
+deconvolution_results_selection = subset(deconvolution_results, Grading %in% c("G3"))
+vis_mat = deconvolution_results_selection[,c("NEC_NET","ductal","MKI67","hisc")]
 vis_mat = reshape2::melt(vis_mat)
 colnames(vis_mat) = c("NEC_NET","Type","Value")
 
 p = ggplot( data = vis_mat,aes( x = NEC_NET, y = Value, fill =Type) )
 p = p + geom_bar(stat="identity", position=position_dodge())
 p
+
+anova_mki67 = aov(deconvolution_results$MKI67 ~ as.factor(as.character(deconvolution_results$NEC_NET)) )
+TukeyHSD(anova_mki67)$`as.factor(as.character(deconvolution_results$NEC_NET))`
+
+anova_ductal = aov(deconvolution_results$ductal ~ as.factor(as.character(deconvolution_results$NEC_NET)) )
+TukeyHSD(anova_ductal)$`as.factor(as.character(deconvolution_results$NEC_NET))`
+
+anova_hisc = aov(deconvolution_results$hisc ~ as.factor(as.character(deconvolution_results$NEC_NET)) )
+TukeyHSD(anova_hisc)$`as.factor(as.character(deconvolution_results$NEC_NET))`
 
 ###
 
@@ -26,11 +35,12 @@ opt.cut = function( perf, pred ){
 
 ### ROCR
 library("ROCR")
+library(InformationValue)
 
 perf_vec <<- c()
 subtypes = c( "HISC", "ductal", "mki67")
 
-for( i in 19){
+for( i in 7:24){
     
     dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
@@ -87,6 +97,8 @@ for( i in 19){
     mki67 = mki67 / 100
     
     ###
+    
+    print ( dataset_query)
 
     for (subtype in subtypes ){
         
@@ -95,6 +107,23 @@ for( i in 19){
                 text = subtype
             )
         )
+        
+        t_data = data.frame(
+            Grading = as.factor(target_vector),
+            Value =  as.double( prediction_vector  )
+        )
+        
+        rf_fit <- glm(
+            Grading ~ Value, data = t_data, family=binomial(link="logit")
+            #method = "glm"#,
+            #lambda = 0
+        )
+        predicted <- plogis(predict(rf_fit, t_data))  # predicted scores
+        optCutOff <- optimalCutoff(t_data$Grading, predicted)[1] 
+        sensitivity = round(InformationValue::sensitivity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
+        specificity = round(InformationValue::specificity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
+
+        F1_score =  round(2*(sensitivity*specificity/(sensitivity+specificity)),2)
         
         pred_obj = ROCR::prediction(
             predictions = as.double( prediction_vector  ),
@@ -113,8 +142,8 @@ for( i in 19){
                 ),
                 2 )
         )
-        
-        print( paste0( c( subtype,"AUC:", rocr_auc) ), collapse = " " )
+
+        print( paste0( c( subtype,"Sensitivity:", sensitivity,", Specificity", specificity, ", F1", F1_score) ), collapse = " " )
         perf = ROCR::performance(
             prediction.obj = pred_obj,
             measure = "tpr",
