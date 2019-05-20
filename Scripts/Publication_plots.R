@@ -27,7 +27,12 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
 #meta_data_2 = rbind(meta_data_2,meta_data)
-meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
+
+table(meta_data_2$Study)
+table(meta_data_2$Location)
+
+table(meta_data$Grading)
+#meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
 expr_raw = expr_raw[,rownames(meta_data)]
 #meta_data[colnames(expr_raw),"mki_67"] = log(as.double(expr_raw["MKI67",])+1)
 #meta_data$mki_67[ which(meta_data$mki_67 > mean(meta_data$mki_67))] = "high"
