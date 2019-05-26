@@ -225,3 +225,45 @@ pheatmap::pheatmap(
     #fontsize_col = 7,
     clustering_method = "average"
 )
+
+## Figure 3 Segerstolpe Heatmap
+
+deconvolution_results = readRDS("~/Deko/Results//TMP.RDS")
+
+selector = c("MKI67","Grading","hisc","ductal","acinar","delta","gamma","beta","alpha")
+vis_mat = deconvolution_results[,selector]
+vis_mat$MKI67 = round(vis_mat$MKI67 / max(vis_mat$MKI67) * 100,1)* 3
+vis_mat$Grading = str_replace_all(vis_mat$Grading,pattern = "^G","")
+vis_mat = matrix(as.double(unlist(vis_mat)), ncol = length(selector))
+colnames(vis_mat) = c("MKI67","Grading","HISC","Ductal","Acinar","Delta","Gamma","Beta","Alpha")
+vis_mat = as.data.frame(vis_mat)
+vis_mat$Grading = as.factor(vis_mat$Grading)
+vis_mat = reshape2::melt(vis_mat)
+vis_mat$variable = factor(vis_mat$variable,levels = c("Grading","MKI67","HISC","Ductal","Acinar","Delta","Gamma","Beta","Alpha"))
+
+melt_mat = vis_mat %>% group_by(Grading,variable)
+mean_mat = melt_mat %>% summarise( mean(value) ) %>% rename( 'Mean_Proportion' = 'mean(value)' )
+mean_mat = melt_mat %>% summarise( sd(value) ) %>% rename( 'SD' = 'sd(value)' ) %>% right_join(mean_mat) %>% group_by(variable) %>% rename( 'Cell_Type_Proportion' = 'variable' )
+
+g = ggplot(
+    data = mean_mat,
+    aes(
+        x = Grading,
+        y = Mean_Proportion,
+        group = Cell_Type_Proportion,
+        color = Cell_Type_Proportion
+    )
+)
+g = g + scale_color_manual(values=c('Red',"Black",'Brown',"lightblue","purple","orange","darkgreen","blue"))
+g = g + geom_errorbar(aes(ymin = Mean_Proportion - SD*.2, ymax = Mean_Proportion + SD*.1), width = .1)
+g = g + geom_line(lwd = 2, aes(linetype = Cell_Type_Proportion)) 
+g = g + ylab(label = "Average Proportion Prediction")
+g = g + theme(legend.position="top") 
+g = g + guides( color = guide_legend(keywidth = 5))
+#g = g + scale_y_continuous(sec.axis = sec_axis( ~.*1.0, name = "Relative MKI67 expression"))
+g
+
+svg(filename = "~/Deko/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
+g
+dev.off()
+#“blank”, “solid”, “dashed”, “dotted”, “dotdash”, “longdash”, “twodash”
