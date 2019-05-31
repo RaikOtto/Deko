@@ -1,3 +1,5 @@
+library("stringr")
+
 meta_info = "~/Deko/Misc/Meta_information.tsv" %>% read.table(sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")

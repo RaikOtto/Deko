@@ -35,12 +35,13 @@ opt.cut = function( perf, pred ){
 
 ### ROCR
 library("ROCR")
-library(InformationValue)
+library("InformationValue")
 
 perf_vec <<- c()
 subtypes = c( "HISC", "ductal", "mki67")
+res_mat <<-  matrix(as.character(),ncol = 6)
 
-for( i in 7:24){
+for( i in seq(7,24,by=3)){
     
     dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
@@ -143,7 +144,7 @@ for( i in 7:24){
                 2 )
         )
 
-        print( paste0( c( subtype,"Sensitivity:", sensitivity,", Specificity", specificity, ", F1", F1_score) ), collapse = " " )
+        print( paste0( c( subtype,"Sensitivity:", sensitivity,", Specificity:", specificity, ", F1:", F1_score, ", ROC:",rocr_auc) ), collapse = " " )
         perf = ROCR::performance(
             prediction.obj = pred_obj,
             measure = "tpr",
@@ -151,29 +152,35 @@ for( i in 7:24){
         );
         
         perf_vec <<- c(perf_vec,perf)
+        res_vec = c(dataset_query, subtype,sensitivity,specificity,F1_score,rocr_auc)
+        res_mat =  rbind(res_mat,res_vec)
     }
-    
 }
-    
+colnames(res_mat) = c("Dataset","Proportion","Sensitivity","Specificity","F1","AUC")
+write.table(res_mat,"~/Deko/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",row.names = F)
 # graphics
 
 perf_1 = unlist(perf_vec)[[1]]
 perf_2 = unlist(perf_vec)[[2]]
 perf_3 = unlist(perf_vec)[[3]]
+perf_4 = unlist(perf_vec)[[4]]
 
 x_val_1 = ( as.double(unlist(perf_1@x.values ) ) ) * 100
 x_val_2 = ( as.double(unlist(perf_2@x.values ) ) ) * 100
 x_val_3 = ( as.double(unlist(perf_3@x.values ) ) ) * 100
+x_val_4 = ( as.double(unlist(perf_4@x.values ) ) ) * 100
 
 y_val_1 = ( as.double( unlist(perf_1@y.values) ) ) * 100
 y_val_2 = ( as.double( unlist(perf_2@y.values) ) ) * 100
 y_val_3 = ( as.double( unlist(perf_3@y.values) ) ) * 100
+y_val_4 = ( as.double( unlist(perf_4@y.values) ) ) * 100
 
 sub_classifier = as.factor( 
     c( 
         rep(subtypes[1],length(x_val_1)),
         rep(subtypes[2],length(x_val_2)),
-        rep(subtypes[3],length(x_val_3))
+        rep(subtypes[3],length(x_val_3)),
+        rep(subtypes[4],length(x_val_4))
     )
 )
 
@@ -182,12 +189,14 @@ plots_frame = as.data.frame(
         c(
             x_val_1,
             x_val_2, 
-            x_val_3
+            x_val_3,
+            x_val_4
         ),
         c(
             y_val_1,
             y_val_2,
-            y_val_3
+            y_val_3,
+            y_val_4
         )
     )
 )

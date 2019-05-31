@@ -149,20 +149,24 @@ p + geom_errorbar(aes(),  position = "dodge")
 # Figure 4
 
 data_t = read.table("~/Deko/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",header = T)
-data_t$Dataset = factor(data_t$Dataset, levels = c("Scarpa","MAPtor-NET","Wiedenmann","Sadanandam"))
-data_t$Measurement = factor(data_t$Measurement,levels = c("Sensitivity","Specificity","F1","ROC"))
+data_t$Dataset = factor(data_t$Dataset, levels = c("Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
+data_t = reshape2::melt(data_t)
+colnames(data_t) = c("Dataset","Approach","Measurement","Value")
+data_t$Measurement = factor(data_t$Measurement,levels = c("Sensitivity","Specificity","F1","AUC"))
 #data_t$P_value = -1*log(data_t$P_value)
-data_t = subset(data_t, Dataset != "Missaglia")
+#data_t = subset(data_t, Dataset != "Missaglia")
 data_t$Value = data_t$Value*100
 
-p = ggplot( data = data_t,aes( x = Dataset, y = as.double(Value), fill =Proportion) )
+p = ggplot( data = data_t,aes( x = Dataset, y = as.double(Value), fill =Approach) )
 p = p + geom_bar(stat="identity", position=position_dodge())
 p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
 #p = p + annotate("text", x=1:57,y = 5.5,parse=TRUE, label = label_vec, color = col_vec, size = 4.5 )
 p = p + xlab("") + ylab("Sensitivity") + theme(legend.position = "top")
-p + facet_wrap(~Measurement)+scale_fill_manual(values=c("orange", "black", "darkgreen"))
+p = p + facet_wrap(~Measurement)+scale_fill_manual(values=c("orange", "black", "darkgreen"))
 
-
+svg(filename = "~/Deko/Results/Images/Figure_4_G1_G2_vs_G3_Grading.svg", width = 10, height = 10)
+p
+dev.off()
 ### survival plots ###
 
 surv_cor = apply(expr_raw, MARGIN = 1, FUN = function(vec){return(cor(vec, as.double(meta_data$OS_Tissue)))})
