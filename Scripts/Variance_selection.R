@@ -43,10 +43,11 @@ max_list <<- as.integer( sapply( hgnc_list_uni, FUN = function(gene){
 max_list[is.na(max_list)] = 0
 expr_raw = expr_raw[max_list,]
 rownames(expr_raw) = hgnc_list[as.integer(max_list)]
-expr_raw[1:5,1:5]
+
+expr_raw[(nrow(expr_raw)-10):nrow(expr_raw),1:5]
 dim(expr_raw)
 length(hgnc_list_uni)
-summary(as.integer(expr_raw["INS",]))
+
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
 bam_data = expr_raw

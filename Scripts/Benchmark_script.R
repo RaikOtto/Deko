@@ -8,35 +8,35 @@ library("MuSiC")
 
 
 models_ductal = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
-    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))#,
+    #list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 models_hisc = c(
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 models_mixed = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
-    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    #list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 nr_models = length(models_ductal)
 
-transcriptome_files = list.files("~/Deko/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
+transcriptome_files = list.files("~/Deco/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
 transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-source("~/Deko/Scripts/Benchmark.R")
+source("~/Deco//Scripts/Benchmark.R")
 
 algorithm = "bseqsc"
-type = "hisc"
-path_benchmark_files = paste0(c("~/Deko/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
+type = "ductal"
+path_benchmark_files = paste0(c("~/Dece/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1

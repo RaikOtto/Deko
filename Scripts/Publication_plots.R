@@ -8,18 +8,18 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 #source("~/Deko/Scripts/Visualization_colors.R")
-genes_of_interest_hgnc_t = read.table("~/Deko/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t[,1]
 genes_of_interest_hgnc_t$V1
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[35,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 
-path_transcriptome_file = "~/Deko/Data/Bench_data/MAPTor_NET.S57.tsv"
+path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
 visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
 
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
@@ -27,9 +27,8 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
 #meta_data_2 = rbind(meta_data_2,meta_data)
-
-table(meta_data_2$Study)
-table(meta_data_2$Location)
+#table(meta_data_2$Study)
+#table(meta_data_2$Location)
 
 table(meta_data$Grading)
 #meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
@@ -47,7 +46,7 @@ pcr = prcomp(t(correlation_matrix))
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = 1,
-    groups = meta_data$NEC_NET,
+    groups = meta_data$Grading,
     ellipse = TRUE,
     circle = TRUE,
     #labels = rownames(meta_data)
@@ -59,15 +58,15 @@ p
 #meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
 #meta_data$Grading[meta_data$Grading == ""] = "G0"
 pheatmap::pheatmap(
-  cor_mat,
-  annotation_col = meta_data[c("Location")],
-  annotation_colors = aka3,
-  show_rownames = F,
-  show_colnames = T,
-  treeheight_col = 0,
-  legend = F,
-  fontsize_col = 7,
-  clustering_method = "average"
+    correlation_matrix,
+    annotation_col = meta_data[c("NEC_NET","Grading")],
+    annotation_colors = aka3,
+    show_rownames = F,
+    show_colnames = T,
+    treeheight_col = 0,
+    legend = F,
+    fontsize_col = 7,
+    clustering_method = "average"
 )
 
 ## Figure 1
@@ -78,7 +77,7 @@ pheatmap::pheatmap(
 
 # Plot 1
 
-data_t = read.table("~/Deko/Results/ROC_curves.tsv",sep ="\t", header = T)
+data_t = read.table("~/Deco/Results/ROC_curves.tsv",sep ="\t", header = T)
 
 # hisc
 
@@ -145,10 +144,9 @@ p = p + geom_bar(stat="identity", position=position_dodge())
 #p = p + xlab("") + ylab("MEN1 expression in log TPM and MEN1 mutation allele frequency") + theme(legend.position = "top")
 p + geom_errorbar(aes(),  position = "dodge")
 
-
 # Figure 4
 
-data_t = read.table("~/Deko/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",header = T)
+data_t = read.table("~/Deco/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",header = T)
 data_t$Dataset = factor(data_t$Dataset, levels = c("Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
 data_t = reshape2::melt(data_t)
 colnames(data_t) = c("Dataset","Approach","Measurement","Value")
@@ -164,9 +162,9 @@ p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
 p = p + xlab("") + ylab("Sensitivity") + theme(legend.position = "top")
 p = p + facet_wrap(~Measurement)+scale_fill_manual(values=c("orange", "black", "darkgreen"))
 
-svg(filename = "~/Deko/Results/Images/Figure_4_G1_G2_vs_G3_Grading.svg", width = 10, height = 10)
+#svg(filename = "~/Deko/Results/Images/Figure_4_G1_G2_vs_G3_Grading.svg", width = 10, height = 10)
 p
-dev.off()
+#dev.off()
 ### survival plots ###
 
 surv_cor = apply(expr_raw, MARGIN = 1, FUN = function(vec){return(cor(vec, as.double(meta_data$OS_Tissue)))})
@@ -210,7 +208,7 @@ optCutOff <- optimalCutoff(target_vector, predicted)[1]
 sensitivity = round(InformationValue::sensitivity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
 specificity = round(InformationValue::specificity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
 
-## Figure 1
+## Figure 1 # ESTIMATE
 
 estimate_t = read.table("~/Deko/Results/MAPTor-NET.estimate.tsv",skip = 2,header = T)
 colnames(estimate_t) = str_replace_all(colnames(estimate_t),pattern = "^X","")

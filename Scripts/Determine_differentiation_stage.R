@@ -31,7 +31,6 @@ add_deconvolution_training_model_bseqsc(
     training_nr_marker_genes = 800
 )
 
-
 add_deconvolution_training_model_music(
     transcriptome_data = transcriptome_data,
     model_name = model_name,

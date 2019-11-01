@@ -48,7 +48,7 @@ run_benchmark = function(
     
     model_path = paste0(
         c(
-            "~/Deko/Data/Bench_data/Models/",
+            "~/Deco/Data/Bench_data/Models/",
             dataset_query,
             dataset_training[2],
             algorithm,
@@ -83,7 +83,7 @@ run_benchmark = function(
         transcriptome_data  = transcriptome_data[,rownames(meta_data)]
         
     }
-
+    #write.table(deconvolution_results,"~/Deco/Results/Cell_fraction_predictions/RepSet_Cibersort_Baron.tsv",sep ="\t", row.names =T , quote=F)
     if( length(ki_index) != 0 ){
         
         deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
