@@ -1,6 +1,7 @@
 library("stringr")
+library("limma")
 
-meta_info = "~/Deko/Misc/Meta_information.tsv" %>% read.table(sep = "\t",header = T,stringsAsFactors = F)
+meta_info = "~/Deco/Misc/Meta_information.tsv" %>% read.table(sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
@@ -10,13 +11,13 @@ i_mat = transcriptome_data
 colnames(i_mat) = str_replace_all(colnames(i_mat),pattern = "^X","")
 
 if (!exists(scRNA_training_mat))
-    scRNA_training_mat = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv" %>% read.table(sep="\t",header = T,stringsAsFactors = F)
+    scRNA_training_mat = "~/Deco/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv" %>% read.table(sep="\t",header = T,stringsAsFactors = F)
 scRNA_training_mat[1:5,1:5]
 scRNA_training_mat %>% typeof()
-training_nr_marker_genes = 800
+training_nr_marker_genes = 400
 
 meta_data = meta_info[colnames(scRNA_training_mat),]
-case_subtype = "Ductal"
+case_subtype = "Alpha"
 groups = meta_data$Subtype
 table(groups)
 groups[groups == case_subtype] = "CASE"
@@ -57,6 +58,8 @@ result_t = result_t[order(result_t$Log_FC,decreasing = TRUE),]
 marker_genes = as.character(result_t$HGNC)
 marker_genes = marker_genes[marker_genes %in% rownames(scRNA_training_mat)]
 marker_genes = marker_genes[1:training_nr_marker_genes]
+
+write.table(result_t,"~/Deco/Results/Cell_fraction_predictions/Dif_exp_alpha_400.tsv",sep ="\t", row.names=T, quote = F)
 
 ## prepping the prediction matrix
 
@@ -100,6 +103,3 @@ predicted_mki67 = predict(rf_fit, data.frame(prediction_mat)) %>% plogis  # trai
 # predicting
 
 grading_vec = meta_info[rownames(prediction_mat),"Grading"] %>% str_replace_all( pattern = "G", "" ) %>% as.double
-#cor.test(predicted_mki67,grading_vec)
-cor.test(predicted_mki67,i_mat["MKI67",])
-print(case_subtype)
