@@ -144,7 +144,7 @@ p = p + geom_bar(stat="identity", position=position_dodge())
 #p = p + xlab("") + ylab("MEN1 expression in log TPM and MEN1 mutation allele frequency") + theme(legend.position = "top")
 p + geom_errorbar(aes(),  position = "dodge")
 
-# Figure 4
+# Figure 4 <- here be changes for supervised versus unsupervised
 
 data_t = read.table("~/Deco/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",header = T)
 data_t$Dataset = factor(data_t$Dataset, levels = c("Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
@@ -174,8 +174,7 @@ cut_off = quantile(sort(subtype), probs = seq(0,1,.1) )[9]
 subtype[subtype > as.double(cut_off) ] = "Above"
 subtype[subtype != "Above" ] = "Below"
 
-##fit = survival::survfit( survival::Surv( meta_data$OS_Tissue) ~ subtype,data = meta_data)
-cell_type = meta_data$Deco_type
+#cell_type = meta_data$
 cell_type[cell_type != "Not_sig"] = "Sig"
 #col_vec = 
 fit = survival::survfit( survival::Surv( meta_data$OS_Tissue ) ~ cell_type)
@@ -230,42 +229,139 @@ pheatmap::pheatmap(
 
 ## Figure 3 Segerstolpe Heatmap
 
-deconvolution_results = readRDS("~/Deko/Results//TMP.RDS")
+#deconvolution_results = readRDS("~/Deco/Results//TMP.RDS")
 
-selector = c("MKI67","Grading","hisc","ductal","acinar","delta","gamma","beta","alpha")
-vis_mat = deconvolution_results[,selector]
-vis_mat$MKI67 = round(vis_mat$MKI67 / max(vis_mat$MKI67) * 100,1)* 3
+d_6 = read.table("~/Deco/Results/Segerstolpe_RepSet_6.tsv",sep =",", header = T, stringsAsFactors = F)
+rownames(d_6) = d_6[,1]
+d_6 = d_6[,-1]
+meta_data = meta_info[rownames(d_6),]
+grading = meta_data$Grading
+d_6$Grading = grading
+
+selector = c("Grading","ductal","acinar","delta","gamma","beta","alpha")
+vis_mat = d_6[,selector]
+#vis_mat$MKI67 = round(vis_mat$MKI67 / max(vis_mat$MIK67) * 100,1)* 3
 vis_mat$Grading = str_replace_all(vis_mat$Grading,pattern = "^G","")
 vis_mat = matrix(as.double(unlist(vis_mat)), ncol = length(selector))
-colnames(vis_mat) = c("MKI67","Grading","HISC","Ductal","Acinar","Delta","Gamma","Beta","Alpha")
+colnames(vis_mat) = c("Grading","Ductal","Acinar","Delta","Gamma","Beta","Alpha")
 vis_mat = as.data.frame(vis_mat)
 vis_mat$Grading = as.factor(vis_mat$Grading)
-vis_mat = reshape2::melt(vis_mat)
-vis_mat$variable = factor(vis_mat$variable,levels = c("Grading","MKI67","HISC","Ductal","Acinar","Delta","Gamma","Beta","Alpha"))
 
-melt_mat = vis_mat %>% group_by(Grading,variable)
-mean_mat = melt_mat %>% summarise( mean(value) ) %>% rename( 'Mean_Proportion' = 'mean(value)' )
-mean_mat = melt_mat %>% summarise( sd(value) ) %>% rename( 'SD' = 'sd(value)' ) %>% right_join(mean_mat) %>% group_by(variable) %>% rename( 'Cell_Type_Proportion' = 'variable' )
+vis_mat = reshape2::melt(vis_mat)
+vis_mat$variable = factor(vis_mat$variable,levels = c("Grading","Ductal","Acinar","Delta","Gamma","Beta","Alpha"))
+
+melt_mat = vis_mat %>% dplyr::group_by(Grading,variable)
+mean_mat = melt_mat %>% dplyr::summarise( mean(value) ) %>% dplyr::rename( 'Mean_Proportion' = 'mean(value)' )
+mean_mat = melt_mat %>% dplyr::summarise( sd(value) ) %>% dplyr::rename( 'SD' = 'sd(value)' ) %>% dplyr::right_join(mean_mat) %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
+
+col_vec = as.character(mean_mat$Cell_Type_Proportion)
+col_vec[ col_vec =="Alpha"] = rep("blue", sum(col_vec =="Alpha"))
+col_vec[ col_vec =="Beta"] = rep("darkgreen", sum(col_vec =="Beta"))
+col_vec[ col_vec =="Gamma"] = rep("organge", sum(col_vec =="Gamma"))
+col_vec[ col_vec =="Delta"] = rep("purple", sum(col_vec =="Delta"))
+col_vec[ col_vec =="Ductal"] = rep("brown", sum(col_vec =="Ductal"))
+col_vec[ col_vec =="Acinar"] = rep("lightblue", sum(col_vec =="Acinar"))
+
+
+mean_mat$Cell_Type_Proportion = factor(mean_mat$Cell_Type_Proportion, levels = c("Acinar","Delta","Gamma","Beta","Alpha","Ductal"))
 
 g = ggplot(
     data = mean_mat,
     aes(
         x = Grading,
-        y = Mean_Proportion,
-        group = Cell_Type_Proportion,
-        color = Cell_Type_Proportion
+        y = Mean_Proportion
     )
 )
-g = g + scale_color_manual(values=c('Red',"Black",'Brown',"lightblue","purple","orange","darkgreen","blue"))
-g = g + geom_errorbar(aes(ymin = Mean_Proportion - SD*.2, ymax = Mean_Proportion + SD*.1), width = .1)
-g = g + geom_line(lwd = 2, aes(linetype = Cell_Type_Proportion)) 
-g = g + ylab(label = "Average Proportion Prediction")
-g = g + theme(legend.position="top") 
-g = g + guides( color = guide_legend(keywidth = 5))
-#g = g + scale_y_continuous(sec.axis = sec_axis( ~.*1.0, name = "Relative MKI67 expression"))
-g
+g = g + geom_bar(
+    aes(
+        y = Mean_Proportion,
+        x = Grading,
+        fill = Cell_Type_Proportion
+    ),
+    data = mean_mat,
+    stat="identity",
+    colour="black"
+)
+g = g + ylab(label = "Averaged Cell-type fraction prediction per grading") + theme(legend.position="top") 
+g = g + theme(axis.line = element_line(size=1, colour = "black"),
+          panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+          panel.border = element_blank(), panel.background = element_blank())  +
+theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+          text=element_text(family="Tahoma"),
+          axis.text.x=element_text(colour="black", size = 10),
+          axis.text.y=element_text(colour="black", size = 10)
+)
+g = g + labs(fill = "Cell-type fraction") + scale_fill_discrete(name = "Dose", labels = c("Ductal", "Acinar", "Beta","Gamma","Alpha","delta"))
+g_6 = g + scale_fill_manual(values = c("lightblue", "Purple","Orange","darkgreen","blue","Red"))
+g_6
 
-svg(filename = "~/Deko/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
+###
+
+d_4 = read.table("~/Deco/Results/Segerstolpe_RepSet_4.tsv",sep ="\t", header = T, stringsAsFactors = F)
+rownames(d_4) = d_4[,1]
+d_4 = d_4[,-1]
+#d_4 = read.table("~/Deco/Results/Baron_RepSet_4.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[rownames(d_4),]
+grading = meta_data$Grading
+d_4$Grading = grading
+
+selector = c("Grading","delta","gamma","beta","alpha")
+vis_mat = d_4[,selector]
+vis_mat$Grading = str_replace_all(vis_mat$Grading,pattern = "^G","")
+vis_mat = matrix(as.double(unlist(vis_mat)), ncol = length(selector))
+colnames(vis_mat) = c("Grading","Delta","Gamma","Beta","Alpha")
+vis_mat = as.data.frame(vis_mat)
+vis_mat$Grading = as.factor(vis_mat$Grading)
+
+vis_mat = reshape2::melt(vis_mat)
+vis_mat$variable = factor(vis_mat$variable,levels = c("Grading","Delta","Gamma","Beta","Alpha"))
+
+melt_mat = vis_mat %>% dplyr::group_by(Grading,variable)
+mean_mat = melt_mat %>% dplyr::summarise( mean(value) ) %>% dplyr::rename( 'Mean_Proportion' = 'mean(value)' )
+mean_mat = melt_mat %>% dplyr::summarise( sd(value) ) %>% dplyr::rename( 'SD' = 'sd(value)' ) %>% dplyr::right_join(mean_mat) %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
+
+col_vec = as.character(mean_mat$Cell_Type_Proportion)
+col_vec[ col_vec =="Alpha"] = rep("blue", sum(col_vec =="Alpha"))
+col_vec[ col_vec =="Beta"] = rep("darkgreen", sum(col_vec =="Beta"))
+col_vec[ col_vec =="Gamma"] = rep("organge", sum(col_vec =="Gamma"))
+col_vec[ col_vec =="Delta"] = rep("purple", sum(col_vec =="Delta"))
+col_vec[ col_vec =="Ductal"] = rep("brown", sum(col_vec =="Ductal"))
+col_vec[ col_vec =="Acinar"] = rep("lightblue", sum(col_vec =="Acinar"))
+
+g = ggplot(
+    data = mean_mat,
+    aes(
+        x = Grading,
+        y = Mean_Proportion#,
+        #fill = Cell_Type_Proportion#,
+        #color = col_vec
+    )
+)
+g = g + geom_bar(
+    aes(
+        y = Mean_Proportion,
+        x = Grading,
+        fill = Cell_Type_Proportion
+    ),
+    data = mean_mat,
+    stat="identity",
+    colour="black"
+)
+g = g + ylab(label = "Averaged Cell-type fraction prediction per grading") + theme(legend.position="top") 
+g = g + theme(axis.line = element_line(size=1, colour = "black"),
+              panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
+              panel.border = element_blank(), panel.background = element_blank())  +
+    theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+          text=element_text(family="Tahoma"),
+          axis.text.x=element_text(colour="black", size = 10),
+          axis.text.y=element_text(colour="black", size = 10)
+    )
+g = g + labs(fill = "Cell-type fraction") + scale_fill_discrete(name = "Dose", labels = c("Beta","Gamma","Alpha","delta"))
+g_4 = g + scale_fill_manual(values = c( "Purple","Orange","darkgreen","blue"))
+g_4
+
+
+#svg(filename = "~/Deco/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
 g
-dev.off()
+#dev.off()
 #“blank”, “solid”, “dashed”, “dotted”, “dotdash”, “longdash”, “twodash”

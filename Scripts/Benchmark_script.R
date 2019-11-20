@@ -8,18 +8,18 @@ library("MuSiC")
 
 
 models_ductal = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))#,
-    #list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 models_hisc = c(
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
-    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 models_mixed = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
-    #list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    #list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 nr_models = length(models_ductal)
@@ -53,6 +53,7 @@ for( i in 1:length(transcriptome_files)){
     }
     
     dataset_training = as.character(unlist(models[((i-1) %% 3) + 1]))
+    #dataset_training = models
     
     transcriptome_file = transcriptome_files[i]
     visualization_file = visualization_files[i]

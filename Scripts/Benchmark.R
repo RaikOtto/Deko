@@ -38,7 +38,7 @@ run_benchmark = function(
     name_datatype = tail(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
     
     identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
-    if (str_detect(dataset_training[2], "HISC")){
+    if (str_detect(dataset_training[[1]][2], "HISC")){
         dataset_training_label = paste(identifier,"hisc",sep="_")
     } else {dataset_training_label = identifier}
     
@@ -50,7 +50,7 @@ run_benchmark = function(
         c(
             "~/Deco/Data/Bench_data/Models/",
             dataset_query,
-            dataset_training[2],
+            dataset_training[[1]][2],
             algorithm,
             "RDS"
         ),
@@ -62,7 +62,7 @@ run_benchmark = function(
     
     if (! file.exists(model_path)){
     
-        deconvolution_results = Determine_differentiation_stage(
+        deconvolution_results = Deconvolve_transcriptome(
             transcriptome_data = transcriptome_data,
             deconvolution_algorithm = str_to_lower(algorithm),
             models = dataset_training,
@@ -84,6 +84,7 @@ run_benchmark = function(
         
     }
     #write.table(deconvolution_results,"~/Deco/Results/Cell_fraction_predictions/RepSet_Cibersort_Baron.tsv",sep ="\t", row.names =T , quote=F)
+    
     if( length(ki_index) != 0 ){
         
         deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
@@ -95,14 +96,15 @@ run_benchmark = function(
     }
     
     if (str_detect( transcriptome_file,pattern = "Wiedenmann_Scarpa_GSE73338")){
-        mki_67_wiedenmann = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",sep="\t",header = T)
+        
+        mki_67_wiedenmann = read.table("~/Deco/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",sep="\t",header = T)
         colnames(mki_67_wiedenmann) = str_replace_all(colnames(mki_67_wiedenmann),pattern="^X","")
         deconvolution_results[colnames(mki_67_wiedenmann),"MKI67"] = as.double(mki_67_wiedenmann["MKI67",])
     }
-    
+
     deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4
     deconvolution_results$Confidence_score_dif[which(is.infinite(as.double(deconvolution_results$Confidence_score_dif)))] = 0
-    
+
     vis_mat = create_visualization_matrix(
         visualization_data = visualization_data,
         deconvolution_results = deconvolution_results,
@@ -113,7 +115,7 @@ run_benchmark = function(
     
     ### results parsing
     
-    graphics_path_heatmap = paste("~/Deko/Results/Images",algorithm, sep ="/")
+    graphics_path_heatmap = paste("~/Deco/Results/Images",algorithm, sep ="/")
     graphics_path_heatmap = paste(graphics_path_heatmap,"Heatmap", sep ="/")
     if (! dir.exists(graphics_path_heatmap))
         dir.create(graphics_path_heatmap)
@@ -165,7 +167,7 @@ run_benchmark = function(
         
         data = vis_mat[,c("OS_Tissue","Zensur")]
         
-        graphics_path_survival = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        graphics_path_survival = paste("~/Deco/Results/Images",algorithm, sep ="/")
         graphics_path_survival = paste(graphics_path_survival,"Survival", sep ="/")
         if (! dir.exists(graphics_path_survival))
             dir.create(graphics_path_survival)
@@ -259,7 +261,7 @@ run_benchmark = function(
     
     ###
     
-    graphics_path_pca = paste("~/Deko/Results/Images",algorithm, sep ="/")
+    graphics_path_pca = paste("~/Deco/Results/Images",algorithm, sep ="/")
     graphics_path_pca = paste(graphics_path_pca,"PCA", sep ="/")
     if (! dir.exists(graphics_path_pca))
         dir.create(graphics_path_pca)
@@ -285,7 +287,7 @@ run_benchmark = function(
         
         deconvolution_results$MKI67 = transcriptome_data[ki_index,rownames(deconvolution_results)]
         
-        graphics_path_mki67 = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        graphics_path_mki67 = paste("~/Deco/Results/Images",algorithm, sep ="/")
         graphics_path_mki67 = paste(graphics_path_mki67,"MKI67", sep ="/")
         if (! dir.exists(graphics_path_mki67))
             dir.create(graphics_path_mki67)
@@ -328,7 +330,7 @@ run_benchmark = function(
         grading_numeric = vis_mat$Grading
         grading_numeric = as.integer(str_replace_all(grading_numeric,pattern ="G",""))
         
-        graphics_path_grading = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        graphics_path_grading = paste("~/Deco/Results/Images",algorithm, sep ="/")
         graphics_path_grading = paste(graphics_path_grading,"Grading_ratio", sep ="/")
         if (! dir.exists(graphics_path_grading))
             dir.create(graphics_path_grading)
@@ -471,7 +473,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$MKI67)]
         g = ggplot(data_mat,aes( x = Grading, y = MKI67, fill = Grading )) + geom_boxplot( )
         
-        mki67_grading_path = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        mki67_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
         mki67_grading_path = paste(mki67_grading_path,"Grading", sep ="/")
         if (! dir.exists(mki67_grading_path)) dir.create(mki67_grading_path)
         mki67_grading_path = paste(mki67_grading_path,name_datatype, sep ="/")
@@ -527,7 +529,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$ductal)]
         g=ggplot(data_mat,aes( x = Grading, y = ductal, fill = Grading )) + geom_boxplot( )
         
-        ductal_grading_path = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        ductal_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
         ductal_grading_path = paste(ductal_grading_path,"Grading", sep ="/")
         if (! dir.exists(ductal_grading_path)) dir.create(ductal_grading_path)
         ductal_grading_path = paste(ductal_grading_path,name_datatype, sep ="/")
@@ -578,7 +580,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$hisc)]
         g=ggplot(data_mat,aes( x = Grading, y = hisc, fill = Grading )) + geom_boxplot( )
         
-        hisc_grading_path = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        hisc_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
         hisc_grading_path = paste(hisc_grading_path,"Grading", sep ="/")
         if (! dir.exists(hisc_grading_path)) dir.create(hisc_grading_path)
         hisc_grading_path = paste(hisc_grading_path,name_datatype, sep ="/")
@@ -632,7 +634,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$ratio)]
         g=ggplot(data_mat,aes( x = Grading, y = ratio, fill = Grading )) + geom_boxplot( )
         
-        ratio_grading_path = paste("~/Deko/Results/Images",algorithm, sep ="/")
+        ratio_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
         ratio_grading_path = paste(ratio_grading_path,"Grading", sep ="/")
         if (! dir.exists(ratio_grading_path)) dir.create(ratio_grading_path)
         ratio_grading_path = paste(ratio_grading_path,name_datatype, sep ="/")
