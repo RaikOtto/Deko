@@ -48,6 +48,7 @@ dim(expr_raw)
 descrCor2 <- cor(t(expr_raw))
 summary(descrCor2[upper.tri(descrCor2)])
 
+expr_raw_save = expr_raw
 #comboInfo <- findLinearCombos(t(expr_raw))
 #filteredDescr = t(expr_raw)[-comboInfo$remove,]
 #dim(expr_raw)
@@ -138,3 +139,51 @@ plot.roc(
 
 gbmImp <- varImp(model, scale = FALSE)
 plot(varImp(model), top = 20)
+
+indices = list(
+    "1" = seq(1,1+5),
+    "2" = seq(7,7+5),
+    "3" = seq(13,13+5),
+    "4" = seq(19,19+5),
+    "5" = seq(25,25+5),
+    "6" = seq(31,31+5),
+    "7" = seq(37,37+4),
+    "8" = seq(42,42+4),
+    "9" = seq(47,47+4),
+    "10" = seq(52,57)
+)
+
+sensitivity <- c()
+specificity <- c()
+accuracy <- c()
+PPV <- c()
+#Kappa <<- c()
+
+for (i in 1:10){
+    predictions = as.character(model$pred$pred)[
+        as.integer(unlist(indices[i]))
+    ]
+    observations = as.character(model$pred$obs)[
+        as.integer(unlist(indices[i]))
+    ] 
+    predictions = data.frame(
+        "predictions" = predictions,
+        "observations" = observations
+    )
+    conf_mat = confusionMatrix(
+        as.factor(predictions$predictions),
+        as.factor(predictions$observations),
+        positive = "G3"
+    )
+    sensitivity = c(sensitivity, as.double(conf_mat$byClass["Sensitivity"]))
+    specificity = c(specificity, as.double(conf_mat$byClass["Specificity"]))
+    accuracy = c(accuracy, as.double((conf_mat$byClass["Balanced Accuracy"])))
+    PPV = c(PPV, as.double((conf_mat$byClass["Pos Pred Value"])))
+    Kappa = c(Kappa, as.double((conf_mat$byClass["Pos Pred Value"])))
+}
+
+sd(as.double(as.character(unlist(sensitivity))))
+sd(as.double(as.character(unlist(specificity))))
+sd(as.double(as.character(unlist(accuracy))))
+sd(as.double(as.character(unlist(PPV)))[-9])
+
