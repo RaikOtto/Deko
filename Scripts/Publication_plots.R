@@ -48,7 +48,7 @@ pcr = prcomp(t(correlation_matrix))
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = 1,
-    groups = meta_data$Grading,
+#    groups = meta_data$Grading,
     ellipse = TRUE,
     circle = TRUE,
     #labels = rownames(meta_data)
@@ -173,11 +173,11 @@ p = p + geom_bar(stat="identity", position=position_dodge())
 p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
 p = p + xlab("Performance paramter") + ylab("Performance in percent") + theme(legend.position = "top")
 p = p + scale_fill_manual(values = c("red","blue"))
-p = p+ geom_errorbar(aes(size = .5),  position = "dodge",size = 2)
+p = p+ geom_errorbar(aes(size = .5),  position = "dodge",size = 1)
 
-svg(filename = "~/Deco/Results/Images/Figure_3_classification_efficiency.svg", width = 10, height = 10)
+#svg(filename = "~/Deco/Results/Images/Figure_3_classification_efficiency.svg", width = 10, height = 10)
 p
-dev.off()
+#dev.off()
 ### survival plots ###
 
 surv_cor = apply(expr_raw, MARGIN = 1, FUN = function(vec){return(cor(vec, as.double(meta_data$OS_Tissue)))})
@@ -351,6 +351,57 @@ p = p + facet_wrap( ~Type) #+ scale_fill_manual(values=c("orange", "black", "dar
 p = p + scale_x_discrete(labels=c("1" = "G1", "2" = "G2","3" = "G3"))
 p
 
-svg(filename = "~/Deco/Results/Images/Figure_2_Cell_Type_fractions.svg", width = 10, height = 10)
+#svg(filename = "~/Deco/Results/Images/Figure_2_Cell_Type_fractions.svg", width = 10, height = 10)
 p
-dev.off()
+#dev.off()
+
+meta_data =meta_info[rownames(fractions),]
+fractions = fractions[meta_data$Grading %in% c("G1","G2","G3"),]
+meta_data =meta_info[rownames(fractions),]
+fractions$Grading = meta_data$Grading
+#write.table(fractions,"~/Deco/Results/fractions.tsv",row.names = T, quote =F , sep ="\t")
+
+library(ggplot2)
+ggplot(
+    data = fractions,
+    aes(
+        x = Grading,
+        y = ductal
+    )
+) + geom_point()
+# Change the point size, and shape
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+    geom_point(size=2, shape=23)
+
+mat = fractions[,c("alpha","beta","gamma","delta","acinar","ductal")]
+mat = t(mat)
+correlation_matrix = cor(mat)
+pcr = prcomp(t(correlation_matrix))
+
+p = ggbiplot::ggbiplot(
+    pcr,
+    obs.scale = 1,
+    groups = meta_data$Grading,
+    ellipse = TRUE,
+    circle = TRUE,
+    #labels = rownames(meta_data)
+    var.axes = F#,
+)
+p
+
+
+library("umap")
+umap_plot = umap::umap((correlation_matrix))
+vis_data = as.data.frame(umap_plot$layout)
+colnames(vis_data) = c("x","y")
+dist_mat = dist((vis_data))
+p = ggplot2::qplot(
+    x = vis_data$x,
+    y = vis_data$y,
+    color = meta_data$Grading,
+    geom=c("point"),
+    xlab = "Umap dim 1",
+    ylab = "Umap dim 2"#,
+    #shape = meta_data[colnames(expr),"IFN_I"]
+)
+p

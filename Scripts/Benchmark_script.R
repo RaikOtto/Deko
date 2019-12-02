@@ -8,13 +8,13 @@ library("MuSiC")
 
 
 models_ductal = c(
-    #list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))#,
-    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))#,
+    #list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 models_hisc = c(
-    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Hisc_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 models_mixed = c(
@@ -25,7 +25,8 @@ models_mixed = c(
 nr_models = length(models_ductal)
 
 transcriptome_files = list.files("~/Deco/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
-transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
+#transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
+transcriptome_files = transcriptome_files[! (transcriptome_files %in% c("/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv","/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S23.tsv"))]
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
 meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
@@ -36,10 +37,12 @@ source("~/Deco//Scripts/Benchmark.R")
 
 algorithm = "bseqsc"
 type = "ductal"
-path_benchmark_files = paste0(c("~/Dece/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
+path_benchmark_files = paste0(c("~/Deco/Results/Benchmark_results",algorithm,type,"tsv"),collapse = ".")
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
+
+fractions <<- matrix( as.character(), ncol = 6)
 
 for( i in 1:length(transcriptome_files)){
     
@@ -47,27 +50,33 @@ for( i in 1:length(transcriptome_files)){
     dataset_query = str_replace_all(dataset_query,".tsv","")
     
     if (type == "ductal") {
-        models = models_ductal
+        models = models_ductal[[1]]
     } else if  (type == "hisc") {
-        models = models_hisc
+        models = models_hisc[[1]]
     }
     
-    dataset_training = as.character(unlist(models[((i-1) %% 3) + 1]))
+    #dataset_training = as.character(unlist(models[((i-1) %% 3) + 1]))
+    dataset_training = models[2]
+    
+    if (! str_detect(dataset_training, pattern = "Baron") )
+        next()
     #dataset_training = models
     
     transcriptome_file = transcriptome_files[i]
     visualization_file = visualization_files[i]
     
     print(i)
+    print(dataset_query)
+    print(dataset_training)
     
-    if (file.exists(path_benchmark_files)){
-        benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
-        
-        if (nrow(benchmark_results_t) >= i)
-            next(paste0("Skipping ",i))
-    }
+    #if (file.exists(path_benchmark_files)){
+    #    benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+    #    
+    #    if (nrow(benchmark_results_t) >= i)
+    #        next(paste0("Skipping ",i))
+    #}
     
-    run_benchmark(
+    res = run_benchmark(
         dataset_query = dataset_query,
         dataset_training = dataset_training,
         algorithm = algorithm,
@@ -78,4 +87,5 @@ for( i in 1:length(transcriptome_files)){
         low_threshold = low_threshold,
         confidence_threshold = confidence_threshold
     )
+    fractions = rbind(fractions,res)
 }

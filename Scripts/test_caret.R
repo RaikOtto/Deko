@@ -179,7 +179,7 @@ for (i in 1:10){
     specificity = c(specificity, as.double(conf_mat$byClass["Specificity"]))
     accuracy = c(accuracy, as.double((conf_mat$byClass["Balanced Accuracy"])))
     PPV = c(PPV, as.double((conf_mat$byClass["Pos Pred Value"])))
-    Kappa = c(Kappa, as.double((conf_mat$byClass["Pos Pred Value"])))
+    #Kappa = c(Kappa, as.double((conf_mat$byClass["Pos Pred Value"])))
 }
 
 sd(as.double(as.character(unlist(sensitivity))))
