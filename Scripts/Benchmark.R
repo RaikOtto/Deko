@@ -51,7 +51,7 @@ run_benchmark = function(
         c(
             "~/Deco/Data/Bench_data/Models/",
             dataset_query,
-            dataset_training,
+            dataset_training[2],
             algorithm,
             "RDS"
         ),
@@ -74,8 +74,8 @@ run_benchmark = function(
     } else {
         deconvolution_results = readRDS(model_path)
     }
-
-    return(deconvolution_results[,c("alpha","beta","gamma","delta","acinar","ductal")])
+    
+    return(deconvolution_results)
     
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
         
@@ -726,6 +726,6 @@ run_benchmark = function(
 
     # output 
     
-    #write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
+    write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
     
 }
