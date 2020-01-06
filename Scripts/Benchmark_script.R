@@ -35,18 +35,9 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deco//Scripts/Benchmark.R")
 
-algorithm = "bseqsc"
+algorithm = "music" # NMF # music # bseqsc
 type = "ductal"
-path_benchmark_files = paste0(
-    "~/Deco/Results/Cell_fraction_predictions/",
-    paste0(
-        c(dataset_query,
-            paste0(dataset_training, collapse = ".", sep =""),
-            algorithm,"tsv"
-        ),
-        collapse = "."
-    )
-)
+
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
@@ -54,40 +45,49 @@ confidence_threshold = 1.1
 fractions <<- matrix( as.character(), ncol = 6)
 
 for( i in 1:length(transcriptome_files)){
-    
+
     dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
-    
+
     if (type == "ductal") {
-        models = models_ductal#[[1]]
+        models = models_ductal[[1]]
     } else if  (type == "hisc") {
-        models = models_hisc#[[1]]
+        models = models_hisc[[1]]
     }
     
-    dataset_training = as.character(unlist(models[((i-1) %% 3) + 1]))
-    #dataset_training = models[2]
+    #dataset_training = as.character(unlist(models))[((i-1) %% 3) + 1]
+    path_benchmark_files = paste0(
+        "~/Deco/Results/Cell_fraction_predictions/",
+        paste0(
+            c(dataset_query,
+              paste0(models[2], collapse = ".", sep =""),
+              algorithm,"tsv"
+            ),
+            collapse = "."
+        )
+    )
     
-    if (! str_detect(dataset_training[2], pattern = "Baron") )
-        next()
-    dataset_training = models
+    
+    #if (! str_detect(models[2], pattern = "Baron") )
+    #    next()
     
     transcriptome_file = transcriptome_files[i]
     visualization_file = visualization_files[i]
     
     print(i)
     print(dataset_query)
-    print(dataset_training)
+    print(models[2])
     
     if (file.exists(path_benchmark_files)){
         benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
         
-        if (nrow(benchmark_results_t) >= i)
-            next(paste0("Skipping ",i))
+        #if (nrow(benchmark_results_t) >= i)
+        #    next(paste0("Skipping ",i))
     }
     
     res = run_benchmark(
         dataset_query = dataset_query,
-        dataset_training = dataset_training,
+        dataset_training = models,
         algorithm = algorithm,
         transcriptome_file = transcriptome_file,
         visualization_file = visualization_file,

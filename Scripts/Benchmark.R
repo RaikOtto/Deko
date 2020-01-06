@@ -39,7 +39,7 @@ run_benchmark = function(
     
     identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
     
-    if (str_detect(dataset_training, "HISC")){
+    if (str_detect(dataset_training[2], "HISC")){
         dataset_training_label = paste(identifier,"hisc",sep="_")
     } else {dataset_training_label = identifier}
     
@@ -61,20 +61,14 @@ run_benchmark = function(
     
     ###
     
-    if (! file.exists(model_path)){
-    
-        deconvolution_results = Deconvolve_transcriptome(
-            transcriptome_data = transcriptome_data,
-            deconvolution_algorithm = str_to_lower(algorithm),
-            models = dataset_training,
-            nr_permutations = 1000,
-            output_file = ""
-        )
-        saveRDS(deconvolution_results, file = model_path)
-    } else {
-        deconvolution_results = readRDS(model_path)
-    }
-    
+    deconvolution_results = Deconvolve_transcriptome(
+        transcriptome_data = transcriptome_data,
+        deconvolution_algorithm = str_to_lower(algorithm),
+        models = dataset_training,
+        nr_permutations = 1000,
+        output_file = ""
+    )
+
     return(deconvolution_results)
     
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
