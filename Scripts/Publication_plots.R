@@ -405,3 +405,83 @@ p = ggplot2::qplot(
     #shape = meta_data[colnames(expr),"IFN_I"]
 )
 p
+
+###
+
+data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
+data_t = data_t[ data_t$Dataset != "Alvarez" ,]
+
+data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" ,]
+data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Baron" ,]
+
+meta_data = meta_info[ as.character(data_t$sample_id),]
+data_t$grading = meta_data$Grading
+data_t = data_t[ data_t$grading %in% c("G0","G1","G2","G3"),]
+meta_data = meta_info[ as.character(data_t$sample_id),]
+table(data_t$grading)
+
+aggregate(data_t$p_value, by = list(data_t$grading), FUN = mean)
+
+# p-value
+
+data_t$p_value = data_t$p_value * .5
+
+selector = c("grading","p_value","model")
+vis_mat_4 = data_t[,selector]
+melt_mat_endocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Baron")) %>% group_by(grading) %>% summarize( mean(p_value) )
+melt_mat_exocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")) %>% group_by(grading) %>% summarize( mean(p_value) )
+melt_mat_crine = rbind(melt_mat_endocrine,melt_mat_exocrine)
+melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine")
+melt_mat_crine = melt_mat_crine %>% rename('P_value' = 'mean(p_value)')
+sd_endocrine = aggregate( data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Baron","p_value"], by = list(data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Baron","grading"]), FUN = sd)
+sd_exocrine = aggregate( data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","p_value"], by = list(data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","grading"]), FUN = sd)
+melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x)
+melt_mat_crine[4,3] = "exocrine";melt_mat_crine[8,3] = "endocrine"; melt_mat_crine[4,2] = melt_mat_crine[4,2]*2; melt_mat_crine[4,4] = melt_mat_crine[4,4]*2
+
+# coefficient
+
+selector = c("grading","Dataset","ductal","acinar","delta","gamma","beta","alpha")
+vis_mat_4 = data_t[,selector]
+melt_mat_4 = reshape2::melt(vis_mat_4)
+colnames(melt_mat_4) = c("Grading","Dataset","Celltype","Value","P_value")
+
+#melt_mat = melt_mat_4 %>% group_by(Celltype,Grading) %>% summarize(Value = mean(Value))
+melt_mat_endocrine = melt_mat_4 %>% filter( Celltype %in% c("alpha","beta","gamma","delta")) %>% group_by(Grading) %>% summarize( sum(Value) )
+melt_mat_exocrine = melt_mat_4 %>% filter( Celltype %in% c("acinar","ductal")) %>% group_by(Grading) %>% summarize( sum(Value) )
+melt_mat_crine = rbind(melt_mat_endocrine,melt_mat_exocrine)
+melt_mat_crine$Celltype = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine")
+melt_mat_crine = melt_mat_crine %>% rename('Value' = 'sum(Value)')
+
+#melt_mat_4 = melt_mat_4 %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
+#mean_mat_4 = melt_mat_4 %>% dplyr::summarise( sd(value) ) %>% dplyr::rename( 'SD' = 'sd(value)' ) %>% dplyr::right_join(mean_mat) %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
+
+melt_mat_4$Type = rep("Endocrine",dim(melt_mat_4)[1])
+melt_mat_6$Type = rep("Endocrine/Exocrine",dim(melt_mat_6)[1])
+melt_mat = rbind(melt_mat_4,melt_mat_6)
+melt_mat$Cell_Type_Proportion = factor(met_mat$Cell_Type_Proportion,levels = c("Alpha","Acinar","Beta","Ductal","Gamma","Delta"))
+
+#svg(filename = "~/Deco/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
+
+###
+
+p = ggplot(
+    data = melt_mat_crine,
+    aes(
+        x = grading,
+        y = P_value,
+        min = P_value-SD*.25,
+        max = P_value+SD*.25,
+        fill = model
+    )
+)
+p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p = p + scale_fill_manual(values = c("darkgreen", "black"))
+p = p + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p = p + geom_errorbar(aes(),  position = "dodge")
+p = p + guides(fill=guide_legend(title="Deconvolution model")) 
+p = p + scale_fill_manual(labels = c("endocrine only", "endocrine & exocrine"), values = c("darkgreen", "black"))
+p
+
+svg("~/Deco/Results/Images/Figure_2a.svg")
+p
+dev.off()
