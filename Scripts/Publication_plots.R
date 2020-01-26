@@ -18,7 +18,8 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t[,1]
 genes_of_interest_hgnc_t$V1
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[35,3:ncol(genes_of_interest_hgnc_t)]) )
+#sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 
 path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
@@ -48,10 +49,10 @@ pcr = prcomp(t(correlation_matrix))
 p = ggbiplot::ggbiplot(
     pcr,
     obs.scale = 1,
-#    groups = meta_data$Grading,
+    groups = meta_data$NEC_NET,
     ellipse = TRUE,
     circle = TRUE,
-    #labels = rownames(meta_data)
+    labels = rownames(meta_data),
     var.axes = F#,
 )
 p
