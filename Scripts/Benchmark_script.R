@@ -1,9 +1,12 @@
 ### benchmark runs
+#missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
 
 library(devtools)
 load_all("~/artdeco")
+source("~/Deco/CIBERSORT_package/CIBERSORT.R")
 library(stringr)
-library("MuSiC")
+library("bseqsc")
+library("Archive/music.R")
 #library("xbioc")
 
 models_ductal = c(
@@ -12,9 +15,9 @@ models_ductal = c(
     #list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 models_hisc = c(
-    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron"))#,
     #list(c("Alpha_Beta_Gamma_Delta_Acinar_Hisc_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe"))#,
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+    #list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 models_mixed = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron"))#,
@@ -34,7 +37,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deco//Scripts/Benchmark.R")
 
-algorithm = "music" # NMF # music # bseqsc
+algorithm = "bseqsc" # NMF # music # bseqsc
 type = "hisc"
 
 high_threshold = 66
@@ -66,6 +69,17 @@ for( i in 1:length(transcriptome_files)){
         )
     )
     
+    path_benchmark_files_dec_res = paste0(
+        "~/Deco/Results/Cell_fraction_predictions/",
+        paste0(
+            c(dataset_query,
+              paste0(models[2], collapse = ".", sep =""),
+              algorithm,".dec_res.tsv"
+            ),
+            collapse = "."
+        )
+    )
+    
     
     #if (! str_detect(models[2], pattern = "Baron") )
     #    next()
@@ -77,11 +91,14 @@ for( i in 1:length(transcriptome_files)){
     print(dataset_query)
     print(models[2])
     
-    if (file.exists(path_benchmark_files)){
-        benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+    if (
+        file.exists(path_benchmark_files) |
+        file.exists(str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")))
+    {
+        #benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
         
         #if (nrow(benchmark_results_t) >= i)
-        #    next(paste0("Skipping ",i))
+            next(paste0("Skipping ",i))
     }
     
     res = run_benchmark(
@@ -93,7 +110,8 @@ for( i in 1:length(transcriptome_files)){
         path_benchmark_files = path_benchmark_files,
         high_threshold = high_threshold,
         low_threshold = low_threshold,
-        confidence_threshold = confidence_threshold
+        confidence_threshold = confidence_threshold,
+        path_benchmark_files_dec_res = path_benchmark_files_dec_res
     )
     
     write.table(res, path_benchmark_files, sep ="\t", quote = F, row.names = F)

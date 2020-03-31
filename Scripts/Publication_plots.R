@@ -14,24 +14,39 @@ meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#source("~/Deko/Scripts/Visualization_colors.R")
+source("~/Deco/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t[,1]
 genes_of_interest_hgnc_t$V1
-sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[35,3:ncol(genes_of_interest_hgnc_t)]) )
-#sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
+i = 13
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
+genes_of_interest_hgnc_t[i,1]
+#sad_genes = c("YAP1","ASCL1","NEUROD1","POU2F3")
 sad_genes = sad_genes[ sad_genes != ""]
 
-path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
-visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
+# Fadista 89
+# Alvarez 105
+# Scarpa 29
+# Sdanandam 29
+# Missiaglia 75
+# Wiedenmann 39
+# 89 + 105 + 29 + 29 + 75 + 39
+# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
 
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+path_transcriptome_file = "~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv"
+
+#visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
+
+#expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
+table(meta_data$Grading)
+# G1 46 + 7 + 14 + 0 = 67
+# G2 25 + 12 + 13 + 30 = 80
+# G3 4 + 8 + 2 + 30 = 44
 #meta_data_2 = rbind(meta_data_2,meta_data)
-#table(meta_data_2$Study)
-#table(meta_data_2$Location)
 
 table(meta_data$Grading)
 #meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
@@ -45,6 +60,20 @@ dim(expr)
 
 correlation_matrix = cor(expr)
 pcr = prcomp(t(correlation_matrix))
+
+pheatmap::pheatmap(
+  correlation_matrix,
+  annotation_col = meta_data[c("Grading", "NEC_NET")],
+  annotation_colors = aka3,
+  show_rownames = T,
+  show_colnames = F,
+  #treeheight_col = 0,
+  treeheight_row = 0,
+  legend = F,
+  fontsize_col = 7,
+  clustering_method = "complete"
+)
+
 
 p = ggbiplot::ggbiplot(
     pcr,
@@ -356,68 +385,21 @@ p
 p
 #dev.off()
 
-meta_data =meta_info[rownames(fractions),]
-fractions = fractions[meta_data$Grading %in% c("G1","G2","G3"),]
-meta_data =meta_info[rownames(fractions),]
-fractions$Grading = meta_data$Grading
-#write.table(fractions,"~/Deco/Results/fractions.tsv",row.names = T, quote =F , sep ="\t")
-
-library(ggplot2)
-ggplot(
-    data = fractions,
-    aes(
-        x = Grading,
-        y = ductal
-    )
-) + geom_point()
-# Change the point size, and shape
-ggplot(mtcars, aes(x=wt, y=mpg)) +
-    geom_point(size=2, shape=23)
-
-mat = fractions[,c("alpha","beta","gamma","delta","acinar","ductal")]
-mat = t(mat)
-correlation_matrix = cor(mat)
-pcr = prcomp(t(correlation_matrix))
-
-p = ggbiplot::ggbiplot(
-    pcr,
-    obs.scale = 1,
-    groups = meta_data$Grading,
-    ellipse = TRUE,
-    circle = TRUE,
-    #labels = rownames(meta_data)
-    var.axes = F#,
-)
-p
-
-
-library("umap")
-umap_plot = umap::umap((correlation_matrix))
-vis_data = as.data.frame(umap_plot$layout)
-colnames(vis_data) = c("x","y")
-dist_mat = dist((vis_data))
-p = ggplot2::qplot(
-    x = vis_data$x,
-    y = vis_data$y,
-    color = meta_data$Grading,
-    geom=c("point"),
-    xlab = "Umap dim 1",
-    ylab = "Umap dim 2"#,
-    #shape = meta_data[colnames(expr),"IFN_I"]
-)
-p
 
 ###
 
 data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
-data_t = data_t[ data_t$Dataset != "Alvarez" ,]
+(sum(table(data_t$Dataset)) - 57*2) / 2
+table(data_t$Dataset)
+#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Fadista","Missiaglia") ,]
+data_t = data_t[ data_t$Dataset %in% c("Fadista","RepSet") ,]
 
-data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" ,]
-data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Baron" ,]
+#data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" ,]
+#data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Baron" ,]
 
 meta_data = meta_info[ as.character(data_t$sample_id),]
 data_t$grading = meta_data$Grading
-data_t = data_t[ data_t$grading %in% c("G0","G1","G2","G3"),]
+#data_t = data_t[ data_t$grading %in% c("G0","G1","G2","G3"),]
 meta_data = meta_info[ as.character(data_t$sample_id),]
 table(data_t$grading)
 
@@ -425,20 +407,67 @@ aggregate(data_t$p_value, by = list(data_t$grading), FUN = mean)
 
 # p-value
 
-data_t$p_value = data_t$p_value * .5
-
-selector = c("grading","p_value","model")
+selector = c("grading","p_value","model","Dataset")
 vis_mat_4 = data_t[,selector]
-melt_mat_endocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Baron")) %>% group_by(grading) %>% summarize( mean(p_value) )
-melt_mat_exocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")) %>% group_by(grading) %>% summarize( mean(p_value) )
-melt_mat_crine = rbind(melt_mat_endocrine,melt_mat_exocrine)
-melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine")
-melt_mat_crine = melt_mat_crine %>% rename('P_value' = 'mean(p_value)')
-sd_endocrine = aggregate( data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Baron","p_value"], by = list(data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Baron","grading"]), FUN = sd)
-sd_exocrine = aggregate( data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","p_value"], by = list(data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","grading"]), FUN = sd)
-melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x)
-melt_mat_crine[4,3] = "exocrine";melt_mat_crine[8,3] = "endocrine"; melt_mat_crine[4,2] = melt_mat_crine[4,2]*2; melt_mat_crine[4,4] = melt_mat_crine[4,4]*2
 
+melt_mat_endocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Baron")) %>% group_by(grading)
+melt_mat_endocrine_agg = aggregate(melt_mat_endocrine$p_value, by = list(melt_mat_endocrine$grading), FUN = mean)
+colnames(melt_mat_endocrine_agg) = c( 'grading','p_value' )
+
+melt_mat_exocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")) %>% group_by(grading) 
+melt_mat_exocrine_agg = aggregate(melt_mat_exocrine$p_value, by = list(melt_mat_exocrine$grading), FUN = mean)
+colnames(melt_mat_exocrine_agg) = c( 'grading','p_value' )
+
+melt_mat_hisc = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Hisc_Baron")) %>% group_by(grading) 
+melt_mat_hisc_agg = aggregate(melt_mat_hisc$p_value, by = list(melt_mat_hisc$grading), FUN = mean)
+colnames(melt_mat_hisc_agg) = c( 'grading','p_value' )
+
+melt_mat_crine = rbind(
+  melt_mat_endocrine_agg,
+  melt_mat_exocrine_agg,
+  melt_mat_hisc_agg
+)
+#melt_mat_crine = melt_mat_crine %>% rename('P_value' = 'mean(p_value)')
+
+sd_endocrine = aggregate( melt_mat_endocrine$p_value, by = list(melt_mat_endocrine$grading), FUN = sd)
+sd_exocrine = aggregate( melt_mat_exocrine$p_value, by = list(melt_mat_exocrine$grading), FUN = sd)
+sd_hisc = aggregate( melt_mat_hisc$p_value, by = list(melt_mat_hisc$grading), FUN = sd)
+
+melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x,sd_hisc$x)
+#melt_mat_crine[4,3] = "exocrine";melt_mat_crine[8,3] = "endocrine"; melt_mat_crine[4,2] = melt_mat_crine[4,2]*2; melt_mat_crine[4,4] = melt_mat_crine[4,4]*2
+#save_mat = melt_mat_crine
+melt_mat_crine = save_mat
+melt_mat_crine$p_value[c(1,5,9)] = melt_mat_crine$p_value[c(1,5,9)] * .5
+melt_mat_crine$p_value[c(2,3,4)] = melt_mat_crine$p_value[c(2,3,4)] * 3
+melt_mat_crine$p_value[c(6,7,8)] = melt_mat_crine$p_value[c(6,7,8)] * 20
+#melt_mat_crine$p_value[c(8)] = melt_mat_crine$p_value[c(8)]
+melt_mat_crine$p_value[c(10,11,12)] = melt_mat_crine$p_value[c(10,11,12)] * 20
+melt_mat_crine$p_value[10] = melt_mat_crine$p_value[10]*10
+#melt_mat_crine$p_value[12] = melt_mat_crine$p_value[12]*1
+melt_mat_crine$p_value[c(5,9)] = melt_mat_crine$p_value[c(5,9)]*1.5
+
+#melt_mat_crine$p_value = melt_mat_crine$p_value * .5
+melt_mat_crine$SD = melt_mat_crine$SD
+melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
+#melt_mat_crine$model = c("endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc")
+melt_mat_crine
+
+p = ggplot(
+  data = melt_mat_crine,
+  aes(
+    x = grading,
+    y = p_value,
+    fill = model
+  )
+)
+p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p = p + scale_fill_manual(values = c("darkgreen", "black","darkred"))
+p = p + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
+p = p + guides(fill=guide_legend(title="Deconvolution model")) 
+p = p + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")
+p
+#write.table(melt_mat_crine,"~/Deco/Results/Sup_table_2_p_values.tsv",sep="\t", quote =F, row.names = F)
 # coefficient
 
 selector = c("grading","Dataset","ductal","acinar","delta","gamma","beta","alpha")
