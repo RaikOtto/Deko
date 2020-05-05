@@ -1,5 +1,5 @@
 ### benchmark runs
-#missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
+missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
 
 library(devtools)
 load_all("~/artdeco")

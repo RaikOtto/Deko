@@ -60,6 +60,7 @@ run_benchmark = function(
     )
     model_path = str_replace_all(model_path, pattern = "/\\.","/")
     
+    #transcriptome_data = transcriptome_data[,missing_samples]
     ###
     
     deconvolution_results = Deconvolve_transcriptome(

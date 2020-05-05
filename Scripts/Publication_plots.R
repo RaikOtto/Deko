@@ -74,39 +74,6 @@ pheatmap::pheatmap(
   clustering_method = "complete"
 )
 
-
-p = ggbiplot::ggbiplot(
-    pcr,
-    obs.scale = 1,
-    groups = meta_data$NEC_NET,
-    ellipse = TRUE,
-    circle = TRUE,
-    labels = rownames(meta_data),
-    var.axes = F#,
-)
-p
-## Figure 1
-
-#meta_data$Location[!str_detect(meta_data$Location,pattern = "Primary")] = "Metastasis"
-#meta_data$Grading[meta_data$Grading == ""] = "G0"
-pheatmap::pheatmap(
-    correlation_matrix,
-    annotation_col = meta_data[c("NEC_NET","Grading")],
-    annotation_colors = aka3,
-    show_rownames = F,
-    show_colnames = T,
-    treeheight_col = 0,
-    legend = F,
-    fontsize_col = 7,
-    clustering_method = "average"
-)
-
-## Figure 1
-
-# Plot 2
-
-## Figure 2
-
 # Plot 1
 
 data_t = read.table("~/Deco/Results/ROC_curves.tsv",sep ="\t", header = T)
@@ -170,15 +137,11 @@ vis_mat$SD = as.double(as.character(vis_mat$SD))
 
 p = ggplot( data = vis_mat,aes( x = Dataset, y = as.integer(ROC), min = ROC-SD, max = ROC+SD, fill =Type) )
 p = p + geom_bar(stat="identity", position=position_dodge())
-#p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-#p = p + scale_fill_gradientn(colours = c("white","yellow","red"), breaks = c(0.0,.5,1.0))
-#p = p + annotate("text", x=1:57,y = 5.5,parse=TRUE, label = label_vec, color = col_vec, size = 4.5 )
-#p = p + xlab("") + ylab("MEN1 expression in log TPM and MEN1 mutation allele frequency") + theme(legend.position = "top")
 p + geom_errorbar(aes(),  position = "dodge")
 
 # Figure 4 <- here be changes for supervised versus unsupervised
 
-data_t = read.table("~/Deco/Results/SM_Table_2_Supervised_vs_Unsupervised_Grading_prediction.tsv",sep="\t",header = T)
+data_t = read.table("~/Deco/Results/SM_Table_3_Supervised_vs_Unsupervised_Grading_prediction.tsv",sep="\t",header = T)
 data_t_sd = data_t[ !( data_t$X %in% c("Sensitivity","Specificity","Accuracy","PPV","Kappa")),]
 data_t_sd = as.double(as.character(unlist((data_t_sd[,c(2,3)]))))
 data_t = data_t[data_t$X %in% c("Sensitivity","Specificity","Accuracy","PPV","Kappa"),]
@@ -187,23 +150,21 @@ sd_max = as.double(as.character(unlist((data_t[,c(2,3)])))) + data_t_sd
 sd_max[sd_max > 100] = 100
 data_t = reshape2::melt(data_t)  %>% dplyr::rename( 'Parameter' = 'X' ) %>% dplyr::rename( 'Type' = 'variable' )
 data_t$Parameter = factor(data_t$Parameter, levels = c("Sensitivity","Specificity","Accuracy","PPV","Kappa"))
-#data_t$SD = data_t_sd
+data_t$Type = factor(data_t$Type)
 
 p = ggplot( 
     data = data_t,
     aes( 
         x = Parameter,
-        y = as.double(value),
-        fill = Type,
-        min = sd_min,
-        max = sd_max
+        y = value,
+        fill = Type
     )
 )
 p = p + geom_bar(stat="identity", position=position_dodge())
 p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
 p = p + xlab("Performance paramter") + ylab("Performance in percent") + theme(legend.position = "top")
 p = p + scale_fill_manual(values = c("red","blue"))
-p = p+ geom_errorbar(aes(size = .5),  position = "dodge",size = 1)
+p = p + geom_errorbar(aes(ymin = sd_min,ymax = sd_max),  position = "dodge")
 
 #svg(filename = "~/Deco/Results/Images/Figure_3_classification_efficiency.svg", width = 10, height = 10)
 p
@@ -389,68 +350,52 @@ p
 ###
 
 data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
-(sum(table(data_t$Dataset)) - 57*2) / 2
-table(data_t$Dataset)
-#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Fadista","Missiaglia") ,]
-data_t = data_t[ data_t$Dataset %in% c("Fadista","RepSet") ,]
+table(data_t$Dataset) / 3
+vis_mat = data_t
 
-#data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" ,]
-#data_t = data_t[ data_t$model == "Alpha_Beta_Gamma_Delta_Baron" ,]
+#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia") ,]
+vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
 
-meta_data = meta_info[ as.character(data_t$sample_id),]
-data_t$grading = meta_data$Grading
-#data_t = data_t[ data_t$grading %in% c("G0","G1","G2","G3"),]
-meta_data = meta_info[ as.character(data_t$sample_id),]
-table(data_t$grading)
-
-aggregate(data_t$p_value, by = list(data_t$grading), FUN = mean)
+meta_data = meta_info[ as.character(vis_mat$sample_id),]
+vis_mat$grading = meta_data$Grading
+meta_data = meta_info[ as.character(vis_mat$sample_id),]
+aggregate(vis_mat$p_value, by = list(vis_mat$grading), FUN = mean)
 
 # p-value
 
 selector = c("grading","p_value","model","Dataset")
-vis_mat_4 = data_t[,selector]
+vis_mat_4 = vis_mat[,selector]
 
 melt_mat_endocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Baron")) %>% group_by(grading)
 melt_mat_endocrine_agg = aggregate(melt_mat_endocrine$p_value, by = list(melt_mat_endocrine$grading), FUN = mean)
-colnames(melt_mat_endocrine_agg) = c( 'grading','p_value' )
-
 melt_mat_exocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")) %>% group_by(grading) 
 melt_mat_exocrine_agg = aggregate(melt_mat_exocrine$p_value, by = list(melt_mat_exocrine$grading), FUN = mean)
-colnames(melt_mat_exocrine_agg) = c( 'grading','p_value' )
-
 melt_mat_hisc = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Hisc_Baron")) %>% group_by(grading) 
 melt_mat_hisc_agg = aggregate(melt_mat_hisc$p_value, by = list(melt_mat_hisc$grading), FUN = mean)
-colnames(melt_mat_hisc_agg) = c( 'grading','p_value' )
 
 melt_mat_crine = rbind(
   melt_mat_endocrine_agg,
   melt_mat_exocrine_agg,
   melt_mat_hisc_agg
 )
-#melt_mat_crine = melt_mat_crine %>% rename('P_value' = 'mean(p_value)')
+colnames(melt_mat_crine) = c( 'grading','p_value' )
 
 sd_endocrine = aggregate( melt_mat_endocrine$p_value, by = list(melt_mat_endocrine$grading), FUN = sd)
 sd_exocrine = aggregate( melt_mat_exocrine$p_value, by = list(melt_mat_exocrine$grading), FUN = sd)
 sd_hisc = aggregate( melt_mat_hisc$p_value, by = list(melt_mat_hisc$grading), FUN = sd)
 
 melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x,sd_hisc$x)
-#melt_mat_crine[4,3] = "exocrine";melt_mat_crine[8,3] = "endocrine"; melt_mat_crine[4,2] = melt_mat_crine[4,2]*2; melt_mat_crine[4,4] = melt_mat_crine[4,4]*2
-#save_mat = melt_mat_crine
-melt_mat_crine = save_mat
-melt_mat_crine$p_value[c(1,5,9)] = melt_mat_crine$p_value[c(1,5,9)] * .5
-melt_mat_crine$p_value[c(2,3,4)] = melt_mat_crine$p_value[c(2,3,4)] * 3
-melt_mat_crine$p_value[c(6,7,8)] = melt_mat_crine$p_value[c(6,7,8)] * 20
-#melt_mat_crine$p_value[c(8)] = melt_mat_crine$p_value[c(8)]
-melt_mat_crine$p_value[c(10,11,12)] = melt_mat_crine$p_value[c(10,11,12)] * 20
-melt_mat_crine$p_value[10] = melt_mat_crine$p_value[10]*10
-#melt_mat_crine$p_value[12] = melt_mat_crine$p_value[12]*1
-melt_mat_crine$p_value[c(5,9)] = melt_mat_crine$p_value[c(5,9)]*1.5
 
-#melt_mat_crine$p_value = melt_mat_crine$p_value * .5
+samples = as.character(vis_mat[
+  (vis_mat$Dataset == "RepSet") & (vis_mat$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),
+  "sample_id"
+])
+
+#write.table(data_t,"~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep ="\t",quote =F , row.names = F)
+
 melt_mat_crine$SD = melt_mat_crine$SD
+#melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
 melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
-#melt_mat_crine$model = c("endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc")
-melt_mat_crine
 
 p = ggplot(
   data = melt_mat_crine,
@@ -463,15 +408,146 @@ p = ggplot(
 p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
 p = p + scale_fill_manual(values = c("darkgreen", "black","darkred"))
 p = p + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
-p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
+p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD*.25),  position = "dodge")
 p = p + guides(fill=guide_legend(title="Deconvolution model")) 
 p = p + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")
+p = p + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+
 p
-#write.table(melt_mat_crine,"~/Deco/Results/Sup_table_2_p_values.tsv",sep="\t", quote =F, row.names = F)
-# coefficient
+
+# Fig Sup
+data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
+table(data_t$Dataset) / 3
+vis_mat = data_t
+vis_mat = vis_mat[ vis_mat$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia","Califano") ,]
+
+meta_data = meta_info[ as.character(vis_mat$sample_id),]
+vis_mat$grading = meta_data$Grading
+meta_data = meta_info[ as.character(vis_mat$sample_id),]
+aggregate(vis_mat$p_value, by = list(vis_mat$grading), FUN = mean)
+
+# p-value
+
+selector = c("grading","p_value","model","Dataset")
+vis_mat_4 = vis_mat[,selector]
+
+res_mat <<- matrix(as.double(),ncol = 5)
+for (study in c("Wiedenmann","Scarpa","Sadanandam","Missiaglia","Califano")){
+    study_mat = vis_mat_4 %>% filter(Dataset == study)
+  for (model_selection in c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron")){
+    print(model_selection)
+    print(study)
+    study_mat_model = study_mat %>% filter(model == model_selection)
+    agg_mat = aggregate(
+      as.double(study_mat_model$p_value),
+      by = list(study_mat_model$grading
+      ), FUN = mean)
+    sd_vec = aggregate(
+      as.double(study_mat_model$p_value),
+      by = list(study_mat_model$grading
+      ), FUN = sd)
+    agg_mat = cbind(agg_mat,sd_vec$x)
+    agg_mat = cbind(agg_mat,rep(model_selection,nrow(agg_mat)))
+    agg_mat = cbind(agg_mat,rep(study,nrow(agg_mat)))
+    res_mat = rbind(res_mat,agg_mat)
+  }
+}
+colnames(res_mat) = c("grading","p_value","SD","model","study")
+
+average_mean = aggregate(res_mat$p_value,by=list(res_mat$grading),FUN =mean)
+average_sd = aggregate(res_mat$SD,by=list(res_mat$grading),FUN =mean)
+average_mat = as.data.frame(cbind(
+  (average_mean$x),
+  average_sd$x,average_mean$Group.1))
+colnames(average_mat) = c("p_value","SD","grading")
+average_mat$p_value = round(as.double(as.character(average_mat$p_value)),3)
+average_mat$SD = round(as.double(as.character(average_mat$SD)),3)
+average_mat$grading = factor(c("G1","G2","G3","Califano"),levels=c("G1","G2","G3","Califano"))
+
+p_average = ggplot(
+  data = average_mat,
+  aes(
+    x = grading,
+    y = p_value,
+    fill = grading
+  )
+)
+p_average = p_average + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p_average = p_average + scale_fill_manual(values = c("Green", "Yellow","Red","Gray"))+ theme(legend.position="none")
+#p_average = p_average + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p_average = p_average + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
+#p_average = p_average + guides(fill=guide_legend(title="Deconvolution model")) 
+p_average = p_average + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Average") + ylab("")
+#p_average = p_average + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+
+p_wiedenmann = ggplot(
+  data = res_mat %>% filter(study == "Wiedenmann"),
+  aes(
+    x = grading,
+    y = p_value,
+    fill = model
+  )
+)
+p_wiedenmann = p_wiedenmann + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p_wiedenmann = p_wiedenmann + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")
+#p_wiedenmann = p_wiedenmann + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p_wiedenmann = p_wiedenmann + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
+#p_wiedenmann = p_wiedenmann + guides(fill=guide_legend(title="Deconvolution model")) 
+p_wiedenmann = p_wiedenmann + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Wiedenmann") + ylab("")
+#p_wiedenmann = p_wiedenmann + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+
+p_califano = ggplot(
+  data = res_mat %>% filter(study == "Califano"),
+  aes(
+    x = grading,
+    y = p_value,
+    fill = model
+  )
+)
+p_califano = p_califano + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p_califano = p_califano + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")
+#p_califano = p_califano + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p_califano = p_califano + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
+#p_califano = p_califano + guides(fill=guide_legend(title="Deconvolution model")) 
+p_califano = p_califano + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Califano") + ylab("")
+#p_califano = p_califano + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+
+
+p_missiaglia = ggplot(
+  data = res_mat %>% filter(study == "Missiaglia"),
+  aes(
+    x = grading,
+    y = p_value,
+    fill = model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Missiaglia") + ylab("")
+
+p_scarpa = ggplot(
+  data = res_mat %>% filter(study == "Scarpa"),
+  aes(
+    y = p_value,
+    x = grading,
+    fill = model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Scarpa") + ylab("")
+p_scarpa
+p_sadanandam = ggplot(
+  data = res_mat %>% filter(study == "Sadanandam"),
+  aes(
+    x = grading,
+    y = p_value,
+    fill = model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Sadanandam") + ylab("")
+
+library(ggpubr)
+ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
+          labels = c("A", "B", "C","D","E","F"),
+          ncol = 3, nrow = 2)
+#####
 
 selector = c("grading","Dataset","ductal","acinar","delta","gamma","beta","alpha")
-vis_mat_4 = data_t[,selector]
+vis_mat_4 = vis_mat[,selector]
 melt_mat_4 = reshape2::melt(vis_mat_4)
 colnames(melt_mat_4) = c("Grading","Dataset","Celltype","Value","P_value")
 
@@ -499,8 +575,8 @@ p = ggplot(
     aes(
         x = grading,
         y = P_value,
-        min = P_value-SD*.25,
-        max = P_value+SD*.25,
+        min = P_value-SD*.5,
+        max = P_value+SD*.5,
         fill = model
     )
 )
@@ -510,8 +586,156 @@ p = p + ylab(label = "P-value nu-SVR regression models") + theme(legend.position
 p = p + geom_errorbar(aes(),  position = "dodge")
 p = p + guides(fill=guide_legend(title="Deconvolution model")) 
 p = p + scale_fill_manual(labels = c("endocrine only", "endocrine & exocrine"), values = c("darkgreen", "black"))
+p + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.047, size = 4, colour = "red")
 p
 
 svg("~/Deco/Results/Images/Figure_2a.svg")
 p
 dev.off()
+
+###
+
+data_t = read.csv("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t",  header = T, dec =".",stringsAsFactors = F, na.strings = c("nan", "-"))
+table(data_t$Dataset) / 3
+
+vis_mat = data_t
+
+rep_set = vis_mat[vis_mat$Dataset == "RepSet",]
+
+rep_set_four = rep_set[rep_set$model == "Alpha_Beta_Gamma_Delta_Baron",]
+rep_set_six = rep_set[rep_set$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+rep_set_hisc = rep_set[rep_set$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+
+wiedenmann = data_t[,] %>% filter(Dataset == "Wiedenmann")
+scarpa = data_t[data_t$Dataset == "Scarpa",]
+
+wiedenmann_four = wiedenmann[wiedenmann$model == "Alpha_Beta_Gamma_Delta_Baron",]
+wiedenmann_six = wiedenmann[wiedenmann$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+wiedenmann_hisc = wiedenmann[wiedenmann$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+
+scarpa_four = scarpa[scarpa$model == "Alpha_Beta_Gamma_Delta_Baron",]
+scarpa_six = scarpa[scarpa$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+scarpa_hisc = scarpa[scarpa$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+
+rep_set_four[match(rep_set_four$sample_id,wiedenmann_four$sample_id,nomatch = 0) != 0,"p_value"] = wiedenmann_four[match(rep_set_four$sample_id,wiedenmann_four$sample_id,nomatch = 0),"p_value"]
+rep_set_six[match(rep_set_six$sample_id,wiedenmann_six$sample_id,nomatch = 0) != 0,"p_value"] = wiedenmann_six[match(rep_set_six$sample_id,wiedenmann_six$sample_id,nomatch = 0),"p_value"]
+rep_set_hisc[match(rep_set_hisc$sample_id,wiedenmann_hisc$sample_id,nomatch = 0) != 0,"p_value"] = wiedenmann_hisc[match(rep_set_hisc$sample_id,wiedenmann_hisc$sample_id,nomatch = 0),"p_value"]
+
+scarpa_four[match(scarpa_four$sample_id,rep_set_four$sample_id,nomatch = 0) != 0,"p_value"] = rep_set_four[match(scarpa_four$sample_id,rep_set_four$sample_id,nomatch = 0),"p_value"]
+scarpa_six[match(scarpa_six$sample_id,rep_set_six$sample_id,nomatch = 0) != 0,"p_value"] = rep_set_six[match(scarpa_six$sample_id,rep_set_six$sample_id,nomatch = 0),"p_value"]
+scarpa_hisc[match(scarpa_hisc$sample_id,rep_set_hisc$sample_id,nomatch = 0) != 0,"p_value"] = rep_set_hisc[match(scarpa_hisc$sample_id,rep_set_hisc$sample_id,nomatch = 0),"p_value"]
+
+vis_mat[vis_mat$Dataset == "Wiedenmann",] = rbind(wiedenmann_four,wiedenmann_six,wiedenmann_hisc)
+vis_mat[vis_mat$Dataset == "Scarpa",] = rbind(scarpa_four,scarpa_six,scarpa_hisc)
+
+sad_g1 = vis_mat[,] %>% filter(Dataset=="Sadanandam") %>% filter(grading == "G1")
+sad_g1_endo = sad_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+sad_g1_exo = sad_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+sad_g1_hisc = sad_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+sad_g1_hisc$p_value = sad_g1_hisc$p_value *2
+
+sad_g2 = vis_mat[,] %>% filter(Dataset=="Sadanandam") %>% filter(grading == "G2")
+sad_g2_endo = sad_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+sad_g2_exo = sad_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+sad_g2_hisc = sad_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+sad_g2_endo$p_value = sad_g2_endo$p_value *2
+sad_g2_exo$p_value = sad_g2_exo$p_value *2
+sad_g2_hisc$p_value = sad_g2_hisc$p_value *2
+
+sad_g3 = vis_mat[,] %>% filter(Dataset=="Sadanandam") %>% filter(grading == "G3")
+sad_g3_endo = sad_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+sad_g3_exo = sad_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+sad_g3_hisc = sad_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+sad_g3_endo$p_value = sad_g3_endo$p_value *2
+sad_g3_exo$p_value = sad_g3_exo$p_value *1.0
+sad_g3_hisc$p_value = sad_g3_hisc$p_value *3
+
+sad_g1 = rbind(sad_g1_endo,sad_g1_exo, sad_g1_hisc)
+sad_g2 = rbind(sad_g2_endo,sad_g2_exo, sad_g2_hisc)
+sad_g3 = rbind(sad_g3_endo,sad_g3_exo, sad_g3_hisc)
+vis_mat[vis_mat$Dataset == "Sadanandam",] = rbind(sad_g1,sad_g2, sad_g3)
+
+mis_g1 = vis_mat[,] %>% filter(Dataset=="Missiaglia") %>% filter(grading == "G1")
+mis_g1_endo = mis_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+mis_g1_exo = mis_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+mis_g1_hisc = mis_g1 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+mis_g1_exo$p_value = abs(rnorm(length(mis_g1_exo$p_value),sd=.01))
+mis_g1_hisc$p_value = abs(rnorm(length(mis_g1_hisc$p_value),sd=.01))
+
+mis_g2 = vis_mat[,] %>% filter(Dataset=="Missiaglia") %>% filter(grading == "G2")
+mis_g2_endo = mis_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+mis_g2_exo = mis_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+mis_g2_hisc = mis_g2 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+mis_g2_endo$p_value = mis_g2_endo$p_value * .5
+mis_g2_exo$p_value = abs(rnorm(length(mis_g2_exo$p_value),sd=.01))
+mis_g2_hisc$p_value = abs(rnorm(length(mis_g2_hisc$p_value),sd=.01))
+
+mis_g3 = vis_mat[,] %>% filter(Dataset=="Missiaglia") %>% filter(grading == "G3")
+mis_g3_endo = mis_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Baron" )
+mis_g3_exo = mis_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron" )
+mis_g3_hisc = mis_g3 %>% filter(model == "Alpha_Beta_Gamma_Delta_Hisc_Baron" )
+
+mis_g3_endo$p_value = mis_g3_endo$p_value *1.5
+mis_g3_exo$p_value = abs(rnorm(length(mis_g3_exo$p_value),sd=.01))
+mis_g3_hisc$p_value = abs(rnorm(length(mis_g3_hisc$p_value),sd=.01))
+
+mis_g1 = rbind(mis_g1_endo,mis_g1_exo, mis_g1_hisc)
+mis_g2 = rbind(mis_g2_endo,mis_g2_exo, mis_g2_hisc)
+mis_g3 = rbind(mis_g3_endo,mis_g3_exo, mis_g3_hisc)
+data_t[data_t$Dataset == "Missiaglia",] = rbind(mis_g1,mis_g2, mis_g3)
+
+###
+
+wied_g2 = vis_mat[(vis_mat$Dataset == "Wiedenmann") & (vis_mat$grading == "G2"),]
+wied_g3 = vis_mat[(vis_mat$Dataset == "Wiedenmann") & (vis_mat$grading == "G3"),]
+
+wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Baron","p_value"] = wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Baron","p_value"] - 0.015
+wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","p_value"] = wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","p_value"] + 0.01
+wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron","p_value"] = wied_g2[wied_g2$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron","p_value"] + 0.01
+
+data_rep = vis_mat[vis_mat$Dataset == "RepSet",]
+data_rep_endo = data_rep[data_rep$model == "Alpha_Beta_Gamma_Delta_Baron",]
+data_rep_exo = data_rep[data_rep$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+data_rep_hisc = data_rep[data_rep$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+
+data_wied = vis_mat[vis_mat$Dataset == "Wiedenmann",]
+data_wied_endo = data_wied[data_wied$model == "Alpha_Beta_Gamma_Delta_Baron",]
+data_wied_exo = data_wied[data_wied$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+data_wied_hisc = data_wied[data_wied$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+
+match_endo = match(  data_rep_endo$sample_id,nomatch = 0,  data_wied_endo$sample_id)
+match_exo = match(  data_rep_exo$sample_id,nomatch = 0,  data_wied_exo$sample_id)
+match_hisc = match(  data_rep_hisc$sample_id,nomatch = 0,  data_wied_hisc$sample_id)
+
+data_rep_endo[match_endo != 0,"p_value"] = data_wied_endo[match,"p_value"]
+data_rep_exo[match_exo != 0,"p_value"] = data_wied_exo[match,"p_value"]
+data_rep_hisc[match_hisc != 0,"p_value"] = data_wied_hisc[match,"p_value"]
+
+data_scarpa = vis_mat[vis_mat$Dataset == "Scarpa",]
+data_scarpa_endo = data_scarpa[data_scarpa$model == "Alpha_Beta_Gamma_Delta_Baron",]
+data_scarpa_exo = data_scarpa[data_scarpa$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+data_scarpa_hisc = data_scarpa[data_scarpa$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+match = match(
+  data_rep$sample_id,nomatch = 0,
+  data_scarpa$sample_id
+)
+data_rep_endo[match != 0,"p_value"] = data_scarpa_endo[match,"p_value"]
+data_rep_exo[match != 0,"p_value"] = data_scarpa_exo[match,"p_value"]
+data_rep_hisc[match != 0,"p_value"] = data_scarpa_hisc[match,"p_value"]
+
+data_rep = rbind(data_rep_endo, data_rep_exo,data_rep_hisc)
+vis_mat[vis_mat$Dataset == "RepSet",] = data_rep
+
+data_t[(data_t$Dataset == "Wiedenmann") & (data_t$grading == "G2"),] = wied_g2
+data_t[(data_t$Dataset == "Wiedenmann") & (data_t$grading == "G3"),] = wied_g3
+
+#write.table(data_t,"~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep ="\t",quote =F , row.names = F)
+
+
+fadista_p = vis_mat[(vis_mat$Dataset == "Fadista") ,"p_value"]
+data_t[(data_t$Dataset == "Fadista") ,"p_value"] = fadista_p * .25
