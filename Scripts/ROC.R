@@ -157,7 +157,7 @@ for( i in seq(7,24,by=3)){
     }
 }
 colnames(res_mat) = c("Dataset","Proportion","Sensitivity","Specificity","F1","AUC")
-write.table(res_mat,"~/Deko/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",row.names = F)
+write.table(res_mat,"~/Deco/Results/Figure_4_Classification_G1_&_G2_versus_G3_Performance.tsv",sep="\t",row.names = F)
 # graphics
 
 perf_1 = unlist(perf_vec)[[1]]

@@ -7,7 +7,8 @@ run_benchmark = function(
     path_benchmark_files,
     confidence_threshold,
     high_threshold,
-    low_threshold
+    low_threshold,
+    path_benchmark_files_dec_res
 ){
     
     ### prep
@@ -59,6 +60,7 @@ run_benchmark = function(
     )
     model_path = str_replace_all(model_path, pattern = "/\\.","/")
     
+    #transcriptome_data = transcriptome_data[,missing_samples]
     ###
     
     deconvolution_results = Deconvolve_transcriptome(
@@ -68,7 +70,25 @@ run_benchmark = function(
         nr_permutations = 1000,
         output_file = ""
     )
-
+    col_names = colnames(deconvolution_results)
+    width = ncol(deconvolution_results)
+    height = nrow(deconvolution_results) 
+    res_table = matrix(unlist(deconvolution_results),ncol = width, nrow = height)
+    colnames(res_table) = col_names
+    res_table= as.data.frame(res_table)
+    res_table$p_value = as.double(as.character(res_table$p_value))
+    saveRDS(
+        deconvolution_results,
+        str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")
+    )
+    deconvolution_results$p_value = as.double(deconvolution_results$p_value)
+    write.table(
+        deconvolution_results,
+        path_benchmark_files_dec_res,
+        sep="\t",
+        quote =F, row.names = F
+    )
+    
     return(deconvolution_results)
     
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){

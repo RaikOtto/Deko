@@ -2,13 +2,13 @@ library("devtools")
 library("NMF")
 load_all("~/artdeco/")
 
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### add models
 
-scRNA_file_path = "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor.tsv"
+scRNA_file_path = "~/Deco/Data/Alpha_Beta_Gamma_Delta_Hisc_Baron.tsv"
 model_name = str_replace_all(scRNA_file_path,pattern = "\\.tsv","")
 model_name = tail(str_split(model_name,pattern = "/")[[1]],1)
 

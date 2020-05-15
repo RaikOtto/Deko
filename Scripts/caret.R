@@ -75,7 +75,7 @@ truth_vec = meta_data$Grading
 truth_vec[truth_vec %in% c("G1","G2")] = 0
 truth_vec[truth_vec %in% c("G3")] = 1
 
-train_mat = t(expr_raw)[,1:100]
+train_mat = t(expr_raw)[,1:50]
 
 t_data = data.frame(
     cbind(
@@ -90,9 +90,9 @@ rf_fit <- glm(
     #lambda = 0
 )
 prediction_vector <- plogis(predict(rf_fit, as.data.frame(train_mat)))  # predicted scores
-optCutOff = InformationValue::optimalCutoff(as.double(t_data$Grading), predicted)[1] 
-sensitivity = round(InformationValue::sensitivity(actuals = as.double(truth_vec),predicted, threshold = optCutOff),2)
-specificity = round(InformationValue::specificity(actuals = as.double(truth_vec),predicted, threshold = optCutOff),2)
+optCutOff = InformationValue::optimalCutoff(as.double(t_data$Grading), prediction_vector)[1] 
+sensitivity = round(InformationValue::sensitivity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
+specificity = round(InformationValue::specificity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
 
 F1_score =  round(2*(sensitivity*specificity/(sensitivity+specificity)),2)
 
@@ -115,7 +115,7 @@ rocr_auc = as.character(
 )
 
 print( paste0( c( "Sensitivity:", sensitivity,", Specificity:", specificity, ", F1:", F1_score, ", ROC:",rocr_auc) ), collapse = " " )
-perf = ROCR::performance(
+perf_vec = ROCR::performance(
     prediction.obj = pred_obj,
     measure = "tpr",
     x.measure = "fpr"
