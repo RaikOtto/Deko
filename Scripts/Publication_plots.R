@@ -22,16 +22,31 @@ sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[35,3:ncol(genes
 #sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[13,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 
+# Fadista 89
+# Alvarez 105
+# Scarpa 29
+# Sdanandam 29
+# Missiaglia 75
+# Wiedenmann 39
+# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
+
 path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
+path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Missaglia.S75.tsv"
+path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Sadanandam.S29.tsv"
+path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Scarpa.S29.tsv"
+path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S39.tsv"
+
 visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
 
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
+table(meta_data$Grading)
+# G1 46 + 7 + 14 + 0 = 67
+# G2 25 + 12 + 13 + 30 = 80
+# G3 4 + 8 + 2 + 30 = 44
 #meta_data_2 = rbind(meta_data_2,meta_data)
-#table(meta_data_2$Study)
-#table(meta_data_2$Location)
 
 table(meta_data$Grading)
 #meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
