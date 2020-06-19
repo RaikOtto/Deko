@@ -30,20 +30,9 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Sdanandam 29
 # Missiaglia 75
 # Wiedenmann 39
-<<<<<<< HEAD
-# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
 
-path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Missaglia.S75.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Sadanandam.S29.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Scarpa.S29.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S39.tsv"
-
-visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
-=======
 # 89 + 105 + 29 + 29 + 75 + 39
 # "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
->>>>>>> 344e35809e56947551eced33a75addbc10034e5b
 
 path_transcriptome_file = "~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv"
 
@@ -151,36 +140,6 @@ p = ggplot( data = vis_mat,aes( x = Dataset, y = as.integer(ROC), min = ROC-SD, 
 p = p + geom_bar(stat="identity", position=position_dodge())
 p + geom_errorbar(aes(),  position = "dodge")
 
-# Figure 4 <- here be changes for supervised versus unsupervised
-
-data_t = read.table("~/Deco/Results/SM_Table_3_Supervised_vs_Unsupervised_Grading_prediction.tsv",sep="\t",header = T)
-data_t_sd = data_t[ !( data_t$X %in% c("Sensitivity","Specificity","Accuracy","PPV","Kappa")),]
-data_t_sd = as.double(as.character(unlist((data_t_sd[,c(2,3)]))))
-data_t = data_t[data_t$X %in% c("Sensitivity","Specificity","Accuracy","PPV","Kappa"),]
-sd_min = as.double(as.character(unlist((data_t[,c(2,3)])))) - data_t_sd
-sd_max = as.double(as.character(unlist((data_t[,c(2,3)])))) + data_t_sd
-sd_max[sd_max > 100] = 100
-data_t = reshape2::melt(data_t)  %>% dplyr::rename( 'Parameter' = 'X' ) %>% dplyr::rename( 'Type' = 'variable' )
-data_t$Parameter = factor(data_t$Parameter, levels = c("Sensitivity","Specificity","Accuracy","PPV","Kappa"))
-data_t$Type = factor(data_t$Type)
-
-p = ggplot( 
-    data = data_t,
-    aes( 
-        x = Parameter,
-        y = value,
-        fill = Type
-    )
-)
-p = p + geom_bar(stat="identity", position=position_dodge())
-p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
-p = p + xlab("Performance paramter") + ylab("Performance in percent") + theme(legend.position = "top")
-p = p + scale_fill_manual(values = c("red","blue"))
-p = p + geom_errorbar(aes(ymin = sd_min,ymax = sd_max),  position = "dodge")
-
-#svg(filename = "~/Deco/Results/Images/Figure_3_classification_efficiency.svg", width = 10, height = 10)
-p
-#dev.off()
 ### survival plots ###
 
 surv_cor = apply(expr_raw, MARGIN = 1, FUN = function(vec){return(cor(vec, as.double(meta_data$OS_Tissue)))})
@@ -751,3 +710,33 @@ data_t[(data_t$Dataset == "Wiedenmann") & (data_t$grading == "G3"),] = wied_g3
 
 fadista_p = vis_mat[(vis_mat$Dataset == "Fadista") ,"p_value"]
 data_t[(data_t$Dataset == "Fadista") ,"p_value"] = fadista_p * .25
+
+# SM Figure 3 <- here be changes for supervised versus unsupervised
+
+#data_t = read.table("~/Deco/Results/Figure_4.tsv",sep="\t",header = T,stringsAsFactors = F)
+data_t = read.table("~/Deco/Results/SM_Figure_3.tsv",sep="\t",header = T,stringsAsFactors = F)
+data_t = reshape2::melt(data_t)
+data_t$variable = str_replace(data_t$variable,"\\.","")
+data_t$Type = factor(data_t$Type)
+data_t = data_t %>% rename("Parameter" = "variable")
+data_t = data_t %>% filter(Parameter %in% c("Accuracy"))
+data_t$Dataset = factor(data_t$Dataset, levels = c("Missiaglia","Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
+data_t$Type = factor(data_t$Type, levels = c("Unsupervised","Supervised"))
+
+p = ggplot( 
+  data = data_t,
+  aes( 
+    x = Dataset,
+    y = value,
+    fill = Type
+  )
+)
+p = p + geom_bar(stat="identity", position=position_dodge())
+#p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+p = p + xlab("Dataset") + ylab("Accuracy") + theme(legend.position = "top")
+p = p + scale_fill_manual(values = c("blue","red"))
+p = p + theme(axis.text = element_text(size=12)) + theme(  legend.title = element_text(size = 14),legend.text = element_text(size = 12))
+
+#svg(filename = "~/Deco/Results/Images/SM_Figure_3.svg", width = 10, height = 10)
+p 
+dev.off()
