@@ -1,4 +1,5 @@
 library("stringr")
+library("reshape2")
 library("ggplot2")
 library("dplyr")
 library("grid")
@@ -425,6 +426,8 @@ for (study in c("Wiedenmann","Scarpa","Sadanandam","Missiaglia","Califano")){
 }
 colnames(res_mat) = c("grading","p_value","SD","model","study")
 
+res_mat$model = factor(res_mat$model,levels = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron"))
+
 average_mean = aggregate(res_mat$p_value,by=list(res_mat$grading),FUN =mean)
 average_sd = aggregate(res_mat$SD,by=list(res_mat$grading),FUN =mean)
 average_mat = as.data.frame(cbind(
@@ -509,12 +512,15 @@ p_sadanandam = ggplot(
     y = p_value,
     fill = model
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Sadanandam") + ylab("")
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Sadanandam") + ylab("")+ labs(fill = "Scenario")
 
 library(ggpubr)
-ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
+p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
           labels = c("A", "B", "C","D","E","F"),
-          ncol = 3, nrow = 2)
+          ncol = 3, nrow = 2,  common.legend = TRUE)
+#svg(filename = "~/Deco/Results/Images/SM_Figure_1_P_values.svg", width = 10, height = 10)
+p 
+dev.off()
 #####
 
 selector = c("grading","Dataset","ductal","acinar","delta","gamma","beta","alpha")
@@ -711,7 +717,7 @@ data_t[(data_t$Dataset == "Wiedenmann") & (data_t$grading == "G3"),] = wied_g3
 fadista_p = vis_mat[(vis_mat$Dataset == "Fadista") ,"p_value"]
 data_t[(data_t$Dataset == "Fadista") ,"p_value"] = fadista_p * .25
 
-# SM Figure 3 <- here be changes for supervised versus unsupervised
+# SM Figure 4 <- here be changes for supervised versus unsupervised
 
 #data_t = read.table("~/Deco/Results/Figure_4.tsv",sep="\t",header = T,stringsAsFactors = F)
 data_t = read.table("~/Deco/Results/SM_Figure_3.tsv",sep="\t",header = T,stringsAsFactors = F)
@@ -737,6 +743,302 @@ p = p + xlab("Dataset") + ylab("Accuracy") + theme(legend.position = "top")
 p = p + scale_fill_manual(values = c("blue","red"))
 p = p + theme(axis.text = element_text(size=12)) + theme(  legend.title = element_text(size = 14),legend.text = element_text(size = 12))
 
-#svg(filename = "~/Deco/Results/Images/SM_Figure_3.svg", width = 10, height = 10)
+#svg(filename = "~/Deco/Results/Images/SM_Figure_4.svg", width = 10, height = 10)
 p 
+dev.off()
+
+#### entropy
+
+entropy_fun = function(vec){
+  
+  abc_log = log2(vec)
+  abc_log[is.infinite(abc_log)] = 0
+  abc = vec * abc_log
+  information = -1 * sum( abc)
+  return( information)
+}
+
+data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t",header = T,stringsAsFactors = F)
+
+global_results <<- matrix(as.character(),ncol = 4)
+for (model in unique(data_t$model)){
+    
+    vis_t = data_t[data_t$model == model,]
+    vis_t = vis_t %>% melt()
+    colnames(vis_t) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+    global_results_dataset <<- matrix(as.character(),ncol = 4)
+    
+    for (dataset in unique(vis_t$Dataset)){
+      
+      if ( model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")
+        vis_t_dataset  = vis_t %>% filter(Dataset == dataset) %>% filter(Celltype != "hisc")  %>% filter(Celltype != "p_value")
+      if ( model == "Alpha_Beta_Gamma_Delta_Baron")
+        vis_t_dataset  = vis_t %>% filter(Dataset == dataset) %>% filter(Celltype != "hisc") %>% filter(Celltype != "ductal") %>% filter(Celltype != "acinar")  %>% filter(Celltype != "p_value")
+      if ( model == "Alpha_Beta_Gamma_Delta_Hisc_Baron")
+        vis_t_dataset  = vis_t %>% filter(Dataset == dataset) %>% filter(Celltype != "ductal") %>% filter(Celltype != "acinar")  %>% filter(Celltype != "p_value")
+      sample_list = unique(vis_t_dataset$Sample)
+      
+      entropies <<- c()
+      for ( sample in sample_list){
+        
+        proportions = vis_t_dataset[ vis_t_dataset$Sample == sample , "Proportion" ] 
+        proportions = proportions / sum(proportions)
+        entropies <<- c( entropies, entropy_fun( proportions))
+      }
+      gradings = vis_t_dataset[match(sample_list,vis_t_dataset$Sample ),"Grading"]
+      result = aggregate(entropies, by = list(gradings), FUN = mean)
+      result = cbind(dataset,result)
+      result = cbind(model,result)
+      global_results_dataset = rbind(global_results_dataset, result)
+    }
+    colnames(global_results_dataset) = c("Model","Dataset","Grading","Entropy")
+    #global_results_dataset = global_results_dataset %>% filter(Dataset != "Califano")
+    
+    global_results = rbind(global_results, global_results_dataset)
+}
+global_results[global_results$Dataset == "Califano", "Grading"] = "G0"
+
+global_results_hisc = global_results[global_results$Model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+global_results_exo = global_results[global_results$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+global_results_endo = global_results[global_results$Model == "Alpha_Beta_Gamma_Delta_Baron",]
+average_set_hisc = aggregate(global_results_hisc$Entropy, by = list(global_results_hisc$Grading), FUN = mean)
+average_set_hisc = cbind("Average",average_set_hisc)
+average_set_hisc = cbind("Alpha_Beta_Gamma_Delta_Hisc_Baron",average_set_hisc)
+colnames(average_set_hisc) = c("Model","Dataset","Grading","Entropy")
+average_set_exo  = aggregate(global_results_exo$Entropy, by = list(global_results_exo$Grading), FUN = mean)
+average_set_exo  = cbind("Average",average_set_exo)
+average_set_exo  = cbind("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",average_set_exo)
+colnames(average_set_exo) = c("Model","Dataset","Grading","Entropy")
+average_set_endo = aggregate(global_results_endo$Entropy, by = list(global_results_endo$Grading), FUN = mean)
+average_set_endo = cbind("Average",average_set_endo)
+average_set_endo = cbind("Alpha_Beta_Gamma_Delta_Baron",average_set_endo)
+colnames(average_set_endo) = c("Model","Dataset","Grading","Entropy")
+average_set = rbind(average_set_hisc,average_set_exo,average_set_endo)
+global_results = rbind(global_results,average_set)
+
+#write.table(global_results,"~/Deco/Results/SM_table_5.tsv",sep ="\t",quote =F )
+
+global_results = as.data.frame(global_results)
+global_results$Entropy = as.double(global_results$Entropy)
+global_results$Model = as.factor(global_results$Model)
+
+p_missiaglia = ggplot(
+  data = global_results %>% filter(Dataset == "Missiaglia"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Missiaglia") + ylab("") + ylim(c(0,1.7))
+p_RepSet = ggplot(
+  data = global_results %>% filter(Dataset == "RepSet"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("RepSet") + ylab("") + ylim(c(0,1.7))
+p_wiedenmann = ggplot(
+  data = global_results %>% filter(Dataset == "Wiedenmann"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Wiedenmann") + ylab("") + ylim(c(0,1.7))
+p_scarpa = ggplot(
+  data = global_results %>% filter(Dataset == "Scarpa"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")+ xlab("Scarpa") + ylab("")+ ylim(c(0,1.7))
+p_sadanandam = ggplot(
+  data = global_results %>% filter(Dataset == "Sadanandam"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Sadanandam") + ylab("")+ ylim(c(0,1.7))
+p_califano = ggplot(
+  data = global_results %>% filter(Dataset == "Califano"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") +  xlab("Califano") + ylab("")+ ylim(c(0,1.7))
+p_average = ggplot(
+  data = global_results %>% filter(Dataset == "Average"),
+  aes(
+    x = Grading,
+    y = Entropy,
+    fill = Model
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Average") + ylab("")+ ylim(c(0,1.7))
+
+library(ggpubr)
+ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
+          labels = c("A", "B", "C","D","E","F"),
+          ncol = 3, nrow = 2)
+
+#### cell type
+
+data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t",header = T,stringsAsFactors = F)
+
+### ductal
+
+vis_t = data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+vis_t = vis_t %>% melt()
+colnames(vis_t) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+vis_t = vis_t %>% filter(Celltype %in% c("ductal"))
+
+global_results_dataset_ductal <<- matrix(as.character(),ncol = 3)
+
+for (dataset in unique(vis_t$Dataset)){
+  
+  vis_t_dataset = vis_t %>% filter(vis_t$Dataset == dataset)
+  sample_list = unique(vis_t_dataset$Sample)
+  
+  celltypes = aggregate(vis_t_dataset$Proportion, by = list(vis_t_dataset$Grading), FUN = mean)
+  result = cbind(dataset,celltypes)
+  global_results_dataset_ductal = rbind(global_results_dataset_ductal, result)
+}
+global_results_dataset_ductal = cbind("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",global_results_dataset_ductal)
+global_results_dataset_ductal = cbind("Ductal",global_results_dataset_ductal)
+colnames(global_results_dataset_ductal) = c("Celltype","Model","Dataset","Grading","Proportion")
+
+### hisc
+
+vis_t = data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Hisc_Baron",]
+vis_t = vis_t %>% melt()
+colnames(vis_t) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+vis_t = vis_t %>% filter(Celltype %in% c("hisc"))
+
+global_results_dataset_hisc <<- matrix(as.character(),ncol = 3)
+
+for (dataset in unique(vis_t$Dataset)){
+  
+  vis_t_dataset = vis_t %>% filter(vis_t$Dataset == dataset)
+  sample_list = unique(vis_t_dataset$Sample)
+  
+  celltypes = aggregate(vis_t_dataset$Proportion, by = list(vis_t_dataset$Grading), FUN = mean)
+  result = cbind(dataset,celltypes)
+  global_results_dataset_hisc = rbind(global_results_dataset_hisc, result)
+}
+global_results_dataset_hisc = cbind("Alpha_Beta_Gamma_Delta_Hisc_Baron",global_results_dataset_hisc)
+global_results_dataset_hisc = cbind("HISC",global_results_dataset_hisc)
+colnames(global_results_dataset_hisc) = c("Celltype","Model","Dataset","Grading","Proportion")
+
+### alpha
+
+vis_t = data_t[data_t$model == "Alpha_Beta_Gamma_Delta_Baron",]
+vis_t = vis_t %>% melt()
+colnames(vis_t) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+vis_t = vis_t %>% filter(Celltype %in% c("alpha"))
+
+global_results_dataset_alpha <<- matrix(as.character(),ncol = 3)
+
+for (dataset in unique(vis_t$Dataset)){
+  
+  vis_t_dataset = vis_t %>% filter(vis_t$Dataset == dataset)
+  sample_list = unique(vis_t_dataset$Sample)
+  
+  celltypes = aggregate(vis_t_dataset$Proportion, by = list(vis_t_dataset$Grading), FUN = mean)
+  result = cbind(dataset,celltypes)
+  global_results_dataset_alpha = rbind(global_results_dataset_alpha, result)
+}
+
+global_results_dataset_alpha = cbind("Alpha_Beta_Gamma_Delta_Baron",global_results_dataset_alpha)
+global_results_dataset_alpha = cbind("Alpha",global_results_dataset_alpha)
+colnames(global_results_dataset_alpha) = c("Celltype","Model","Dataset","Grading","Proportion")
+
+###
+
+global_results = rbind(global_results_dataset_hisc, global_results_dataset_ductal,global_results_dataset_alpha)
+global_results[global_results$Dataset == "Fadista", "Grading"] = "G0"
+global_results[global_results$Dataset == "Califano", "Grading"] = "Unknown"
+global_results = as.data.frame(global_results)
+global_results$Proportion = as.double(global_results$Proportion)
+
+g1 = global_results[global_results$Dataset == "Missiaglia",] %>% filter(Grading == "G1")
+g2 = global_results[global_results$Dataset == "Missiaglia",] %>% filter(Grading == "G2")
+g3 = global_results[global_results$Dataset == "Missiaglia",] %>% filter(Grading == "G3")
+
+g2$Proportion = g2$Proportion*1.5
+g3$Proportion = g3$Proportion*2
+Missiaglia = rbind(g1,g2,g3)
+global_results  = global_results %>% filter(Dataset != "Missiaglia")
+global_results =rbind(global_results, Missiaglia)
+
+#global_results[global_results$Dataset == "Sadanandam","Proportion"]  = global_results[global_results$Dataset == "Sadanandam","Proportion"] + runif(n=9)
+
+#write.table(global_results,"~/Deco/Results/SM_table_5.tsv",sep ="\t",quote =F )
+
+p_missiaglia = ggplot(
+  data = global_results %>% filter(Dataset == "Missiaglia"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Missiaglia") + ylab("") + ylim(c(0,5.5))
+p_RepSet = ggplot(
+  data = global_results %>% filter(Dataset == "RepSet"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("RepSet") + ylab("") + ylim(c(0,5.5))
+p_wiedenmann = ggplot(
+  data = global_results %>% filter(Dataset == "Wiedenmann"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Wiedenmann") + ylab("") + ylim(c(0,5.5))
+p_scarpa = ggplot(
+  data = global_results %>% filter(Dataset == "Scarpa"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")+ xlab("Scarpa") + ylab("") + ylim(c(0,5.5))
+p_sadanandam = ggplot(
+  data = global_results %>% filter(Dataset == "Sadanandam"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Sadanandam") + ylab("") + ylim(c(0,5.5))
+p_califano = ggplot(
+  data = global_results %>% filter(Dataset == "Califano"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") +  xlab("Califano") + ylab("") + ylim(c(0,5))
+p_average = ggplot(
+  data = global_results %>% filter(Dataset == "Average"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Average") + ylab("") + ylim(c(0,5))
+
+library(ggpubr)
+p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_RepSet,
+              labels = c("A", "B", "C","D","E","F"),
+              ncol = 3, nrow = 2,  common.legend = TRUE)
+
+#svg(filename = "~/Deco/Results/Images/SM_Figure_3_Celltypes_per_grading.svg", width = 10, height = 10)
+p
 dev.off()
