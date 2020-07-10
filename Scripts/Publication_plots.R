@@ -1,3 +1,4 @@
+library(ggpubr)
 library("stringr")
 library("reshape2")
 library("ggplot2")
@@ -237,23 +238,23 @@ colnames(vis_mat_endo) = c("Celltype","Proportion","Grading")
 
 cell_m_exo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
 colnames(cell_m_exo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
-cell_m_exo = cell_m_exo %>% filter(!( Celltype %in%  c("MKI67","P_value","HISC")))
+cell_m_exo = cell_m_exo %>% filter(!( Celltype %in%  c("MKI67","P_value")))
 cell_m_exo_g1 = cell_m_exo[cell_m_exo$Grading == "G1",]
 cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] + 1
 cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] + .5
 vis_mat_exo_g1 = aggregate(cell_m_exo_g1$Proportion, by = list(cell_m_exo_g1$Celltype), FUN = sum)
 vis_mat_exo_g1$x = round(vis_mat_exo_g1$x / sum(vis_mat_exo_g1$x) * 100, 1 )
-vis_mat_exo_g1$Grading = rep("G1",6)
+vis_mat_exo_g1$Grading = rep("G1",7)
 cell_m_exo_g2 = cell_m_exo[cell_m_exo$Grading == "G2",]
 cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] + .5
 cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] + .25
 vis_mat_exo_g2 = aggregate(cell_m_exo_g2$Proportion, by = list(cell_m_exo_g2$Celltype), FUN = sum)
 vis_mat_exo_g2$x = round(vis_mat_exo_g2$x / sum(vis_mat_exo_g2$x)  * 100, 1 )
-vis_mat_exo_g2$Grading = rep("G2",6)
+vis_mat_exo_g2$Grading = rep("G2",7)
 cell_m_exo_g3 = cell_m_exo[cell_m_exo$Grading == "G3",]
 vis_mat_exo_g3 = aggregate(cell_m_exo_g3$Proportion, by = list(cell_m_exo_g3$Celltype), FUN = sum)
 vis_mat_exo_g3$x = round(vis_mat_exo_g3$x / sum(vis_mat_exo_g3$x)  * 100, 1 )
-vis_mat_exo_g3$Grading = rep("G3",6)
+vis_mat_exo_g3$Grading = rep("G3",7)
 vis_mat_exo = rbind(vis_mat_exo_g1,vis_mat_exo_g2,vis_mat_exo_g3)
 colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
 
@@ -296,8 +297,7 @@ p_endo = ggplot(
   data = vis_mat_endo,
   stat="identity",
   colour="black"
-)
-
+)+ scale_fill_manual(values = c("blue", "darkgreen","yellow","purple")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
 p_exo = ggplot(
     data = vis_mat_exo,
     aes(
@@ -313,7 +313,7 @@ p_exo = ggplot(
     data = vis_mat_exo,
     stat="identity",
     colour="black"
-)
+) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","cyan","darkred","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
 
 p_hisc = ggplot(
   data = vis_mat_hisc,
@@ -330,27 +330,15 @@ p_hisc = ggplot(
   data = vis_mat_hisc,
   stat="identity",
   colour="black"
-)
-
-p = p + ylab(label = "Aggregated relative celltype proportion") + theme(legend.position="top") 
-p = p + theme(axis.line = element_line(size=1, colour = "black"),
-              panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
-              panel.border = element_blank(), panel.background = element_blank())  +
-    theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
-          text=element_text(family="Tahoma"),
-          axis.text.x=element_text(colour="black", size = 15),
-          axis.text.y=element_text(colour="black", size = 15)
-)
-
-p = p + labs(fill = "Celltype proportion") + scale_fill_discrete(name = "Dose", labels = c("Ductal", "Acinar", "Beta","Gamma","Alpha","Delta"))
-p = p + scale_fill_manual(values = c("lightblue", "blue","darkgreen","purple","red","orange"))
-p = p + facet_wrap( ~Type) #+ scale_fill_manual(values=c("orange", "black", "darkgreen"))
-p = p + scale_x_discrete(labels=c("1" = "G1", "2" = "G2","3" = "G3"))
-p
+) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","black"))+ theme(legend.position="none")  + ylab("") + xlab("")+ theme(legend.position="none",axis.text=element_text(size=12))
 
 #svg(filename = "~/Deco/Results/Images/Figure_2_Cell_Type_fractions.svg", width = 10, height = 10)
-p
-#dev.off()
+ggarrange(
+  p_endo,p_exo,p_hisc,
+  labels = c("", "", ""),
+  ncol = 3, nrow = 1, common.legend = FALSE, legend.grob = get_legend(p_exo)
+)
+dev.off()
 
 
 ###
