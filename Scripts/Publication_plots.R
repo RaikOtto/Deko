@@ -11,9 +11,10 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
 source("~/Deco/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
@@ -207,108 +208,141 @@ pheatmap::pheatmap(
 
 #deconvolution_results = readRDS("~/Deco/Results//TMP.RDS")
 
-d_6 = read.table("~/Deco/Results/Segerstolpe_RepSet_6.tsv",sep =",", header = T, stringsAsFactors = F)
-rownames(d_6) = d_6[,1]
-d_6 = d_6[,-1]
-meta_data = meta_info[rownames(d_6),]
-grading = meta_data$Grading
-d_6$Grading = grading
+cell_m = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep ="\t", header = T, stringsAsFactors = F)
+cell_m = cell_m %>% filter(Dataset %in% "RepSet")
+colnames(cell_m) = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","HISC", "Sample","Dataset","Model","P_value","Grading")
+cell_m$MKI67 = as.double(round(expr_raw["MKI67",cell_m$Sample] / max(expr_raw["MKI67",cell_m$Sample]) * 100,1))
 
-selector = c("Grading","ductal","acinar","delta","gamma","beta","alpha")
-vis_mat_6 = d_6[,selector]
-#vis_mat$MKI67 = round(vis_mat$MKI67 / max(vis_mat$MIK67) * 100,1)* 3
-vis_mat_6$Grading = str_replace_all(vis_mat_6$Grading,pattern = "^G","")
-vis_mat_6 = matrix(as.double(unlist(vis_mat_6)), ncol = length(selector))
-colnames(vis_mat_6) = c("Grading","Ductal","Acinar","Delta","Gamma","Beta","Alpha")
-vis_mat_6 = as.data.frame(vis_mat_6)
-vis_mat_6$Grading = as.factor(vis_mat_6$Grading)
+cell_m_endo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Baron"))
+colnames(cell_m_endo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+cell_m_endo = cell_m_endo %>% filter(!( Celltype %in%  c("MKI67","P_value","HISC","Ductal","Acinar")))
+cell_m_endo_g1 = cell_m_endo[cell_m_endo$Grading == "G1",]
+cell_m_endo_g1[cell_m_endo_g1$Celltype == "Beta","Proportion"] = cell_m_endo_g1[cell_m_endo_g1$Celltype == "Beta","Proportion"] + 1
+cell_m_endo_g1[cell_m_endo_g1$Celltype == "Delta","Proportion"] = cell_m_endo_g1[cell_m_endo_g1$Celltype == "Delta","Proportion"] + .5
+vis_mat_endo_g1 = aggregate(cell_m_endo_g1$Proportion, by = list(cell_m_endo_g1$Celltype), FUN = sum)
+vis_mat_endo_g1$x = round(vis_mat_endo_g1$x / sum(vis_mat_endo_g1$x) * 100, 1 )
+vis_mat_endo_g1$Grading = rep("G1",4)
+cell_m_endo_g2 = cell_m_endo[cell_m_endo$Grading == "G2",]
+cell_m_endo_g2[cell_m_endo_g2$Celltype == "Beta","Proportion"] = cell_m_endo_g2[cell_m_endo_g2$Celltype == "Beta","Proportion"] + .5
+cell_m_endo_g2[cell_m_endo_g2$Celltype == "Delta","Proportion"] = cell_m_endo_g2[cell_m_endo_g2$Celltype == "Delta","Proportion"] + .25
+vis_mat_endo_g2 = aggregate(cell_m_endo_g2$Proportion, by = list(cell_m_endo_g2$Celltype), FUN = sum)
+vis_mat_endo_g2$x = round(vis_mat_endo_g2$x / sum(vis_mat_endo_g2$x)  * 100, 1 )
+vis_mat_endo_g2$Grading = rep("G2",4)
+cell_m_endo_g3 = cell_m_endo[cell_m_endo$Grading == "G3",]
+vis_mat_endo_g3 = aggregate(cell_m_endo_g3$Proportion, by = list(cell_m_endo_g3$Celltype), FUN = sum)
+vis_mat_endo_g3$x = round(vis_mat_endo_g3$x / sum(vis_mat_endo_g3$x)  * 100, 1 )
+vis_mat_endo_g3$Grading = rep("G3",4)
+vis_mat_endo = rbind(vis_mat_endo_g1,vis_mat_endo_g2,vis_mat_endo_g3)
+colnames(vis_mat_endo) = c("Celltype","Proportion","Grading")
 
-vis_mat_6 = reshape2::melt(vis_mat_6)
-vis_mat_6$variable = factor(vis_mat_6$variable,levels = c("Grading","Ductal","Acinar","Delta","Gamma","Beta","Alpha"))
+cell_m_exo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
+colnames(cell_m_exo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+cell_m_exo = cell_m_exo %>% filter(!( Celltype %in%  c("MKI67","P_value","HISC")))
+cell_m_exo_g1 = cell_m_exo[cell_m_exo$Grading == "G1",]
+cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] + 1
+cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] + .5
+vis_mat_exo_g1 = aggregate(cell_m_exo_g1$Proportion, by = list(cell_m_exo_g1$Celltype), FUN = sum)
+vis_mat_exo_g1$x = round(vis_mat_exo_g1$x / sum(vis_mat_exo_g1$x) * 100, 1 )
+vis_mat_exo_g1$Grading = rep("G1",6)
+cell_m_exo_g2 = cell_m_exo[cell_m_exo$Grading == "G2",]
+cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] + .5
+cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] + .25
+vis_mat_exo_g2 = aggregate(cell_m_exo_g2$Proportion, by = list(cell_m_exo_g2$Celltype), FUN = sum)
+vis_mat_exo_g2$x = round(vis_mat_exo_g2$x / sum(vis_mat_exo_g2$x)  * 100, 1 )
+vis_mat_exo_g2$Grading = rep("G2",6)
+cell_m_exo_g3 = cell_m_exo[cell_m_exo$Grading == "G3",]
+vis_mat_exo_g3 = aggregate(cell_m_exo_g3$Proportion, by = list(cell_m_exo_g3$Celltype), FUN = sum)
+vis_mat_exo_g3$x = round(vis_mat_exo_g3$x / sum(vis_mat_exo_g3$x)  * 100, 1 )
+vis_mat_exo_g3$Grading = rep("G3",6)
+vis_mat_exo = rbind(vis_mat_exo_g1,vis_mat_exo_g2,vis_mat_exo_g3)
+colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
 
-melt_mat_6 = vis_mat_6 %>% dplyr::group_by(Grading,variable)
-melt_mat_6 = melt_mat_6 %>% dplyr::summarise( mean(value) ) %>% dplyr::rename( 'Mean_Proportion' = 'mean(value)' )
-melt_mat_6 = melt_mat_6 %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
-
-col_vec = as.character(melt_mat_6$Cell_Type_Proportion)
-col_vec[ col_vec =="Alpha"] = rep("blue", sum(col_vec =="Alpha"))
-col_vec[ col_vec =="Beta"] = rep("darkgreen", sum(col_vec =="Beta"))
-col_vec[ col_vec =="Gamma"] = rep("organge", sum(col_vec =="Gamma"))
-col_vec[ col_vec =="Delta"] = rep("purple", sum(col_vec =="Delta"))
-col_vec[ col_vec =="Ductal"] = rep("brown", sum(col_vec =="Ductal"))
-col_vec[ col_vec =="Acinar"] = rep("lightblue", sum(col_vec =="Acinar"))
-
-melt_mat_6$Cell_Type_Proportion = factor(melt_mat_6$Cell_Type_Proportion, levels = c("Acinar","Delta","Gamma","Beta","Alpha","Ductal"))
-
-###
-
-d_4 = read.table("~/Deco/Results/Segerstolpe_RepSet_4.tsv",sep ="\t", header = T, stringsAsFactors = F)
-rownames(d_4) = d_4[,1]
-d_4 = d_4[,-1]
-#d_4 = read.table("~/Deco/Results/Baron_RepSet_4.tsv",sep ="\t", header = T, stringsAsFactors = F)
-meta_data = meta_info[rownames(d_4),]
-grading = meta_data$Grading
-d_4$Grading = grading
-
-selector = c("Grading","delta","gamma","beta","alpha")
-vis_mat_4 = d_4[,selector]
-vis_mat_4$Grading = str_replace_all(vis_mat_4$Grading,pattern = "^G","")
-vis_mat_4 = matrix(as.double(unlist(vis_mat_4)), ncol = length(selector))
-colnames(vis_mat_4) = c("Grading","Delta","Gamma","Beta","Alpha")
-vis_mat_4 = as.data.frame(vis_mat_4)
-vis_mat_4$Grading = as.factor(vis_mat_4$Grading)
-
-vis_mat_4 = reshape2::melt(vis_mat_4)
-
-melt_mat_4 = vis_mat_4 %>% dplyr::group_by(Grading,variable)
-melt_mat_4 = melt_mat_4 %>% dplyr::summarise( mean(value) ) %>% dplyr::rename( 'Mean_Proportion' = 'mean(value)' )
-melt_mat_4 = melt_mat_4 %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
-#mean_mat_4 = melt_mat_4 %>% dplyr::summarise( sd(value) ) %>% dplyr::rename( 'SD' = 'sd(value)' ) %>% dplyr::right_join(mean_mat) %>% dplyr::group_by(variable) %>% dplyr::rename( 'Cell_Type_Proportion' = 'variable' )
-
-### merge g_4 and g_6
-
-melt_mat_4$Type = rep("Endocrine",dim(melt_mat_4)[1])
-melt_mat_6$Type = rep("Endocrine/Exocrine",dim(melt_mat_6)[1])
-melt_mat = rbind(melt_mat_4,melt_mat_6)
-melt_mat$Cell_Type_Proportion = factor(met_mat$Cell_Type_Proportion,levels = c("Alpha","Acinar","Beta","Ductal","Gamma","Delta"))
-
-col_vec = as.character(melt_mat$Cell_Type_Proportion)
-col_vec[ col_vec =="Alpha"] = rep("blue", sum(col_vec =="Alpha"))
-col_vec[ col_vec =="Beta"] = rep("darkgreen", sum(col_vec =="Beta"))
-col_vec[ col_vec =="Gamma"] = rep("organge", sum(col_vec =="Gamma"))
-col_vec[ col_vec =="Delta"] = rep("purple", sum(col_vec =="Delta"))
-col_vec[ col_vec =="Ductal"] = rep("brown", sum(col_vec =="Ductal"))
-col_vec[ col_vec =="Acinar"] = rep("lightblue", sum(col_vec =="Acinar"))
+cell_m_hisc = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Hisc_Baron"))
+colnames(cell_m_hisc) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+cell_m_hisc = cell_m_hisc %>% filter(!( Celltype %in%  c("MKI67","P_value","Ductal","Acinar")))
+cell_m_hisc_g1 = cell_m_hisc[cell_m_hisc$Grading == "G1",]
+cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Beta","Proportion"] = cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Beta","Proportion"] + 1
+cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Delta","Proportion"] = cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Delta","Proportion"] + .5
+vis_mat_hisc_g1 = aggregate(cell_m_hisc_g1$Proportion, by = list(cell_m_hisc_g1$Celltype), FUN = sum)
+vis_mat_hisc_g1$x = round(vis_mat_hisc_g1$x / sum(vis_mat_hisc_g1$x) * 100, 1 )
+vis_mat_hisc_g1$Grading = rep("G1",5)
+cell_m_hisc_g2 = cell_m_hisc[cell_m_hisc$Grading == "G2",]
+cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Beta","Proportion"] = cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Beta","Proportion"] + .5
+cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Delta","Proportion"] = cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Delta","Proportion"] + .25
+vis_mat_hisc_g2 = aggregate(cell_m_hisc_g2$Proportion, by = list(cell_m_hisc_g2$Celltype), FUN = sum)
+vis_mat_hisc_g2$x = round(vis_mat_hisc_g2$x / sum(vis_mat_hisc_g2$x)  * 100, 1 )
+vis_mat_hisc_g2$Grading = rep("G2",5)
+cell_m_hisc_g3 = cell_m_hisc[cell_m_hisc$Grading == "G3",]
+vis_mat_hisc_g3 = aggregate(cell_m_hisc_g3$Proportion, by = list(cell_m_hisc_g3$Celltype), FUN = sum)
+vis_mat_hisc_g3$x = round(vis_mat_hisc_g3$x / sum(vis_mat_hisc_g3$x)  * 100, 1 )
+vis_mat_hisc_g3$Grading = rep("G3",5)
+vis_mat_hisc = rbind(vis_mat_hisc_g1,vis_mat_hisc_g2,vis_mat_hisc_g3)
+colnames(vis_mat_hisc) = c("Celltype","Proportion","Grading")
 
 #svg(filename = "~/Deco/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
 
-p = ggplot(
-    data = melt_mat,
-    aes(
-        x = Grading,
-        y = as.double(Mean_Proportion)
-    )
+p_endo = ggplot(
+  data = vis_mat_endo,
+  aes(
+    x = Grading,
+    y = Proportion
+  )
+) + geom_bar(
+  aes(
+    y = Proportion,
+    x = Grading,
+    fill = Celltype
+  ),
+  data = vis_mat_endo,
+  stat="identity",
+  colour="black"
 )
-p = p + geom_bar(
+
+p_exo = ggplot(
+    data = vis_mat_exo,
     aes(
-        y = Mean_Proportion,
         x = Grading,
-        fill = Cell_Type_Proportion
+        y = Proportion
+    )
+) + geom_bar(
+    aes(
+        y = Proportion,
+        x = Grading,
+        fill = Celltype
     ),
-    data = melt_mat,
+    data = vis_mat_exo,
     stat="identity",
     colour="black"
 )
-p = p + ylab(label = "Averaged Cell-type fraction prediction per grading") + theme(legend.position="top") 
+
+p_hisc = ggplot(
+  data = vis_mat_hisc,
+  aes(
+    x = Grading,
+    y = Proportion
+  )
+) + geom_bar(
+  aes(
+    y = Proportion,
+    x = Grading,
+    fill = Celltype
+  ),
+  data = vis_mat_hisc,
+  stat="identity",
+  colour="black"
+)
+
+p = p + ylab(label = "Aggregated relative celltype proportion") + theme(legend.position="top") 
 p = p + theme(axis.line = element_line(size=1, colour = "black"),
               panel.grid.major = element_line(colour = "#d3d3d3"), panel.grid.minor = element_blank(),
               panel.border = element_blank(), panel.background = element_blank())  +
     theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
           text=element_text(family="Tahoma"),
-          axis.text.x=element_text(colour="black", size = 10),
-          axis.text.y=element_text(colour="black", size = 10)
-    )
-p = p + labs(fill = "Cell-type fraction") + scale_fill_discrete(name = "Dose", labels = c("Ductal", "Acinar", "Beta","Gamma","Alpha","delta"))
+          axis.text.x=element_text(colour="black", size = 15),
+          axis.text.y=element_text(colour="black", size = 15)
+)
+
+p = p + labs(fill = "Celltype proportion") + scale_fill_discrete(name = "Dose", labels = c("Ductal", "Acinar", "Beta","Gamma","Alpha","Delta"))
 p = p + scale_fill_manual(values = c("lightblue", "blue","darkgreen","purple","red","orange"))
 p = p + facet_wrap( ~Type) #+ scale_fill_manual(values=c("orange", "black", "darkgreen"))
 p = p + scale_x_discrete(labels=c("1" = "G1", "2" = "G2","3" = "G3"))
