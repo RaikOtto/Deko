@@ -30,21 +30,6 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Sdanandam 29
 # Missiaglia 75
 # Wiedenmann 39
-<<<<<<< HEAD
-# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
-
-path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Missaglia.S75.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Sadanandam.S29.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Scarpa.S29.tsv"
-path_transcriptome_file = "/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S39.tsv"
-
-visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
-=======
-# 89 + 105 + 29 + 29 + 75 + 39
-# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
->>>>>>> 344e35809e56947551eced33a75addbc10034e5b
-
 path_transcriptome_file = "~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv"
 
 #visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
@@ -601,7 +586,7 @@ p = p + scale_fill_manual(labels = c("endocrine only", "endocrine & exocrine"), 
 p + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.047, size = 4, colour = "red")
 p
 
-svg("~/Deco/Results/Images/Figure_2a.svg")
+#svg("~/Deco/Results/Images/Figure_2a.svg")
 p
 dev.off()
 
