@@ -1,6 +1,8 @@
+library("dplyr")
 library(pROC)
 library("caret")
 library("stringr")
+library("e1071")
 set.seed(1)
 
 meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
@@ -19,22 +21,55 @@ rownames(cell_type_predictions) = str_replace(rownames(cell_type_predictions), p
 
 cell_type_predictions = cell_type_predictions %>% filter(model %in% "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")
 #cell_type_predictions = cell_type_predictions %>% filter(model %in% "Alpha_Beta_Gamma_Delta_HISC_Baron")
-expr_raw = cell_type_predictions %>% filter(!(Dataset %in% "RepSet"))
+expr_raw = cell_type_predictions %>% filter( (Dataset %in% "RepSet"))
 expr_raw = expr_raw %>% filter(grading %in% c("G1","G2","G3"))
-table(expr_raw$Dataset)
+rownames(expr_raw) = expr_raw$sample_id
+expr_raw = expr_raw[,c("alpha","beta","gamma","delta","acinar","ductal","p_value")]
 
-rownames(expr_raw) = str_replace(expr_raw$sample_id, pattern = "^X", "")
-meta_data = meta_info[rownames(expr_raw),]
-expr_raw = expr_raw[rownames(meta_data),]
-rownames(expr_raw) = make.names(rownames(expr_raw))
-
-truth_vec = as.character(expr_raw$grading)
-expr_raw = expr_raw[, colnames(expr_raw) %in% c("alpha","beta","gamma","delta","acinar","ductal","p_value")  ]
+rownames(expr_raw) = str_replace( rownames(expr_raw), pattern = "^X", "")
 dim(expr_raw)
+
+# discern NECs from NETs
+
+expr_raw = t(expr_raw)
+meta_data = meta_info[rownames(expr_raw),]
+truth_vec = as.character(meta_data$NEC_NET)
+expr_raw[1:5,1:5]
+
+bootControl = trainControl(
+    method = "LOOCV",
+    classProbs=T,
+    savePredictions = T#,
+    #number = 10
+    #summaryFunction = twoClassSummary
+)
+
+model = caret::train(
+    x = expr_raw,
+    y = truth_vec,
+    method = "multinom",
+    metric = "Accuracy",
+    trControl = bootControl,
+    scaled = FALSE,
+    tuneLength = 5,# model$finalModel$decay 0.0005623413
+    preProcess = c("center", "scale")
+)
+
+prediction_ml = model$pred$pred
+observations_ml = model$pred$obs
+predictions = data.frame(
+    "predictions" = prediction_ml,
+    "observations" = observations_ml
+)
+m = confusionMatrix(
+    as.factor(predictions$predictions),
+    as.factor(predictions$observations),
+    positive = "NEC"
+)
 
 # supervised RNA-seq section
 
-path_transcriptome_file = "~/Deco/Data/Bench_data/Missaglia.S75.tsv"
+path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
