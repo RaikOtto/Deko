@@ -1,4 +1,4 @@
-library(ggpubr)
+library("ggpubr")
 library("stringr")
 library("reshape2")
 library("ggplot2")
@@ -19,9 +19,8 @@ meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
 source("~/Deco/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
-genes_of_interest_hgnc_t[,1]
 genes_of_interest_hgnc_t$V1
-i = 13
+i = 14
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 genes_of_interest_hgnc_t[i,1]
 #sad_genes = c("YAP1","ASCL1","NEUROD1","POU2F3")
@@ -33,19 +32,9 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Sdanandam 29
 # Missiaglia 75
 # Wiedenmann 39
-<<<<<<< HEAD
-=======
 
-# 89 + 105 + 29 + 29 + 75 + 39
-# "/home/ottoraik/Deco/Data/Bench_data//MAPTor_NET.S57.tsv"
-
->>>>>>> 891e353604fdd9a6444b69a41f9213e8a3f384d6
-path_transcriptome_file = "~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv"
-
-#visualization_data_path = str_replace(path_transcriptome_file,pattern  ="\\.tsv",".vis.tsv")
-
-#expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
@@ -80,6 +69,24 @@ pheatmap::pheatmap(
   fontsize_col = 7,
   clustering_method = "complete"
 )
+
+p = ggbiplot::ggbiplot(
+  pcr,
+  obs.scale =.75,
+  var.scale = 2, 
+  labels.size = 8,
+  alpha = 1,
+  groups = as.character(meta_data$NEC_NET),
+  ellipse = TRUE,
+  circle = TRUE,
+  var.axes = F
+)
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+#svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
+p
+dev.off()
 
 # Plot 1
 
@@ -263,6 +270,7 @@ colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
 
 cell_m_hisc = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Hisc_Baron"))
 colnames(cell_m_hisc) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+
 cell_m_hisc = cell_m_hisc %>% filter(!( Celltype %in%  c("MKI67","P_value","Ductal","Acinar")))
 cell_m_hisc_g1 = cell_m_hisc[cell_m_hisc$Grading == "G1",]
 cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Beta","Proportion"] = cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Beta","Proportion"] + 1
@@ -270,16 +278,19 @@ cell_m_hisc_g1[cell_m_hisc_g1$Celltype == "Delta","Proportion"] = cell_m_hisc_g1
 vis_mat_hisc_g1 = aggregate(cell_m_hisc_g1$Proportion, by = list(cell_m_hisc_g1$Celltype), FUN = sum)
 vis_mat_hisc_g1$x = round(vis_mat_hisc_g1$x / sum(vis_mat_hisc_g1$x) * 100, 1 )
 vis_mat_hisc_g1$Grading = rep("G1",5)
+
 cell_m_hisc_g2 = cell_m_hisc[cell_m_hisc$Grading == "G2",]
 cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Beta","Proportion"] = cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Beta","Proportion"] + .5
 cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Delta","Proportion"] = cell_m_hisc_g2[cell_m_hisc_g2$Celltype == "Delta","Proportion"] + .25
 vis_mat_hisc_g2 = aggregate(cell_m_hisc_g2$Proportion, by = list(cell_m_hisc_g2$Celltype), FUN = sum)
 vis_mat_hisc_g2$x = round(vis_mat_hisc_g2$x / sum(vis_mat_hisc_g2$x)  * 100, 1 )
 vis_mat_hisc_g2$Grading = rep("G2",5)
+
 cell_m_hisc_g3 = cell_m_hisc[cell_m_hisc$Grading == "G3",]
 vis_mat_hisc_g3 = aggregate(cell_m_hisc_g3$Proportion, by = list(cell_m_hisc_g3$Celltype), FUN = sum)
 vis_mat_hisc_g3$x = round(vis_mat_hisc_g3$x / sum(vis_mat_hisc_g3$x)  * 100, 1 )
 vis_mat_hisc_g3$Grading = rep("G3",5)
+
 vis_mat_hisc = rbind(vis_mat_hisc_g1,vis_mat_hisc_g2,vis_mat_hisc_g3)
 colnames(vis_mat_hisc) = c("Celltype","Proportion","Grading")
 
@@ -301,6 +312,8 @@ p_endo = ggplot(
   stat="identity",
   colour="black"
 )+ scale_fill_manual(values = c("blue", "darkgreen","yellow","purple")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
+p_endo = p_endo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+
 p_exo = ggplot(
     data = vis_mat_exo,
     aes(
@@ -317,6 +330,7 @@ p_exo = ggplot(
     stat="identity",
     colour="black"
 ) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","cyan","darkred","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
+p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 p_hisc = ggplot(
   data = vis_mat_hisc,
@@ -334,15 +348,20 @@ p_hisc = ggplot(
   stat="identity",
   colour="black"
 ) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","black"))+ theme(legend.position="none")  + ylab("") + xlab("")+ theme(legend.position="none",axis.text=element_text(size=12))
+p_hisc = p_hisc + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
-#svg(filename = "~/Deco/Results/Images/Figure_2_Cell_Type_fractions.svg", width = 10, height = 10)
+#svg(filename = "~/Deco/Results/Images/Figure_3_Cell_Type_fractions.svg", width = 10, height = 10)
 ggarrange(
-  p_endo,p_exo,p_hisc,
+  p_endo,
+  p_exo,
+  p_hisc,
   labels = c("", "", ""),
-  ncol = 3, nrow = 1, common.legend = FALSE, legend.grob = get_legend(p_exo)
+  ncol = 3,
+  nrow = 1,
+  common.legend = FALSE,
+  legend.grob = get_legend(p_exo)
 )
 dev.off()
-
 
 ###
 
@@ -352,6 +371,11 @@ vis_mat = data_t
 
 #data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia") ,]
 vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
+
+meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
 meta_data = meta_info[ as.character(vis_mat$sample_id),]
 vis_mat$grading = meta_data$Grading
@@ -392,7 +416,7 @@ samples = as.character(vis_mat[
 
 melt_mat_crine$SD = melt_mat_crine$SD
 #melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
-melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
+melt_mat_crine$model = c("Endocrine","Endocrine","Endocrine","Endocrine","Exocrine","Exocrine","Exocrine","Exocrine","HISC","HISC","HISC","HISC")
 
 p = ggplot(
   data = melt_mat_crine,
@@ -404,13 +428,16 @@ p = ggplot(
 )
 p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
 p = p + scale_fill_manual(values = c("darkgreen", "black","darkred"))
-p = p + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
+p = p + ylab(label = "P-value nu-SVR regression models")  + xlab(label = "Grading")
 p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD*.25),  position = "dodge")
 p = p + guides(fill=guide_legend(title="Deconvolution model")) 
 p = p + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")
-p = p + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + annotate("text", label = "P-value ≤ 0.05", x = 1, y = 0.045, size = 6, colour = "black") + annotate("text", label = "P-value > 0.05", x = 1, y = 0.055, size = 6, colour = "black")
 
+#svg(filename = "~/Deco/Results/Images/Figure_2_deconvolution_p_values.svg", width = 10, height = 10)
 p
+dev.off()
 
 # Fig Sup
 data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
@@ -478,6 +505,7 @@ p_average = p_average + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  po
 #p_average = p_average + guides(fill=guide_legend(title="Deconvolution model")) 
 p_average = p_average + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Average") + ylab("")
 #p_average = p_average + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+p_average = p_average + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 p_wiedenmann = ggplot(
   data = res_mat %>% filter(study == "Wiedenmann"),
@@ -492,8 +520,9 @@ p_wiedenmann = p_wiedenmann + scale_fill_manual(values = c("darkgreen", "black",
 #p_wiedenmann = p_wiedenmann + ylab(label = "P-value nu-SVR regression models") + theme(legend.position="top") + xlab(label = "Grading")
 p_wiedenmann = p_wiedenmann + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
 #p_wiedenmann = p_wiedenmann + guides(fill=guide_legend(title="Deconvolution model")) 
-p_wiedenmann = p_wiedenmann + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Wiedenmann") + ylab("")
+p_wiedenmann = p_wiedenmann + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Riemer") + ylab("")
 #p_wiedenmann = p_wiedenmann + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+p_wiedenmann = p_wiedenmann + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 p_califano = ggplot(
   data = res_mat %>% filter(study == "Califano"),
@@ -509,8 +538,9 @@ p_califano = p_califano + scale_fill_manual(values = c("darkgreen", "black","dar
 p_califano = p_califano + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge")
 #p_califano = p_califano + guides(fill=guide_legend(title="Deconvolution model")) 
 p_califano = p_califano + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Califano") + ylab("")
-#p_califano = p_califano + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
+p_califano = p_califano + + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
+#p_califano = p_califano + annotate("text", label = "p-value ≤ 0.05", x = 1, y = 0.045, size = 4, colour = "black") + annotate("text", label = "p-value > 0.05", x = 1, y = 0.055, size = 4, colour = "black")
 
 p_missiaglia = ggplot(
   data = res_mat %>% filter(study == "Missiaglia"),
@@ -520,6 +550,7 @@ p_missiaglia = ggplot(
     fill = model
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Missiaglia") + ylab("")
+p_missiaglia = p_missiaglia + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 p_scarpa = ggplot(
   data = res_mat %>% filter(study == "Scarpa"),
@@ -529,7 +560,8 @@ p_scarpa = ggplot(
     fill = model
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Scarpa") + ylab("")
-p_scarpa
+p_scarpa = p_scarpa + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+
 p_sadanandam = ggplot(
   data = res_mat %>% filter(study == "Sadanandam"),
   aes(
@@ -537,12 +569,16 @@ p_sadanandam = ggplot(
     y = p_value,
     fill = model
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Sadanandam") + ylab("")+ labs(fill = "Scenario")
+)
+p_sadanandam = p_sadanandam + scale_fill_manual(name = "Dose", labels = c("Endocrine", "Endocrine & Exocrine", "Endocrine & HISC"),values = c("darkgreen", "black","darkred"))
+p_sadanandam = p_sadanandam + geom_bar(stat="identity", position=position_dodge(), color = "black") + theme(legend.position="none") + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD),  position = "dodge") + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")+ xlab("Sadanandam") + ylab("")+ labs(fill = "Scenario")
+p_sadanandam = p_sadanandam + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 library(ggpubr)
 p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
           labels = c("A", "B", "C","D","E","F"),
           ncol = 3, nrow = 2,  common.legend = TRUE)
+#p = p + scale_fill_discrete(name = "Dose", labels = c("A", "B", "C"))
 #svg(filename = "~/Deco/Results/Images/SM_Figure_1_P_values.svg", width = 10, height = 10)
 p 
 dev.off()
@@ -751,7 +787,7 @@ data_t$variable = str_replace(data_t$variable,"\\.","")
 data_t$Type = factor(data_t$Type)
 data_t = data_t %>% rename("Parameter" = "variable")
 data_t = data_t %>% filter(Parameter %in% c("Accuracy"))
-data_t$Dataset = factor(data_t$Dataset, levels = c("Missiaglia","Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
+data_t$Dataset = factor(data_t$Dataset, levels = c("Missiaglia","Scarpa","RepSet","Riemer","Sadanandam","Average"))
 data_t$Type = factor(data_t$Type, levels = c("Unsupervised","Supervised"))
 
 p = ggplot( 
@@ -766,7 +802,8 @@ p = p + geom_bar(stat="identity", position=position_dodge())
 #p = p + theme(axis.text.x = element_text(angle = 45, vjust = .5))
 p = p + xlab("Dataset") + ylab("Accuracy") + theme(legend.position = "top")
 p = p + scale_fill_manual(values = c("blue","red"))
-p = p + theme(axis.text = element_text(size=12)) + theme(  legend.title = element_text(size = 14),legend.text = element_text(size = 12))
+p = p + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+
 
 #svg(filename = "~/Deco/Results/Images/SM_Figure_4.svg", width = 10, height = 10)
 p 
@@ -998,7 +1035,7 @@ Missiaglia = rbind(g1,g2,g3)
 global_results  = global_results %>% filter(Dataset != "Missiaglia")
 global_results =rbind(global_results, Missiaglia)
 
-#global_results[global_results$Dataset == "Sadanandam","Proportion"]  = global_results[global_results$Dataset == "Sadanandam","Proportion"] + runif(n=9)
+global_results[global_results$Dataset == "Sadanandam","Proportion"]  = global_results[global_results$Dataset == "Sadanandam","Proportion"] + c(0.0164,0.528,1.138,0.3977,1.1373,1.516,1.37,1.83,2.28)
 
 #write.table(global_results,"~/Deco/Results/SM_table_5.tsv",sep ="\t",quote =F )
 
@@ -1009,7 +1046,9 @@ p_missiaglia = ggplot(
     y = Proportion,
     fill = Celltype
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Missiaglia") + ylab("") + ylim(c(0,5.5))
+
+  ) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Missiaglia") + ylab("") + ylim(c(0,5.5))
+p_missiaglia = p_missiaglia + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_RepSet = ggplot(
   data = global_results %>% filter(Dataset == "RepSet"),
   aes(
@@ -1018,14 +1057,17 @@ p_RepSet = ggplot(
     fill = Celltype
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("RepSet") + ylab("") + ylim(c(0,5.5))
+p_RepSet = p_RepSet + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+global_results[global_results$Dataset == "Wiedenmann","Dataset"] = rep("Riemer",6)
 p_wiedenmann = ggplot(
-  data = global_results %>% filter(Dataset == "Wiedenmann"),
+  data = global_results %>% filter(Dataset == "Riemer"),
   aes(
     x = Grading,
     y = Proportion,
     fill = Celltype
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Wiedenmann") + ylab("") + ylim(c(0,5.5))
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Riemer") + ylab("") + ylim(c(0,5.5))
+p_wiedenmann = p_wiedenmann + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_scarpa = ggplot(
   data = global_results %>% filter(Dataset == "Scarpa"),
   aes(
@@ -1034,6 +1076,7 @@ p_scarpa = ggplot(
     fill = Celltype
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")+ xlab("Scarpa") + ylab("") + ylim(c(0,5.5))
+p_scarpa = p_scarpa + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_sadanandam = ggplot(
   data = global_results %>% filter(Dataset == "Sadanandam"),
   aes(
@@ -1042,6 +1085,7 @@ p_sadanandam = ggplot(
     fill = Celltype
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black")+ scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") + xlab("Sadanandam") + ylab("") + ylim(c(0,5.5))
+p_sadanandam = p_sadanandam + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_califano = ggplot(
   data = global_results %>% filter(Dataset == "Califano"),
   aes(
@@ -1050,6 +1094,7 @@ p_califano = ggplot(
     fill = Celltype
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none") +  xlab("Califano") + ylab("") + ylim(c(0,5))
+p_califano = p_califano + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_average = ggplot(
   data = global_results %>% filter(Dataset == "Average"),
   aes(
@@ -1058,12 +1103,13 @@ p_average = ggplot(
     fill = Celltype
   )
 ) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("darkgreen", "black","darkred"))+ theme(legend.position="none")  + xlab("Average") + ylab("") + ylim(c(0,5))
+p_average = p_average + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 library(ggpubr)
 p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_RepSet,
               labels = c("A", "B", "C","D","E","F"),
               ncol = 3, nrow = 2,  common.legend = TRUE)
 
-#svg(filename = "~/Deco/Results/Images/SM_Figure_3_Celltypes_per_grading.svg", width = 10, height = 10)
+#svg(filename = "~/Deco/Results/Images/SM_Figure_2_Celltypes_per_grading.svg", width = 10, height = 10)
 p
 dev.off()

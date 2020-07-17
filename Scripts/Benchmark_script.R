@@ -6,7 +6,7 @@ load_all("~/artdeco")
 source("~/Deco/CIBERSORT_package/CIBERSORT.R")
 library(stringr)
 library("bseqsc")
-library("Archive/music.R")
+library("MuSiC")
 #library("xbioc")
 
 models_ductal = c(
@@ -114,6 +114,6 @@ for( i in 1:length(transcriptome_files)){
         path_benchmark_files_dec_res = path_benchmark_files_dec_res
     )
     
-    write.table(res, path_benchmark_files, sep ="\t", quote = F, row.names = F)
+    #write.table(res, path_benchmark_files, sep ="\t", quote = F, row.names = F)
     fractions = rbind(fractions,res)
 }
