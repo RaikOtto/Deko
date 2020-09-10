@@ -8,6 +8,16 @@ library(stringr)
 library("bseqsc")
 library("MuSiC")
 
+###
+transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep = "\t",header = T)
+colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
+transcriptome_data[1:5,1:5]
+artdeco::Deconvolve_transcriptome(
+    transcriptome_data,
+    models = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),
+    deconvolution_algorithm = "bseqsc"
+)
+
 models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
     list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
@@ -30,7 +40,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
-algorithm = "music" # NMF # music # bseqsc
+algorithm = "bseqsc" # NMF # music # bseqsc
 type = "ductal"
 
 high_threshold = 66
