@@ -2,6 +2,7 @@ run_benchmark = function(
     dataset_query,
     dataset_training,
     algorithm,
+    type,
     transcriptome_file,
     visualization_file,
     path_benchmark_files,
@@ -40,7 +41,7 @@ run_benchmark = function(
     
     identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
     
-    if (str_detect(dataset_training[2], "HISC")){
+    if (str_detect( dataset_training, "HISC")){
         dataset_training_label = paste(identifier,"hisc",sep="_")
     } else {dataset_training_label = identifier}
     
@@ -60,37 +61,56 @@ run_benchmark = function(
     )
     model_path = str_replace_all(model_path, pattern = "/\\.","/")
     
-    #transcriptome_data = transcriptome_data[,missing_samples]
     ###
+    if (
+        file.exists(str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")))
+    {
+        #benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+        deconvolution_results = readRDS(
+            str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS"))
+
+    } else {
     
-    deconvolution_results = Deconvolve_transcriptome(
-        transcriptome_data = transcriptome_data,
-        deconvolution_algorithm = str_to_lower(algorithm),
-        models = dataset_training,
-        nr_permutations = 1000,
-        output_file = ""
-    )
-    col_names = colnames(deconvolution_results)
-    width = ncol(deconvolution_results)
-    height = nrow(deconvolution_results) 
-    res_table = matrix(unlist(deconvolution_results),ncol = width, nrow = height)
-    colnames(res_table) = col_names
-    res_table= as.data.frame(res_table)
-    res_table$p_value = as.double(as.character(res_table$p_value))
-    saveRDS(
-        deconvolution_results,
-        str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")
-    )
-    deconvolution_results$p_value = as.double(deconvolution_results$p_value)
-    write.table(
-        deconvolution_results,
-        path_benchmark_files_dec_res,
-        sep="\t",
-        quote =F, row.names = F
-    )
+        deconvolution_results = Deconvolve_transcriptome(
+            transcriptome_data = transcriptome_data,
+            deconvolution_algorithm = str_to_lower(algorithm),
+            models = dataset_training,
+            nr_permutations = 1000,
+            output_file = ""
+        )
+        deconvolution_results$P_value = as.double(deconvolution_results$P_value)
+        col_names = colnames(deconvolution_results)
+        width = ncol(deconvolution_results)
+        height = nrow(deconvolution_results) 
+        res_table = matrix(unlist(deconvolution_results),ncol = width, nrow = height)
+        colnames(res_table) = col_names
+        res_table= as.data.frame(res_table)
+        res_table$P_value = as.double(as.character(res_table$P_value))
+        
+        saveRDS(
+            deconvolution_results,
+            str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")
+        )
+        
+        write.table(
+            deconvolution_results,
+            path_benchmark_files_dec_res,
+            sep="\t",
+            quote =F, row.names = F
+        )
+    }
     
-    return(deconvolution_results)
+    #return(deconvolution_results)
     
+    if ( type == "ductal")
+        deconvolution_results = deconvolution_results[
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron", value = F) ,]
+    if ( type == "hisc")
+        deconvolution_results = deconvolution_results[
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Hisc_Baron", value = F) ,]
+    
+    meta_data = meta_info[ rownames(deconvolution_results),]
+
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
         
         meta_data = meta_data[meta_data$Grading!="",]
@@ -112,15 +132,9 @@ run_benchmark = function(
         deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
     }
     
-    if (str_detect( transcriptome_file,pattern = "Wiedenmann_Scarpa_GSE73338")){
-        
-        mki_67_wiedenmann = read.table("~/Deco/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv",sep="\t",header = T)
-        colnames(mki_67_wiedenmann) = str_replace_all(colnames(mki_67_wiedenmann),pattern="^X","")
-        deconvolution_results[colnames(mki_67_wiedenmann),"MKI67"] = as.double(mki_67_wiedenmann["MKI67",])
-    }
-
-    deconvolution_results$Strength_de_differentiation[which(is.infinite(as.double(deconvolution_results$Strength_de_differentiation)))] = -4
-    deconvolution_results$Confidence_score_dif[which(is.infinite(as.double(deconvolution_results$Confidence_score_dif)))] = 0
+    deconvolution_results$Strength_de_differentiation = 0
+    deconvolution_results$Confidence_score_dif = 0
+    deconvolution_results$Subtype = ""
 
     vis_mat = create_visualization_matrix(
         visualization_data = visualization_data,
@@ -144,46 +158,16 @@ run_benchmark = function(
         dir.create(graphics_path_heatmap)
     graphics_path_heatmap = paste(graphics_path_heatmap,paste0(name_training_data,".pdf"),sep = "/")
     
-    #pdf(graphics_path_heatmap,onefile = FALSE)#,width="1024px",height="768px")
-    #create_heatmap_differentiation_stages(
-    #    visualization_data = visualization_data,
-    #    deconvolution_results = deconvolution_results,
-    #    vis_mat = vis_mat,
-    #    confidence_threshold = confidence_threshold,
-    #    show_colnames = F,
-    #    aggregate_differentiated_stages = FALSE,
-    #    high_threshold = high_threshold,
-    #    low_threshold = low_threshold
-    #)
-    #dev.off()
-    
     ### survival curve
     
-    if (sum(meta_data$OS_Tissue != "") != 0){
+    if (sum( meta_data$OS_Tissue != "") != 0){
 
-        meta_data = meta_info[rownames(vis_mat),]
         vis_mat = vis_mat[rownames(deconvolution_results),]
         vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
         vis_mat$OS_Tissue[is.na(vis_mat$OS_Tissue)] = 1
         vis_mat$Grading = meta_data$Grading
         vis_mat$Zensur = meta_data$Zensur
-        
-        mki67 = deconvolution_results[rownames(vis_mat),"MKI67"]
-        mki67[mki67 <= mean(mki67)] = "low"
-        mki67[mki67 != "low"] = "high"
-        ductal = deconvolution_results$ductal
-        ductal[ductal <= mean(ductal)] = "low"
-        ductal[ductal != "low"] = "high"
-        ratio = vis_mat[rownames(deconvolution_results),"Ratio_numeric"]
-        ratio[ratio <= mean(ratio)] = "low"
-        ratio[ratio != "low"] = "high"
-        
-        #mki67 = vis_mat$MKI67
-        #ductal = vis_mat$ductal
-        #ratio = vis_mat$Ratio
-        
-        data = vis_mat[,c("OS_Tissue","Zensur")]
-        
+
         graphics_path_survival = paste("~/Deco/Results/Images",algorithm, sep ="/")
         graphics_path_survival = paste(graphics_path_survival,"Survival", sep ="/")
         if (! dir.exists(graphics_path_survival))
@@ -195,85 +179,73 @@ run_benchmark = function(
         if (! dir.exists(graphics_path_survival))
             dir.create(graphics_path_survival)
         
-        if ("hisc" %in% colnames(deconvolution_results)){
+        if ( type == "hisc"){
             
             hisc = deconvolution_results$hisc
             hisc[hisc <= mean(hisc)] = "low"
             hisc[hisc != "low"] = "high"
             
-            #hisc = vis_mat$hisc
-            
-            data = cbind(mki67,ductal,hisc,ratio,data)
+            data = vis_mat[,c("OS_Tissue","Zensur")]
+            data = cbind(data, hisc)
+            data = data[!is.na(data$Zensur),]
 
-            surv_hisc = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ hisc), data = data[data$hisc!="not_significant",], method = "survdiff")$pval
-            if ( sum(hisc == "high") < 5) surv_hisc = 1
-            
             graphics_path_survival_hisc = paste(graphics_path_survival,paste0(paste(name_training_data,"hisc",sep="_"),".pdf"),sep = "/")
             
-            data = cbind(hisc,vis_mat[,c("OS_Tissue","Zensur")])
-            data = data[data$hisc!="not_significant",]
-            fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$hisc)
+            fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$hisc, data = data)
+            surv_hisc = survminer::surv_pvalue(fit, data = data)$pval
 
-            #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
-            #    print(survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T, censor.size = 10))
-            #dev.off()
+            pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
+                print(survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T, censor.size = 10))
+            dev.off()
+            surv_ductal = 1
         
         } else {
+
+            graphics_path_survival_ductal = paste(graphics_path_survival,paste0(paste(name_training_data,"ductal",sep="_"),".pdf"),sep = "/")
             
-            data = cbind(mki67,ductal,ratio,data)
+            ductal = deconvolution_results$ductal
+            ductal[ductal <= mean(ductal)] = "low"
+            ductal[ductal != "low"] = "high"
+            
+            data = vis_mat[,c("OS_Tissue","Zensur")]
+            data = cbind(data, ductal)
+            data = data[!is.na(data$Zensur),]
+            
+            fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ductal)
+            surv_ductal = survminer::surv_pvalue(fit, data = data)$pval
+            
+            pdf(graphics_path_survival_ductal,onefile = FALSE)#,width="1024px",height="768px")
+            print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
+            dev.off()
+
             surv_hisc = 1
         }
         
-        data = data[ !is.na(data$OS_Tissue),]
-        
-        data$mki67 = mki67
-        data$ductal = ductal
-        data$ratio = ratio
-        
-        surv_mki67 = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$mki67), data = data, method = "survdiff")$pval
-        if ( sum(mki67 == "high") < 5) surv_mki67 = 1
-        surv_ductal = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$ductal), data = data, method = "survdiff")$pval
-        if ( sum(ductal == "high") < 5) surv_ductal = 1
-        surv_ratio = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$ratio), data = data, method = "survdiff")$pval
-        if ( sum(ratio == "high") < 5) surv_ratio = 1
-        
-        data = cbind(mki67,ductal,ratio,vis_mat[,c("OS_Tissue","Zensur")])
-        
         # mki67
         
+        mki67 = deconvolution_results[rownames(vis_mat),"MKI67"]
+        mki67[mki67 <= mean(mki67)] = "low"
+        mki67[mki67 != "low"] = "high"
+        
+        data = vis_mat[,c("OS_Tissue","Zensur")]
+        data = cbind(data, mki67)
+        data = data[!is.na(data$Zensur),]
+
+        surv_mki67 = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$mki67), data = data, method = "survdiff")$pval
+        if ( sum(mki67 == "high") < 5) surv_mki67 = 1
+
         graphics_path_survival_mki67 = paste(graphics_path_survival,paste0(paste(name_training_data,"mki67",sep="_"),".pdf"),sep = "/")
         
         fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$mki67)
+        surv_mki67 = survminer::surv_pvalue(fit, data = data)$pval
         
-        #pdf(graphics_path_survival_mki67,onefile = FALSE)#,width="1024px",height="768px")
-        #    print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
-        #dev.off()
+        pdf(graphics_path_survival_mki67,onefile = FALSE)#,width="1024px",height="768px")
+            print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
+        dev.off()
         
-        # ductal 
 
-        graphics_path_survival_ductal = paste(graphics_path_survival,paste0(paste(name_training_data,"ductal",sep="_"),".pdf"),sep = "/")
-        
-        data = cbind(ductal,vis_mat[,c("OS_Tissue","Zensur")])
-        data = data[data$ductal != "not_significant",]
-        fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ductal)
-        
-        #pdf(graphics_path_survival_ductal,onefile = FALSE)#,width="1024px",height="768px")
-        #    print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
-        #dev.off()
-        
-        # ratio
-        
-        graphics_path_survival_ratio = paste(graphics_path_survival,paste0(paste(name_training_data,"ratio",sep="_"),".pdf"),sep = "/")
-        
-        data = cbind(ratio,vis_mat[,c("OS_Tissue","Zensur")])
-        fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ratio)
-        
-        #pdf(graphics_path_survival_ratio,onefile = FALSE)#,width="1024px",height="768px")
-        #    print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
-        #dev.off()
-    
     } else {
-        surv_mki67 = surv_ductal = surv_hisc = surv_ratio = 1
+        surv_mki67 = surv_ductal = surv_hisc = 1
     }
     
     ###
@@ -289,14 +261,6 @@ run_benchmark = function(
     if (! dir.exists(graphics_path_pca))
         dir.create(graphics_path_pca)
     graphics_path_pca = paste(graphics_path_pca,paste0(name_training_data,".pdf"),sep = "/")
-    
-    #pdf(graphics_path_pca,onefile = FALSE)#,width="1024px",height="768px")
-    #create_PCA_differentiation_stages(
-    #    vis_mat = vis_mat,
-    #    visualization_data = visualization_data,
-    #    deconvolution_results = deconvolution_results
-    #)
-    #dev.off()
     
     ### MKI-67 to ratio correlation
     
@@ -317,69 +281,39 @@ run_benchmark = function(
         graphics_path_mki67 = paste(graphics_path_mki67,paste0(name_training_data,".pdf"),sep = "/")
         
         vis_mat = vis_mat[rownames(deconvolution_results),]
-        scale_mat = data.frame(
-            "MKI67" = deconvolution_results$MKI67,
-            "Ductal" = deconvolution_results$ductal
-        )
         
-        #pdf(graphics_path_mki67,onefile = FALSE)#,width="1024px",height="768px")
-        
-        lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Ductal) # Fit linear model
-        summary(lm.model)
-        correlation = round(cor(scale_mat$MKI67, scale_mat$Ductal),2)
-        cor.test(scale_mat$MKI67, scale_mat$Ductal)
-        
-        g_bench = ggplot(
-            data = scale_mat,
-            aes( y =  log(Ductal+1),x = MKI67))
-        g_bench = g_bench + geom_point( aes( size = 4))
-        g_bench = g_bench + geom_smooth(method = "lm")
-        g_bench = g_bench +  annotate( "text", x = 2, y = 2, label = as.character(correlation), size =10)
-        #plot(g_bench)
-        #dev.off()
-    }
-    
-    ### grading to ratio correlation
-    
-    if( length(vis_mat$Grading) > 0 ){
-        
-        # numerical grading
-        grading_numeric = vis_mat$Grading
-        grading_numeric = as.integer(str_replace_all(grading_numeric,pattern ="G",""))
-        
-        graphics_path_grading = paste("~/Deco/Results/Images",algorithm, sep ="/")
-        graphics_path_grading = paste(graphics_path_grading,"Grading_ratio", sep ="/")
-        if (! dir.exists(graphics_path_grading))
-            dir.create(graphics_path_grading)
-        graphics_path_grading = paste(graphics_path_grading,name_datatype, sep ="/")
-        if (! dir.exists(graphics_path_grading))
-            dir.create(graphics_path_grading)
-        graphics_path_grading = paste(graphics_path_grading,name_query_data, sep ="/")
-        if (! dir.exists(graphics_path_grading))
-            dir.create(graphics_path_grading)
-        graphics_path_grading = paste(graphics_path_grading,paste0(name_training_data,".pdf"),sep = "/")
-        
-        vis_mat = vis_mat[rownames(deconvolution_results),]
-        scale_mat = data.frame(
-            "Grading" = grading_numeric,
-            "Ratio" = vis_mat$Ratio_numeric
-        )
-        
-        #pdf(graphics_path_grading,onefile = FALSE)#,width="1024px",height="768px")
-        
-        lm.model <- lm(scale_mat$Grading ~ scale_mat$Ratio) # Fit linear model
-        summary(lm.model)
-        correlation = round(cor(scale_mat$Grading, scale_mat$Ratio),2)
-        cor.test(scale_mat$Grading, scale_mat$Ratio)
-        
-        g_bench = ggplot(
-            data = scale_mat,
-            aes( y =  Ratio,x = Grading))
-        g_bench = g_bench + geom_point( aes( size = 4)) + scale_size(guide="none")
-        g_bench = g_bench + geom_smooth(method = "lm")
-        g_bench = g_bench +  annotate( "text", x = 2, y = 2, label = as.character(correlation), size =10)
-        #plot(g_bench)
-        #dev.off()
+        if (type == "ductal"){
+            
+            scale_mat = data.frame(
+                "MKI67" = deconvolution_results$MKI67,
+                "Ductal" = deconvolution_results$ductal
+            )
+            lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Ductal) # Fit linear model
+            summary(lm.model)
+            correlation = round(cor(scale_mat$MKI67, scale_mat$Ductal),2)
+            cor.test(scale_mat$MKI67, scale_mat$Ductal)
+            cor_ductal_MKI_67 = correlation
+            cor_ductal_MKI_67_p_value = cor.test(scale_mat$MKI67, scale_mat$Ductal)$p.value
+            
+            cor_hisc_MKI_67 = 1
+            cor_hisc_MKI_67_p_value = 1
+            
+        } else {
+            
+            scale_mat = data.frame(
+                "MKI67" = deconvolution_results$MKI67,
+                "HISC" = deconvolution_results$hisc
+            )
+            lm.model <- lm(scale_mat$MKI67 ~ scale_mat$HISC) # Fit linear model
+            summary(lm.model)
+            correlation = round(cor(scale_mat$MKI67, scale_mat$HISC),2)
+            cor.test(scale_mat$MKI67, scale_mat$HISC)
+            cor_hisc_MKI_67 = correlation
+            cor_hisc_MKI_67_p_value = cor.test(scale_mat$MKI67, scale_mat$HISC)$p.value
+            
+            cor_ductal_MKI_67 = 1
+            cor_ductal_MKI_67_p_value = 1
+        }
     }
     
     ### stats
@@ -404,18 +338,14 @@ run_benchmark = function(
         
         # hisc vs. grading numeric
         
-        if (length(deconvolution_results$hisc) > 0){
+        if ( type == "hisc"){
             
             off_set = rnorm(length(deconvolution_results$hisc),mean=0.001,sd=0.001)
             cor_hisc_grading = cor(deconvolution_results$hisc + off_set,grading_numeric)
             cor_hisc_grading_p_value = cor.test(deconvolution_results$hisc + off_set,grading_numeric)$p.value
         } else {cor_hisc_grading = cor_hisc_grading_p_value = 1.0}
         
-        # ratio vs. grading numeric
-        
-        cor_ratio_grading = cor(vis_mat$Ratio_numeric,grading_numeric)
-        cor_ratio_grading_p_value = cor.test(vis_mat$Ratio_numeric,grading_numeric)$p.value
-        
+
     } else {
         
         cor_MKI67_grading = cor_ductal_grading = cor_hisc_grading = cor_ratio_grading = 0
@@ -424,30 +354,25 @@ run_benchmark = function(
     
     if( length(ki_index) != 0 ){
         
-        
-        # ductal versus MKI-67
-        
-        cor_ductal_MKI_67 = cor(deconvolution_results$ductal, deconvolution_results$MKI67)
-        cor_ductal_MKI_67_p_value = cor.test(deconvolution_results$ductal, deconvolution_results$MKI67)$p.value
-        
+        off_set = rnorm(length(deconvolution_results$hisc),mean=0.001)
         # hisc vs. MKI-67
         
-        if ( length(deconvolution_results$hisc) > 0){
+        if ( type == "hisc"){
             
-            off_set = rnorm(length(deconvolution_results$hisc),mean=0.001)    
             cor_hisc_MKI_67 = cor(deconvolution_results$hisc + off_set,deconvolution_results$MKI67)
             cor_hisc_MKI_67_p_value = cor.test(deconvolution_results$hisc + off_set,deconvolution_results$MKI67)$p.value
-        } else {cor_hisc_MKI_67 = cor_hisc_MKI_67_p_value = 1.0}
-        
-        # ratio vs. MKI-67
-        
-        cor_ratio_MKI_67         = cor(vis_mat$Ratio_numeric, deconvolution_results$MKI67)
-        cor_ratio_MKI_67_p_value = cor.test(vis_mat$Ratio_numeric, deconvolution_results$MKI67)$p.value
-        
-    } else {
-        
-        cor_ductal_MKI_67 = cor_hisc_MKI_67 = cor_ratio_MKI_67 = 0
-        cor_ductal_MKI_67_p_value = cor_hisc_MKI_67_p_value = cor_ratio_MKI_67_p_value = 1
+            
+            cor_ductal_MKI_67 = 0
+            cor_ductal_MKI_67_p_value = 1
+            
+        } else {
+            
+            cor_ductal_MKI_67 = cor(deconvolution_results$ductal + off_set,deconvolution_results$MKI67)
+            cor_ductal_MKI_67_p_value = cor.test(deconvolution_results$ductal + off_set,deconvolution_results$MKI67)$p.value
+            
+            cor_hisc_MKI_67 = 0
+            cor_hisc_MKI_67_p_value = 1
+        }
     }
     
     ### anova
@@ -614,59 +539,6 @@ run_benchmark = function(
         hisc_g1_g2 = hisc_g1_g3 = hisc_g2_g3 = 1.0
     }
     
-    # anova ratio versus grading
-    
-    if (
-        (length(vis_mat$Grading) > 0) & 
-        (length(unique(vis_mat$Grading)) > 1)
-    ) {
-        
-        ## annova 4
-
-        anova_4 = aov(vis_mat$Ratio_numeric ~ as.factor(as.character(vis_mat$Grading)) )
-        anova_4_p_value = TukeyHSD(anova_4)$`as.factor(as.character(vis_mat$Grading))`
-        G1_G2_index = which(rownames(anova_4_p_value) == "G2-G1")
-        G1_G3_index = which(rownames(anova_4_p_value) == "G3-G1")
-        G2_G3_index = which(rownames(anova_4_p_value) == "G3-G2")
-        if(length(G1_G2_index) != 0){
-            ratio_g1_g2 = anova_4_p_value[G1_G2_index,4]
-        } else {ratio_g1_g2 = 1}
-        if(length(G1_G3_index) != 0){
-            ratio_g1_g3 = anova_4_p_value[G1_G3_index,4]
-        } else {ratio_g1_g3 = 1}
-        if(length(G2_G3_index) != 0){
-            ratio_g2_g3 = anova_4_p_value[G2_G3_index,4]
-        } else {ratio_g2_g3 = 1}
-
-        data_mat = reshape2::melt(deconvolution_results )
-        data_mat = vis_mat[,c("Grading","Ratio_numeric")]
-        data_mat$Sample = rownames(data_mat)
-        data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$Ratio_numeric)] )
-        data_mat$ratio = data_mat$Ratio_numeric
-        
-        color_vec = data_mat$Grading
-        color_vec[color_vec == "G1"] = "green"
-        color_vec[color_vec == "G2"] = "yellow"
-        color_vec[color_vec == "G3"] = "red"
-        color_vec = color_vec[order(data_mat$ratio)]
-        g=ggplot(data_mat,aes( x = Grading, y = ratio, fill = Grading )) + geom_boxplot( )
-        
-        ratio_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
-        ratio_grading_path = paste(ratio_grading_path,"Grading", sep ="/")
-        if (! dir.exists(ratio_grading_path)) dir.create(ratio_grading_path)
-        ratio_grading_path = paste(ratio_grading_path,name_datatype, sep ="/")
-        if (! dir.exists(ratio_grading_path)) dir.create(ratio_grading_path)
-        ratio_grading_path = paste(ratio_grading_path,name_query_data, sep ="/")
-        if (! dir.exists(ratio_grading_path)) dir.create(ratio_grading_path)
-        ratio_grading_path = paste(ratio_grading_path,paste0(paste(name_training_data,"ratio",sep="_"),".pdf"),sep = "/")
-        #pdf(ratio_grading_path,onefile = FALSE)#,width="1024px",height="768px")
-        #plot(g)
-        #dev.off()
-        
-    } else {
-        
-        ratio_g1_g2 = ratio_g1_g3 = ratio_g2_g3 = 1
-    }
     ### output
     
     results_vec = c(
@@ -676,28 +548,20 @@ run_benchmark = function(
         cor_ductal_grading_p_value,
         cor_hisc_grading,
         cor_hisc_grading_p_value,
-        #cor_ratio_grading,
-        #cor_ratio_grading_p_value,
         cor_ductal_MKI_67,
         cor_ductal_MKI_67_p_value,
         cor_hisc_MKI_67,
         cor_hisc_MKI_67_p_value,
-        #cor_ratio_MKI_67,
-        #cor_ratio_MKI_67_p_value,
         ductal_g1_g2,
         ductal_g1_g3,
         ductal_g2_g3,
         hisc_g1_g2,
         hisc_g1_g3,
         hisc_g2_g3,
-        #ratio_g1_g2,
-        #ratio_g1_g3,
-        #ratio_g2_g3,
         surv_mki67,
         surv_ductal,
         surv_hisc,
-        surv_ratio
-        
+        type
     )
     
     if (! file.exists(path_benchmark_files)){
@@ -710,27 +574,20 @@ run_benchmark = function(
             "cor_ductal_grading_p_value",
             "cor_hisc_grading",
             "cor_hisc_grading_p_value",
-            #"cor_ratio_grading",
-            #"cor_ratio_grading_p_value",
             "cor_ductal_MKI_67",
             "cor_ductal_MKI_67_p_value",
             "cor_hisc_MKI_67",
             "cor_hisc_MKI_67_p_value",
-            #"cor_ratio_MKI_67",
-            #"cor_ratio_MKI_67_p_value",
             "ductal_g1_g2",
             "ductal_g1_g3",
             "ductal_g2_ g3",
             "hisc_g1_g2",
             "hisc_g1_g3",
             "hisc_g2_g3",
-            #"ratio_g1_g2",
-            #"ratio_g1_g3",
-            #"ratio_g2_g3",
             "surv_mki67",
             "surv_ductal",
             "surv_hisc",
-            "surv_ratio"
+            "type"
         )
     } else {
         
@@ -742,4 +599,5 @@ run_benchmark = function(
     
     write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
     
-}
+    }
+    

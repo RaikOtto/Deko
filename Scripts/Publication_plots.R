@@ -33,7 +33,7 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Missiaglia 75
 # Wiedenmann 39
 
-expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deco/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
@@ -59,7 +59,7 @@ pcr = prcomp(t(correlation_matrix))
 
 pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[c("Grading", "NEC_NET")],
+  annotation_col = meta_data[c("Grading", "NEC_NET_PCA","Study")],
   annotation_colors = aka3,
   show_rownames = T,
   show_colnames = F,
@@ -67,7 +67,7 @@ pheatmap::pheatmap(
   treeheight_row = 0,
   legend = F,
   fontsize_col = 7,
-  clustering_method = "complete"
+  clustering_method = "ward"
 )
 
 p = ggbiplot::ggbiplot(
@@ -76,13 +76,15 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 8,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
+  #groups = as.character(meta_data$Grading),
+  groups = as.character(meta_data$Histology),
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
-p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_PCA) ))
+#p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + scale_color_manual( values = c("Green","brown","Black","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
 p
@@ -365,27 +367,35 @@ dev.off()
 
 ###
 
-data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = F)
-table(data_t$Dataset) / 3
-vis_mat = data_t
-
-#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia") ,]
-vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
-
 meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-meta_data = meta_info[ as.character(vis_mat$sample_id),]
-vis_mat$grading = meta_data$Grading
-meta_data = meta_info[ as.character(vis_mat$sample_id),]
-aggregate(vis_mat$p_value, by = list(vis_mat$grading), FUN = mean)
+data_t = read.table("~/Deco/Results/Bseq_results_fractions_p_values.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = T)
+table(data_t$Dataset) / 3
+vis_mat = data_t
+vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
+
+meta_data = meta_info[vis_mat$sample_id,]
+table(meta_data$Histology)
+vis_mat$Histology = meta_data$Histology
+vis_mat$grading[
+  (vis_mat$grading == "G3") & (vis_mat$Histology != "Pancreatic")
+] = "G3_other"
+vis_mat$grading[
+  (vis_mat$grading == "G2") & (vis_mat$Histology != "Pancreatic")
+  ] = "G2_other"
+table(vis_mat$grading)
+#sum(table(meta_data$Histology)) / 3 - 69
+
+#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia") ,]
 
 # p-value
 
 selector = c("grading","p_value","model","Dataset")
 vis_mat_4 = vis_mat[,selector]
+vis_mat_4[is.na(vis_mat_4$grading),"grading"] = "G0"
 
 melt_mat_endocrine = vis_mat_4 %>% filter( model %in% c("Alpha_Beta_Gamma_Delta_Baron")) %>% group_by(grading)
 melt_mat_endocrine_agg = aggregate(melt_mat_endocrine$p_value, by = list(melt_mat_endocrine$grading), FUN = mean)
@@ -416,7 +426,7 @@ samples = as.character(vis_mat[
 
 melt_mat_crine$SD = melt_mat_crine$SD
 #melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
-melt_mat_crine$model = c("Endocrine","Endocrine","Endocrine","Endocrine","Exocrine","Exocrine","Exocrine","Exocrine","HISC","HISC","HISC","HISC")
+melt_mat_crine$model = c(rep("Endocrine",5),rep("Exocrine",5),rep("HISC",5))
 
 p = ggplot(
   data = melt_mat_crine,
@@ -427,13 +437,13 @@ p = ggplot(
   )
 )
 p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
-p = p + scale_fill_manual(values = c("darkgreen", "black","darkred"))
+p = p + scale_fill_manual(values = c("darkgreen", "black","darkred","yellow"))
 p = p + ylab(label = "P-value nu-SVR regression models")  + xlab(label = "Grading")
 p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD*.25),  position = "dodge")
 p = p + guides(fill=guide_legend(title="Deconvolution model")) 
 p = p + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")
 p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p = p + annotate("text", label = "P-value ≤ 0.05", x = 1, y = 0.045, size = 6, colour = "black") + annotate("text", label = "P-value > 0.05", x = 1, y = 0.055, size = 6, colour = "black")
+p = p + annotate("text", label = "P-value  0.05", x = 2, y = 0.045, size = 4, colour = "black") + annotate("text", label = "P-value > 0.05", x = 2, y = 0.055, size = 4, colour = "black")
 
 #svg(filename = "~/Deco/Results/Images/Figure_2_deconvolution_p_values.svg", width = 10, height = 10)
 p
@@ -948,7 +958,7 @@ ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_averag
 
 #### cell type
 
-data_t = read.table("~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep="\t",header = T,stringsAsFactors = F)
+data_t = read.table("~/Deco/Results/Bseq_results_fractions_p_values.tsv",sep="\t",header = T,stringsAsFactors = F)
 
 ### ductal
 
