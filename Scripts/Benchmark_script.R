@@ -3,7 +3,7 @@
 
 library(devtools)
 load_all("~/artdeco")
-source("~/Deco/CIBERSORT_package/CIBERSORT.R")
+source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
 library(stringr)
 library("bseqsc")
 library("MuSiC")
@@ -14,25 +14,24 @@ models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 models_hisc = c(
-    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Hisc_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
-    list(c("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
 )
 nr_models = length(models_ductal)
 
-transcriptome_files = list.files("~/Deco/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
+transcriptome_files = list.files("~/Deko_Projekt/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
 transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
-transcriptome_files = transcriptome_files[! (transcriptome_files %in% c("/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S39.tsv","/home/ottoraik/Deco/Data/Bench_data//Wiedenmann.S23.tsv"))]
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
 meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-source("~/Deco//Scripts/Benchmark.R")
+source("~/Deko_Projekt/Scripts/Benchmark.R")
 
 algorithm = "bseqsc" # NMF # music # bseqsc
-type = "hisc"
+type = "ductal"
 
 high_threshold = 66
 low_threshold = 33
@@ -56,7 +55,7 @@ for( i in 16:18){
     dataset_training = as.character(unlist(models))[2]
     
     path_benchmark_files = paste0(
-        "~/Deco/Results/Cell_fraction_predictions/",
+        "~/Deko_Projekt/Results/Cell_fraction_predictions/",
         paste0(
             c(dataset_query,
               dataset_training,
@@ -68,7 +67,7 @@ for( i in 16:18){
     )
     
     path_benchmark_files_dec_res = paste0(
-        "~/Deco/Results/Cell_fraction_predictions/",
+        "~/Deko_Projekt/Results/Cell_fraction_predictions/",
         paste0(
             c(dataset_query,
               dataset_training,
@@ -78,11 +77,7 @@ for( i in 16:18){
             collapse = "."
         )
     )
-    
-    
-    #if (! str_detect(models[2], pattern = "Baron") )
-    #    next()
-    
+
     transcriptome_file = transcriptome_files[i]
     visualization_file = visualization_files[i]
     

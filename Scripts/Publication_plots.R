@@ -17,7 +17,7 @@ rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-source("~/Deco/Scripts/Archive/Visualization_colors.R")
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deco/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 i = 14

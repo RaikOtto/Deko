@@ -39,21 +39,17 @@ run_benchmark = function(
     name_algorithm = head(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
     name_datatype = tail(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
     
-    identifier = tail(as.character(unlist(str_split(dataset_training[1],pattern = "_"))),1)
-    
-    if (str_detect( dataset_training, "HISC")){
-        dataset_training_label = paste(identifier,"hisc",sep="_")
-    } else {dataset_training_label = identifier}
-    
+    identifier = tail( as.character(unlist(str_split(dataset_training, pattern = "_"))), 1)
     ki_index = which(rownames(transcriptome_data) == "MKI67")
     
     ###
     
     model_path = paste0(
         c(
-            "~/Deco/Data/Bench_data/Models/",
+            "~/Deko_Projekt/Data/Bench_data/Models/",
             dataset_query,
-            dataset_training[2],
+            type,
+            identifier,
             algorithm,
             "RDS"
         ),
@@ -73,7 +69,7 @@ run_benchmark = function(
     
         deconvolution_results = Deconvolve_transcriptome(
             transcriptome_data = transcriptome_data,
-            deconvolution_algorithm = str_to_lower(algorithm),
+            deconvolution_algorithm = algorithm,
             models = dataset_training,
             nr_permutations = 1000,
             output_file = ""
@@ -104,10 +100,10 @@ run_benchmark = function(
     
     if ( type == "ductal")
         deconvolution_results = deconvolution_results[
-            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron", value = F) ,]
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
     if ( type == "hisc")
         deconvolution_results = deconvolution_results[
-            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Hisc_Baron", value = F) ,]
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Hisc", value = F) ,]
     
     meta_data = meta_info[ rownames(deconvolution_results),]
 
@@ -146,7 +142,7 @@ run_benchmark = function(
     
     ### results parsing
     
-    graphics_path_heatmap = paste("~/Deco/Results/Images",algorithm, sep ="/")
+    graphics_path_heatmap = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
     graphics_path_heatmap = paste(graphics_path_heatmap,"Heatmap", sep ="/")
     if (! dir.exists(graphics_path_heatmap))
         dir.create(graphics_path_heatmap)
@@ -168,7 +164,7 @@ run_benchmark = function(
         vis_mat$Grading = meta_data$Grading
         vis_mat$Zensur = meta_data$Zensur
 
-        graphics_path_survival = paste("~/Deco/Results/Images",algorithm, sep ="/")
+        graphics_path_survival = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
         graphics_path_survival = paste(graphics_path_survival,"Survival", sep ="/")
         if (! dir.exists(graphics_path_survival))
             dir.create(graphics_path_survival)
@@ -250,7 +246,7 @@ run_benchmark = function(
     
     ###
     
-    graphics_path_pca = paste("~/Deco/Results/Images",algorithm, sep ="/")
+    graphics_path_pca = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
     graphics_path_pca = paste(graphics_path_pca,"PCA", sep ="/")
     if (! dir.exists(graphics_path_pca))
         dir.create(graphics_path_pca)
@@ -268,7 +264,7 @@ run_benchmark = function(
         
         deconvolution_results$MKI67 = transcriptome_data[ki_index,rownames(deconvolution_results)]
         
-        graphics_path_mki67 = paste("~/Deco/Results/Images",algorithm, sep ="/")
+        graphics_path_mki67 = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
         graphics_path_mki67 = paste(graphics_path_mki67,"MKI67", sep ="/")
         if (! dir.exists(graphics_path_mki67))
             dir.create(graphics_path_mki67)
@@ -415,7 +411,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$MKI67)]
         g = ggplot(data_mat,aes( x = Grading, y = MKI67, fill = Grading )) + geom_boxplot( )
         
-        mki67_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
+        mki67_grading_path = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
         mki67_grading_path = paste(mki67_grading_path,"Grading", sep ="/")
         if (! dir.exists(mki67_grading_path)) dir.create(mki67_grading_path)
         mki67_grading_path = paste(mki67_grading_path,name_datatype, sep ="/")
@@ -471,7 +467,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$ductal)]
         g=ggplot(data_mat,aes( x = Grading, y = ductal, fill = Grading )) + geom_boxplot( )
         
-        ductal_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
+        ductal_grading_path = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
         ductal_grading_path = paste(ductal_grading_path,"Grading", sep ="/")
         if (! dir.exists(ductal_grading_path)) dir.create(ductal_grading_path)
         ductal_grading_path = paste(ductal_grading_path,name_datatype, sep ="/")
@@ -522,7 +518,7 @@ run_benchmark = function(
         color_vec = color_vec[order(data_mat$hisc)]
         g=ggplot(data_mat,aes( x = Grading, y = hisc, fill = Grading )) + geom_boxplot( )
         
-        hisc_grading_path = paste("~/Deco/Results/Images",algorithm, sep ="/")
+        hisc_grading_path = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
         hisc_grading_path = paste(hisc_grading_path,"Grading", sep ="/")
         if (! dir.exists(hisc_grading_path)) dir.create(hisc_grading_path)
         hisc_grading_path = paste(hisc_grading_path,name_datatype, sep ="/")
