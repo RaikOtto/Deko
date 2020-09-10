@@ -18,7 +18,7 @@ run_benchmark = function(
     transcriptome_data = read.table(transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
     colnames(transcriptome_data) = str_replace_all(colnames(transcriptome_data),pattern="^X","")
     meta_data = meta_info[colnames(transcriptome_data),]
-    if( !nrow(meta_data) == ncol(transcriptome_data))
+    if(  !nrow(meta_data) == ncol(transcriptome_data))
         stop("Inconclusive meta data and transcriptome file dimensions")
     row_names = as.character(rownames(transcriptome_data))
     col_names = as.character(colnames(transcriptome_data))
@@ -74,15 +74,24 @@ run_benchmark = function(
             nr_permutations = 1000,
             output_file = ""
         )
-        deconvolution_results$P_value = as.double(deconvolution_results$P_value)
+        
+        if ( type == "ductal")
+            deconvolution_results = deconvolution_results[
+                grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
+        if ( type == "hisc")
+            deconvolution_results = deconvolution_results[
+                grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc", value = F) ,]
+        
+        if (algorithm == "bseqsc")
+            deconvolution_results$P_value = as.double(deconvolution_results$P_value)
+        
         col_names = colnames(deconvolution_results)
         width = ncol(deconvolution_results)
         height = nrow(deconvolution_results) 
         res_table = matrix(unlist(deconvolution_results),ncol = width, nrow = height)
         colnames(res_table) = col_names
         res_table= as.data.frame(res_table)
-        res_table$P_value = as.double(as.character(res_table$P_value))
-        
+
         saveRDS(
             deconvolution_results,
             str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")
@@ -97,13 +106,6 @@ run_benchmark = function(
     }
     
     #return(deconvolution_results)
-    
-    if ( type == "ductal")
-        deconvolution_results = deconvolution_results[
-            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
-    if ( type == "hisc")
-        deconvolution_results = deconvolution_results[
-            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Hisc", value = F) ,]
     
     meta_data = meta_info[ rownames(deconvolution_results),]
 
@@ -350,7 +352,7 @@ run_benchmark = function(
     
     if( length(ki_index) != 0 ){
         
-        off_set = rnorm(length(deconvolution_results$hisc),mean=0.001)
+        off_set = rnorm( nrow(deconvolution_results),mean=0.001)
         # hisc vs. MKI-67
         
         if ( type == "hisc"){
@@ -539,7 +541,7 @@ run_benchmark = function(
     
     results_vec = c(
         dataset_query,
-        dataset_training_label,
+        dataset_training,
         cor_ductal_grading,
         cor_ductal_grading_p_value,
         cor_hisc_grading,
@@ -594,6 +596,6 @@ run_benchmark = function(
     # output 
     
     write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
-    
-    }
+    return(benchmark_results_t)
+}
     

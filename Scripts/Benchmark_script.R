@@ -30,7 +30,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
-algorithm = "bseqsc" # NMF # music # bseqsc
+algorithm = "music" # NMF # music # bseqsc
 type = "ductal"
 
 high_threshold = 66
