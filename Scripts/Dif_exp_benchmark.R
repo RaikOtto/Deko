@@ -1,31 +1,32 @@
 library("stringr")
 library("limma")
 
-meta_info = "~/Deco/Misc/Meta_information.tsv" %>% read.table(sep = "\t",header = T,stringsAsFactors = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+
+meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+meta_info$NEC_NET = meta_info$NEC_NET_PCA
+
+meta_data = meta_info[colnames(expr_raw),]
 
 # parse scRNA training data
 
-i_mat = transcriptome_data
-colnames(i_mat) = str_replace_all(colnames(i_mat),pattern = "^X","")
+groups = meta_data$Histology
+groups[groups != "Pancreatic"] = "Other"
+case_subtype = "Pancreatic"
 
-if (!exists(scRNA_training_mat))
-    scRNA_training_mat = "~/Deco/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.tsv" %>% read.table(sep="\t",header = T,stringsAsFactors = F)
-scRNA_training_mat[1:5,1:5]
-scRNA_training_mat %>% typeof()
-training_nr_marker_genes = 400
-
-meta_data = meta_info[colnames(scRNA_training_mat),]
-case_subtype = "Alpha"
-groups = meta_data$Subtype
 table(groups)
 groups[groups == case_subtype] = "CASE"
 groups[groups != "CASE"] = "CTRL"
 design <- model.matrix(~0 + groups)
 colnames(design) = c("Case","Ctrl")
 
-vfit = lmFit(scRNA_training_mat,design)
+vfit = lmFit(
+    expr_raw,
+    design
+)
 contr.matrix = makeContrasts(
     contrast = Case - Ctrl,
     levels = design
@@ -37,7 +38,7 @@ efit = eBayes(vfit)
 result_t = topTable(
     efit,
     coef     = "contrast",
-    number   = nrow(scRNA_training_mat),
+    number   = nrow(expr_raw),
     genelist = efit$genes,
     "none",
     sort.by  = "B",
@@ -53,53 +54,29 @@ result_t = result_t[c("HGNC","Log_FC","Average_Expr","P_value","adj_P_value")]
 result_t = result_t[order(result_t$P_value, decreasing = FALSE),]
 result_t$Log_FC = round(result_t$Log_FC, 1)
 result_t$Average_Expr = round(result_t$Average_Expr, 1)
-result_t = result_t[order(result_t$Log_FC,decreasing = TRUE),]
+result_t = result_t[order(abs(result_t$Log_FC),decreasing = TRUE),]
+result_t$HGNC[1:800]
 
 marker_genes = as.character(result_t$HGNC)
-marker_genes = marker_genes[marker_genes %in% rownames(scRNA_training_mat)]
+marker_genes = marker_genes[marker_genes %in% rownames(expr_raw)]
 marker_genes = marker_genes[1:training_nr_marker_genes]
 
-write.table(result_t,"~/Deco/Results/Cell_fraction_predictions/Dif_exp_alpha_400.tsv",sep ="\t", row.names=T, quote = F)
+write.table(result_t[1:800,],"~/Deko_Projekt/Results/dif_expr_RepSet_S69_Pancreatics_Minus_Other_Tissue.tsv",sep ="\t", row.names=T, quote = F)
 
 ## prepping the prediction matrix
 
+sig_t = result_t[1:800,]
+dim(sig_t)
 
-meta_data = meta_info[colnames(i_mat),]
-marker_genes = marker_genes[marker_genes %in% rownames(i_mat)]
+table( hisc_genes[1:400] %in% sig_t$HGNC[1:400] ) 
 
-prediction_mat = i_mat[marker_genes,]
-prediction_mat = apply(prediction_mat, FUN = function(vec) return(log(vec+1)), MARGIN = 1)
-mki_67_pred = i_mat["MKI67",] %>% as.double
-#prediction_mat = t(prediction_mat)
-#prediction_mat = do.call("rbind",prediction_mat)
+table( ductal_genes[1:400] %in% sig_t$HGNC[1:400] ) 
 
-na_cols = apply(prediction_mat, FUN = function(vec) return(sum(is.na(vec))), MARGIN = 2)
-na_col_indices = which(na_cols > 0)
-if (length(na_col_indices) > 0)
-    prediction_mat = prediction_mat[,-as.integer(na_col_indices)]
+table( ductal_genes %in% hisc_genes ) 
 
-### correlation study
-
-training_mat = scRNA_training_mat[marker_genes,]
-training_mat = do.call("rbind",training_mat)
-training_mat = apply(training_mat, FUN = function(vec) return(log(vec+1)), MARGIN = 1)
-training_mat = t(training_mat)
-colnames(training_mat) = marker_genes
-
-if (length(na_col_indices) > 0)
-    training_mat = training_mat[,-as.integer(na_col_indices)]
-
-mki_67_training = scRNA_training_mat["MKI67",] %>% as.double
-mki_67_training = log(mki_67_training + 1)
-
-# training
-
-rf_fit = glm(
-    matrix(mki_67_training,ncol = 1) ~ .,
-    data = data.frame(training_mat)
+marker_genes = data.frame(
+    "HISC" = hisc_genes,
+    "Ductal" = ductal_genes
 )
-predicted_mki67 = predict(rf_fit, data.frame(prediction_mat)) %>% plogis  # training scores
 
-# predicting
-
-grading_vec = meta_info[rownames(prediction_mat),"Grading"] %>% str_replace_all( pattern = "G", "" ) %>% as.double
+write.table(marker_genes,"~/Deko_Projekt/Results/HISC_Ductal_marker_genes.tsv",sep ="\t", row.names=T, quote = F)

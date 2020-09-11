@@ -1,0 +1,243 @@
+algorithm = "bseqsc" # NMF # music # bseqsc
+type = "hisc"
+
+high_threshold = 66
+low_threshold = 33
+confidence_threshold = 1.1
+
+fractions <<- matrix( as.character(), ncol = 6)
+
+dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
+dataset_query = str_replace_all(dataset_query,".tsv","")
+
+if (type == "ductal") {
+    models = models_ductal#[[1]]
+} else if  (type == "hisc") {
+    models = models_hisc#[[1]]
+}
+
+models = models[((i-1) %% 3) + 1]
+dataset_training = as.character(unlist(models))[2]
+
+path_benchmark_files = paste0(
+    "~/Deko_Projekt/Results/Cell_fraction_predictions/",
+    paste0(
+        c(dataset_query,
+          dataset_training,
+          #paste0(models[2], collapse = ".", sep =""),
+          algorithm,"tsv"
+        ),
+        collapse = "."
+    )
+)
+
+path_benchmark_files_dec_res = paste0(
+    "~/Deko_Projekt/Results/Cell_fraction_predictions/",
+    paste0(
+        c(dataset_query,
+          dataset_training,
+          #paste0(models[2], collapse = ".", sep =""),
+          algorithm,".dec_res.tsv"
+        ),
+        collapse = "."
+    )
+)
+
+transcriptome_file = transcriptome_files[i]
+visualization_file = visualization_files[i]
+
+print(i)
+print(dataset_query)
+print(dataset_training)
+
+algorithm = str_to_lower(algorithm)
+transcriptome_data = read.table(transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+colnames(transcriptome_data) = str_replace_all(colnames(transcriptome_data),pattern="^X","")
+meta_data = meta_info[colnames(transcriptome_data),]
+if(  !nrow(meta_data) == ncol(transcriptome_data))
+    stop("Inconclusive meta data and transcriptome file dimensions")
+row_names = as.character(rownames(transcriptome_data))
+col_names = as.character(colnames(transcriptome_data))
+transcriptome_data = matrix(as.double(as.character(unlist(transcriptome_data))),ncol = length(col_names))
+rownames(transcriptome_data) = row_names
+colnames(transcriptome_data) = col_names
+
+visualization_data = read.table(visualization_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
+colnames(visualization_data) = str_replace_all(colnames(visualization_data),pattern="^X","")
+
+name_query_data = tail(as.character(unlist(str_split(transcriptome_file,pattern ="/"))),1)
+name_query_data = str_replace_all(name_query_data,pattern =".tsv","")
+
+name_training_data = tail(as.character(unlist(str_split(dataset_training,pattern ="_"))),1)
+
+name_algorithm_datatype = tail(as.character(unlist(str_split(path_benchmark_files,pattern ="/"))),1)
+name_algorithm_datatype = str_replace_all(name_algorithm_datatype,pattern ="(.tsv)|(Benchmark_results.)","")
+name_algorithm = head(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
+name_datatype = tail(as.character(unlist(str_split(name_algorithm_datatype,pattern ="\\."))),1)
+
+identifier = tail( as.character(unlist(str_split(dataset_training, pattern = "_"))), 1)
+ki_index = which(rownames(transcriptome_data) == "MKI67")
+
+###
+
+model_path = paste0(
+    c(
+        "~/Deko_Projekt/Data/Bench_data/Models/",
+        dataset_query,
+        type,
+        identifier,
+        algorithm,
+        "RDS"
+    ),
+    collapse = "."
+)
+model_path = str_replace_all(model_path, pattern = "/\\.","/")
+
+###
+if (
+    file.exists(str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")))
+{
+    #benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
+    deconvolution_results = readRDS(
+        str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS"))
+    
+} else {
+    
+    deconvolution_results = Deconvolve_transcriptome(
+        transcriptome_data = transcriptome_data,
+        deconvolution_algorithm = algorithm,
+        models = dataset_training,
+        nr_permutations = 1000,
+        output_file = ""
+    )
+    
+    if ( type == "ductal")
+        deconvolution_results = deconvolution_results[
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
+    if ( type == "hisc")
+        deconvolution_results = deconvolution_results[
+            grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc", value = F) ,]
+    
+    if (algorithm == "bseqsc")
+        deconvolution_results$P_value = as.double(deconvolution_results$P_value)
+    
+    col_names = colnames(deconvolution_results)
+    width = ncol(deconvolution_results)
+    height = nrow(deconvolution_results) 
+    res_table = matrix(unlist(deconvolution_results),ncol = width, nrow = height)
+    colnames(res_table) = col_names
+    res_table= as.data.frame(res_table)
+    
+    saveRDS(
+        deconvolution_results,
+        str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")
+    )
+    
+    write.table(
+        deconvolution_results,
+        path_benchmark_files_dec_res,
+        sep="\t",
+        quote =F, row.names = F
+    )
+}
+
+#return(deconvolution_results)
+
+meta_data = meta_info[ rownames(deconvolution_results),]
+
+if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
+    
+    meta_data = meta_data[meta_data$Grading!="",]
+    deconvolution_results = deconvolution_results[rownames(meta_data),]
+    deconvolution_results$Grading = meta_data$Grading
+    visualization_data  = visualization_data[,rownames(meta_data)]
+    transcriptome_data  = transcriptome_data[,rownames(meta_data)]
+    
+}
+#write.table(deconvolution_results,"~/Deco/Results/Cell_fraction_predictions/RepSet_Cibersort_Baron.tsv",sep ="\t", row.names =T , quote=F)
+
+if( length(ki_index) != 0 ){
+    
+    deconvolution_results[,"MKI67"] = rep(0,nrow(deconvolution_results))
+    deconvolution_results[,"MKI67"] = log(as.double(transcriptome_data[ki_index[1],])+1)
+    
+} else {
+    
+    deconvolution_results[,"MKI67"] = as.double(meta_data$KI67)
+}
+
+deconvolution_results$Strength_de_differentiation = 0
+deconvolution_results$Confidence_score_dif = 0
+deconvolution_results$Subtype = ""
+
+vis_mat = create_visualization_matrix(
+    visualization_data = visualization_data,
+    deconvolution_results = deconvolution_results,
+    confidence_threshold = confidence_threshold,
+    high_threshold = high_threshold,
+    low_threshold = low_threshold
+)
+
+### results parsing
+
+graphics_path_heatmap = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
+graphics_path_heatmap = paste(graphics_path_heatmap,"Heatmap", sep ="/")
+if (! dir.exists(graphics_path_heatmap))
+    dir.create(graphics_path_heatmap)
+graphics_path_heatmap = paste(graphics_path_heatmap,name_datatype, sep ="/")
+if (! dir.exists(graphics_path_heatmap))
+    dir.create(graphics_path_heatmap)
+graphics_path_heatmap = paste(graphics_path_heatmap,name_query_data, sep ="/")
+if (! dir.exists(graphics_path_heatmap))
+    dir.create(graphics_path_heatmap)
+graphics_path_heatmap = paste(graphics_path_heatmap,paste0(name_training_data,".pdf"),sep = "/")
+
+### survival curve
+
+vis_mat = vis_mat[rownames(deconvolution_results),]
+vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
+vis_mat$OS_Tissue[is.na(vis_mat$OS_Tissue)] = 1
+vis_mat$Grading = meta_data$Grading
+vis_mat$Zensur = meta_data$Zensur
+
+graphics_path_survival = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
+graphics_path_survival = paste(graphics_path_survival,"Survival", sep ="/")
+if (! dir.exists(graphics_path_survival))
+    dir.create(graphics_path_survival)
+graphics_path_survival = paste(graphics_path_survival,name_datatype, sep ="/")
+if (! dir.exists(graphics_path_survival))
+    dir.create(graphics_path_survival)
+graphics_path_survival = paste(graphics_path_survival,name_query_data, sep ="/")
+if (! dir.exists(graphics_path_survival))
+    dir.create(graphics_path_survival)
+
+if( type == "ductal"){
+    selector_var = "ductal"
+} else {
+    selector_var ="hisc"
+}
+
+ratio = deconvolution_results$alpha / deconvolution_results$ductal
+ratio_m = data.frame(
+    "ductal" = as.double(deconvolution_results[,selector_var]),
+    "ratio" = as.double(ratio),
+    "grading" = deconvolution_results$Grading,
+    "OS_Tissue" = vis_mat$OS_Tissue,
+    "Zensur" = vis_mat$Zensur
+)
+ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
+agg=aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
+
+value = ratio_m$ductal
+value[value <= agg$x[3]] = "low"
+value[value != "low"] = "high"
+ratio_m[,selector_var] = value
+
+fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
+surv_hisc = survminer::surv_pvalue(fit, data = ratio_m)$pval
+
+#pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
+print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
+#dev.off()
+
+#plot(ratio)

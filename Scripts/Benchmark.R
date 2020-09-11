@@ -180,7 +180,8 @@ run_benchmark = function(
         if ( type == "hisc"){
             
             hisc = deconvolution_results$hisc
-            hisc[hisc <= mean(hisc)] = "low"
+            percentiles = quantile(hisc, probs = seq(0,1,by=.01))
+            hisc[hisc <= percentiles[67] ] = "low"
             hisc[hisc != "low"] = "high"
             
             data = vis_mat[,c("OS_Tissue","Zensur")]
@@ -202,7 +203,9 @@ run_benchmark = function(
             graphics_path_survival_ductal = paste(graphics_path_survival,paste0(paste(name_training_data,"ductal",sep="_"),".pdf"),sep = "/")
             
             ductal = deconvolution_results$ductal
-            ductal[ductal <= mean(ductal)] = "low"
+            #ductal = log(ductal+1)
+            percentiles = quantile(ductal, probs = seq(0,1,by=.01))
+            ductal[ductal <= percentiles[66]] = "low"
             ductal[ductal != "low"] = "high"
             
             data = vis_mat[,c("OS_Tissue","Zensur")]
@@ -211,8 +214,9 @@ run_benchmark = function(
             
             fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ductal)
             surv_ductal = survminer::surv_pvalue(fit, data = data)$pval
+            surv_ductal
             
-            pdf(graphics_path_survival_ductal,onefile = FALSE)#,width="1024px",height="768px")
+            #pdf(graphics_path_survival_ductal,onefile = FALSE)#,width="1024px",height="768px")
             print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
             dev.off()
 
