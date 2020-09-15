@@ -1,5 +1,49 @@
 algorithm = "bseqsc" # NMF # music # bseqsc
 type = "hisc"
+i =16
+
+### benchmark runs
+# missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
+
+library(devtools)
+load_all("~/artdeco")
+source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
+library(stringr)
+library("bseqsc")
+library("MuSiC")
+
+###
+transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep = "\t",header = T,row.names = 1)
+colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
+transcriptome_data[1:5,1:5]
+
+#deconvolution_results = artdeco::Deconvolve_transcriptome(
+#    transcriptome_data,
+#    models = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),
+#    deconvolution_algorithm = "bseqsc"
+#)
+
+models_ductal = c(
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
+)
+models_hisc = c(
+    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
+    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+)
+nr_models = length(models_ductal)
+
+transcriptome_files = list.files("~/Deko_Projekt/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
+transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
+visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
+
+meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+source("~/Deko_Projekt/Scripts/Benchmark.R")
 
 high_threshold = 66
 low_threshold = 33
@@ -217,10 +261,9 @@ if( type == "ductal"){
     selector_var ="hisc"
 }
 
-ratio = deconvolution_results$alpha / deconvolution_results$ductal
 ratio_m = data.frame(
-    "ductal" = as.double(deconvolution_results[,selector_var]),
-    "ratio" = as.double(ratio),
+    "ductal" = as.double(deconvolution_results[,"ductal"]),
+    "hisc" = as.double(deconvolution_results[,"hisc"]),
     "grading" = deconvolution_results$Grading,
     "OS_Tissue" = vis_mat$OS_Tissue,
     "Zensur" = vis_mat$Zensur
@@ -228,16 +271,19 @@ ratio_m = data.frame(
 ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
 agg=aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
 
-value = ratio_m$ductal
-value[value <= agg$x[3]] = "low"
+value = ratio_m[,selector_var]
+#threshold = (agg$x[2] + agg$x[3]) / 2
+threshold = agg$x[3]
+value[value <= threshold] = "low"
 value[value != "low"] = "high"
 ratio_m[,selector_var] = value
 
 fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
-surv_hisc = survminer::surv_pvalue(fit, data = ratio_m)$pval
+surv_p_value = survminer::surv_pvalue(fit, data = ratio_m)$pval
+surv_p_value
 
 #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
-print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
+    print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
 #dev.off()
 
 #plot(ratio)

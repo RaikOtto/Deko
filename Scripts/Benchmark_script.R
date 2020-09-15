@@ -13,17 +13,19 @@ transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S6
 colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
 transcriptome_data[1:5,1:5]
 
-deconvolution_results = artdeco::Deconvolve_transcriptome(
-    transcriptome_data,
-    models = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),
-    deconvolution_algorithm = "bseqsc"
-)
+#models_ductal = list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron"))
 
 models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
     list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
     list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
+
+#models_ductal = c(
+#    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
+#    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
+#    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
+#)
 models_hisc = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
     list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
@@ -42,12 +44,12 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
 algorithm = "bseqsc" # NMF # music # bseqsc
-type = "hisc"
+type = "ductal"
 
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
-
+i = 19
 fractions <<- matrix( as.character(), ncol = 6)
 
 #for( i in 1:length(transcriptome_files)){
@@ -111,5 +113,5 @@ for( i in 16:18){
     )
     
     write.table(res, path_benchmark_files, sep ="\t", quote = F, row.names = F)
-    fractions = rbind(fractions,res)
+    #fractions = rbind(fractions,res)
 }

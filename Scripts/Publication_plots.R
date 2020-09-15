@@ -34,7 +34,7 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Wiedenmann 39
 
 expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer.S40.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
@@ -94,7 +94,7 @@ dev.off()
 
 # Plot 1
 
-data_t = read.table("~/Deco/Results/ROC_curves.tsv",sep ="\t", header = T)
+data_t = read.table("~/Deko_Projekt/Results/ROC_curves.tsv",sep ="\t", header = T)
 
 # hisc
 
@@ -157,23 +157,6 @@ p = ggplot( data = vis_mat,aes( x = Dataset, y = as.integer(ROC), min = ROC-SD, 
 p = p + geom_bar(stat="identity", position=position_dodge())
 p + geom_errorbar(aes(),  position = "dodge")
 
-### survival plots ###
-
-surv_cor = apply(expr_raw, MARGIN = 1, FUN = function(vec){return(cor(vec, as.double(meta_data$OS_Tissue)))})
-
-subtype = as.double(expr_raw[ which( rownames(expr_raw) == "POU5F1"),df_map])
-cut_off = quantile(sort(subtype), probs = seq(0,1,.1) )[9]
-subtype[subtype > as.double(cut_off) ] = "Above"
-subtype[subtype != "Above" ] = "Below"
-
-#cell_type = meta_data$
-cell_type[cell_type != "Not_sig"] = "Sig"
-#col_vec = 
-fit = survival::survfit( survival::Surv( meta_data$OS_Tissue ) ~ cell_type)
-
-survminer::ggsurvplot(fit, data = meta_data, risk.table = T, pval = T)
-# Visualize with survminer
-
 ### prediction NEC NET
 
 mki_67 = deconvolution_results[rownames(meta_data),"MKI67"]
@@ -198,26 +181,6 @@ predicted <- plogis(predict(rf_fit, t_data))  # predicted scores
 optCutOff <- optimalCutoff(target_vector, predicted)[1] 
 sensitivity = round(InformationValue::sensitivity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
 specificity = round(InformationValue::specificity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
-
-## Figure 1 # ESTIMATE
-
-estimate_t = read.table("~/Deko/Results/MAPTor-NET.estimate.tsv",skip = 2,header = T)
-colnames(estimate_t) = str_replace_all(colnames(estimate_t),pattern = "^X","")
-rownames(estimate_t) = estimate_t$NAME
-estimate_t = estimate_t[,c(-1,-2)]
-estimate_t = estimate_t[-4,]
-
-pheatmap::pheatmap(
-    estimate_t,
-    annotation_col = meta_data[c("Study")],
-    annotation_colors = aka3,
-    show_rownames = T,
-    show_colnames = T,
-    #treeheight_col = 0,
-    #legend = F,
-    #fontsize_col = 7,
-    clustering_method = "average"
-)
 
 ## Figure 3 Segerstolpe Heatmap
 

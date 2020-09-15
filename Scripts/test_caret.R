@@ -5,13 +5,13 @@ library("stringr")
 library("e1071")
 set.seed(1)
 
-meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 # scRNA section
 
-path_transcriptome_file = "~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv"
 cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = F)
 colnames(cell_type_predictions) = str_replace(colnames(cell_type_predictions), pattern = "^X", "")
 colnames(cell_type_predictions) = str_replace_all(colnames(cell_type_predictions), pattern = "\\.", "_")
@@ -69,38 +69,27 @@ m = confusionMatrix(
 
 # supervised RNA-seq section
 
-path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv"
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+rownames(expr_raw)
 
 row_var = apply( expr_raw, FUN = var, MARGIN = 1)
 summary(row_var)
 expr_raw = expr_raw[ row_var > quantile(row_var)[2], ]
 dim(expr_raw)
 
-descrCor <- cor(t(expr_raw))
-summary(descrCor[upper.tri(descrCor)])
-
-highlyCorDescr <- findCorrelation(descrCor, cutoff = .75)
-expr_raw <- expr_raw[-highlyCorDescr,] ###
-dim(expr_raw)
-descrCor2 <- cor(t(expr_raw))
-summary(descrCor2[upper.tri(descrCor2)])
-
 expr_raw_save = expr_raw
-#comboInfo <- findLinearCombos(t(expr_raw))
-#filteredDescr = t(expr_raw)[-comboInfo$remove,]
-#dim(expr_raw)
 
 marker_genes = c()
 nr_marker_genes = 100
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_alpha_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_beta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_gamma_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_delta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_acinar_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_ductal_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
-marker_genes = c( marker_genes, read.table("~/Deco/Results/Cell_fraction_predictions/Archive/Dif_exp_hisc_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_alpha_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_beta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_gamma_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_delta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_acinar_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_ductal_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
+marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_hisc_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = unique(marker_genes)
 marker_genes = marker_genes[ marker_genes %in% rownames(expr_raw)]
 table(marker_genes %in% rownames(expr_raw))
@@ -114,21 +103,11 @@ expr_raw = t(expr_raw)
 
 ###
 
-#predict_data_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv.tsv"
-#predict_data = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#colnames(predict_data) = str_replace(colnames(predict_data), pattern = "^X", "")
-
 truth_vec = meta_info[rownames(expr_raw),"Grading"]
-
-#table(meta_data$Grading)
-#truth_vec = meta_data$Grading
-
-#truth_vec = expr_raw$grading
-
 truth_vec[truth_vec %in% c("G1","G2")] = "G1_G2"
 truth_vec[truth_vec %in% c("G3")] = "G3"
 dim(expr_raw)
-#expr_raw[1:5,1:5]
+
 length(truth_vec)
 #truth_vec = factor(truth_vec, levels = c("G3","G2","G1"))
 
@@ -248,8 +227,8 @@ sd(as.double(as.character(unlist(PPV)))[-9])
 
 ### visualization
 
-bench_data = read.table("~/Deco/Results/Classification_Performance.tsv",sep="\t",stringsAsFactors = T,header = T)
-bench_data$Dataset = factor(bench_data$Dataset,levels = c("Missiaglia","Scarpa","RepSet","Wiedenmann","Sadanandam","Average"))
+bench_data = read.table("~/Deko_Projekt/Results/Classification_Performance.tsv",sep="\t",stringsAsFactors = T,header = T)
+bench_data$Dataset = factor(bench_data$Dataset,levels = c("Missiaglia","Scarpa","RepSet","Riemer","Sadanandam","Average"))
 bench_data$Type = factor(bench_data$Type, levels = c("Unsupervised","Supervised"))
 
 p = ggplot(

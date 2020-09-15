@@ -80,7 +80,7 @@ run_benchmark = function(
                 grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
         if ( type == "hisc")
             deconvolution_results = deconvolution_results[
-                grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc", value = F) ,]
+                grep(deconvolu0.02432365tion_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc", value = F) ,]
         
         if (algorithm == "bseqsc")
             deconvolution_results$P_value = as.double(deconvolution_results$P_value)
@@ -177,11 +177,12 @@ run_benchmark = function(
         if (! dir.exists(graphics_path_survival))
             dir.create(graphics_path_survival)
         
-        if ( type == "hisc"){
+        if ( "hisc" %in% colnames(deconvolution_results)){
             
             hisc = deconvolution_results$hisc
-            percentiles = quantile(hisc, probs = seq(0,1,by=.01))
-            hisc[hisc <= percentiles[67] ] = "low"
+            agg = aggregate(deconvolution_results$hisc, FUN = mean, by = list(meta_info[rownames(deconvolution_results),"Grading"]))
+            
+            hisc[hisc <= agg$x[3] ] = "low"
             hisc[hisc != "low"] = "high"
             
             data = vis_mat[,c("OS_Tissue","Zensur")]
@@ -196,49 +197,57 @@ run_benchmark = function(
             pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
                 print(survminer::ggsurvplot(fit, data = data, risk.table = T, pval = T, censor.size = 10))
             dev.off()
-            surv_ductal = 1
+            #surv_ductal = 1
         
-        } else {
-
-            graphics_path_survival_ductal = paste(graphics_path_survival,paste0(paste(name_training_data,"ductal",sep="_"),".pdf"),sep = "/")
-            
-            ductal = deconvolution_results$ductal
-            #ductal = log(ductal+1)
-            percentiles = quantile(ductal, probs = seq(0,1,by=.01))
-            ductal[ductal <= percentiles[66]] = "low"
-            ductal[ductal != "low"] = "high"
-            
-            data = vis_mat[,c("OS_Tissue","Zensur")]
-            data = cbind(data, ductal)
-            data = data[!is.na(data$Zensur),]
-            
-            fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ductal)
-            surv_ductal = survminer::surv_pvalue(fit, data = data)$pval
-            surv_ductal
-            
-            #pdf(graphics_path_survival_ductal,onefile = FALSE)#,width="1024px",height="768px")
-            print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
-            dev.off()
-
-            surv_hisc = 1
         }
+
+        graphics_path_survival_ductal = paste(graphics_path_survival,paste0(paste(name_training_data,"ductal",sep="_"),".svg"),sep = "/")
+        
+        #deconvolution_results$
+        
+        ductal_values = deconvolution_results$ductal
+        agg = aggregate(ductal_values, FUN = mean, by = list(meta_info[rownames(deconvolution_results),"Grading"]))
+        
+        ductal = rep("high",length(ductal_values))
+        #ductal[ductal <= mean( ductal )]   = "low"
+        #ductal[ductal <= median( ductal )]   = "low"
+        ductal[ductal_values <= tail( agg$x, 1 )]   = "low"
+        #ductal[ductal <= ( ( tail( agg$x, 1 ) + tail( agg$x, 2 )[1] ) / 2 ) ]    = "low"
+        
+        data = vis_mat[,c("OS_Tissue","Zensur")]
+        data = cbind(data, ductal)
+        data = data[!is.na(data$Zensur),]
+        
+        fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ductal)
+        surv_ductal = survminer::surv_pvalue(fit, data = data)$pval
+        surv_ductal
+        
+        svg(filename = graphics_path_survival_ductal, width = 10, height = 10)
+        print(survminer::ggsurvplot(fit, data = data, risk.table = F, pval = T, censor.size = 10))
+        dev.off()
+
+        #surv_hisc = 1
+
         
         # mki67
         
-        mki67 = deconvolution_results[rownames(vis_mat),"MKI67"]
-        mki67[mki67 <= mean(mki67)] = "low"
-        mki67[mki67 != "low"] = "high"
+        ki67_values = deconvolution_results$MKI67
+        agg = aggregate(ki67_values, FUN = mean, by = list(meta_info[rownames(deconvolution_results),"Grading"]))
+        
+        ki67 = rep("high",length(ki67_values))
+        #ki67[ki67_values <= tail( agg$x, 1 )]   = "low"
+        ki67[ki67_values <= mean( ki67_values)]   = "low"
         
         data = vis_mat[,c("OS_Tissue","Zensur")]
-        data = cbind(data, mki67)
+        data = cbind(data, ki67)
         data = data[!is.na(data$Zensur),]
 
-        surv_mki67 = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$mki67), data = data, method = "survdiff")$pval
-        if ( sum(mki67 == "high") < 5) surv_mki67 = 1
+        surv_mki67 = survminer::surv_pvalue(survival::survfit( survival::Surv( as.double(data$OS_Tissue) ) ~ data$ki67), data = data, method = "survdiff")$pval
+        if ( sum(ki67 == "high") < 5) surv_mki67 = 1
 
         graphics_path_survival_mki67 = paste(graphics_path_survival,paste0(paste(name_training_data,"mki67",sep="_"),".pdf"),sep = "/")
         
-        fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$mki67)
+        fit = survival::survfit( survival::Surv( as.double(data$OS_Tissue), data$Zensur ) ~ data$ki67)
         surv_mki67 = survminer::surv_pvalue(fit, data = data)$pval
         
         pdf(graphics_path_survival_mki67,onefile = FALSE)#,width="1024px",height="768px")
@@ -425,9 +434,9 @@ run_benchmark = function(
         mki67_grading_path = paste(mki67_grading_path,name_query_data, sep ="/")
         if (! dir.exists(mki67_grading_path)) dir.create(mki67_grading_path)
         mki67_grading_path = paste(mki67_grading_path,paste0(paste(name_training_data,"mki67",sep="_"),".pdf"),sep = "/")
-        #pdf(mki67_grading_path,onefile = FALSE)#,width="1024px",height="768px")
-        #    plot(g)
-        #dev.off()
+        pdf(mki67_grading_path,onefile = FALSE)#,width="1024px",height="768px")
+            plot(g)
+        dev.off()
         
     } else {
         
@@ -481,9 +490,9 @@ run_benchmark = function(
         ductal_grading_path = paste(ductal_grading_path,name_query_data, sep ="/")
         if (! dir.exists(ductal_grading_path)) dir.create(ductal_grading_path)
         ductal_grading_path = paste(ductal_grading_path,paste0(paste(name_training_data,"ductal",sep="_"),".pdf"),sep = "/")
-        #pdf(ductal_grading_path,onefile = FALSE)#,width="1024px",height="768px")
-        #    plot(g)
-        #dev.off()
+        pdf(ductal_grading_path,onefile = FALSE)#,width="1024px",height="768px")
+            plot(g)
+        dev.off()
     } else { ductal_g1_g2 = ductal_g1_g3 = ductal_g2_g3 = 1 }
     
     # anova hisc versus grading
@@ -532,9 +541,9 @@ run_benchmark = function(
         hisc_grading_path = paste(hisc_grading_path,name_query_data, sep ="/")
         if (! dir.exists(hisc_grading_path)) dir.create(hisc_grading_path)
         hisc_grading_path = paste(hisc_grading_path,paste0(paste(name_training_data,"hisc",sep="_"),".pdf"),sep = "/")
-        #pdf(hisc_grading_path,onefile = FALSE)#,width="1024px",height="768px")
-        #plot(g)
-        #dev.off()
+        pdf(hisc_grading_path,onefile = FALSE)#,width="1024px",height="768px")
+            plot(g)
+        dev.off()
         
     } else {
         
