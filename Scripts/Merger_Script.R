@@ -6,7 +6,7 @@ rownames(meta_info) = meta_info$Name
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_4.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Segerstolpe.Alpha.Beta.Gamma.Delta.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -80,7 +80,7 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 dim(new_mat)
 new_mat[1:5,1:5]
 #write.table(bam_data_1, "~/Deko/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", quote =F , row.names = T)
-write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Hisc_Baron.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Hisc_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
 
 ### splitter
 

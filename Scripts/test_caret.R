@@ -5,47 +5,89 @@ library("stringr")
 library("e1071")
 set.seed(1)
 
-meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+fitControl <- trainControl(
+    method = "cv",
+    number = 5,
+    sampling = "down",
+    savePred=T
+)
+
+pred_data = function(
+    train_mat,
+    truth_vec,
+    model = ""
+){
+    if ( model == ""){
+        model = caret::train(
+            x = train_mat,
+            y = truth_vec,
+            method = "rf",
+            norm.votes=T,
+            #predict.all=FALSE,
+            type = "Classification",
+            metric= "Accuracy",
+            ntree = 500,
+            trControl = fitControl)
+    }
+
+    truth_vec = factor(truth_vec, levels = c("G1","G2","G3"))
+    prediction_ml = predict(model, train_mat)
+    con_mat = confusionMatrix(
+        prediction_ml,
+        truth_vec,
+        positive = "G3"
+    )
+
+    return(con_mat)
+}
+
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 # scRNA section
 
-path_transcriptome_file = "~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv"
-cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = F)
+path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer.S40.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Scarpa.S29.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Sadanandam.S29.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Missaglia.S75.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+
+cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = T)
+
 colnames(cell_type_predictions) = str_replace(colnames(cell_type_predictions), pattern = "^X", "")
 colnames(cell_type_predictions) = str_replace_all(colnames(cell_type_predictions), pattern = "\\.", "_")
 colnames(cell_type_predictions) = str_replace_all(colnames(cell_type_predictions), pattern = "-", "_")
-colnames(cell_type_predictions) = make.names(colnames(cell_type_predictions))
-rownames(cell_type_predictions) = str_replace(rownames(cell_type_predictions), pattern = "^X", "")
-
+colnames(cell_type_predictions) = str_to_lower(colnames(cell_type_predictions))
+rownames(cell_type_predictions) = 1:nrow(cell_type_predictions)
 cell_type_predictions = cell_type_predictions %>% filter(model %in% "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")
-#cell_type_predictions = cell_type_predictions %>% filter(model %in% "Alpha_Beta_Gamma_Delta_HISC_Baron")
-expr_raw = cell_type_predictions %>% filter( (Dataset %in% "RepSet"))
-expr_raw = expr_raw %>% filter(grading %in% c("G1","G2","G3"))
-rownames(expr_raw) = expr_raw$sample_id
-expr_raw = expr_raw[,c("alpha","beta","gamma","delta","acinar","ductal","p_value")]
+rownames(cell_type_predictions) = str_replace(cell_type_predictions$sample, pattern = "^X", "")
 
-rownames(expr_raw) = str_replace( rownames(expr_raw), pattern = "^X", "")
-dim(expr_raw)
+remove(train_mat)
+train_mat = cell_type_predictions[,
+   match(c("alpha","beta","gamma","delta","acinar","ductal","p_value","correlation","rmse"), colnames(cell_type_predictions), nomatch = 0)
+]
+truth_vec = meta_info[rownames(train_mat),"Grading"]
+
+res = pred_data(
+    train_mat = train_mat,
+    truth_vec = truth_vec
+)
+d = res$byClass
+
+gbmImp <- varImp(model_deco, scale = FALSE)
+plot(varImp(model_deco), top = 20)
 
 # discern NECs from NETs
 
-expr_raw = t(expr_raw)
-meta_data = meta_info[rownames(expr_raw),]
+meta_data = meta_info[rownames(train_mat),]
+train_mat = t(train_mat)
 truth_vec = as.character(meta_data$NEC_NET)
-expr_raw[1:5,1:5]
-
-bootControl = trainControl(
-    method = "LOOCV",
-    classProbs=T,
-    savePredictions = T#,
-    #number = 10
-    #summaryFunction = twoClassSummary
-)
+train_mat[1:5,1:5]
 
 model = caret::train(
-    x = expr_raw,
+    x = train_mat,
     y = truth_vec,
     method = "multinom",
     metric = "Accuracy",
@@ -70,18 +112,17 @@ m = confusionMatrix(
 # supervised RNA-seq section
 
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv"
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-rownames(expr_raw)
+path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Scarpa.S29.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer.S40.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Sadanandam.S29.tsv"
+path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Missaglia.S75.tsv"
+train_mat = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+colnames(train_mat) = str_replace(colnames(train_mat), pattern = "^X", "")
 
-row_var = apply( expr_raw, FUN = var, MARGIN = 1)
-summary(row_var)
-expr_raw = expr_raw[ row_var > quantile(row_var)[2], ]
-dim(expr_raw)
+row_var = apply( train_mat, FUN = var, MARGIN = 1)
+train_mat = train_mat[ row_var > quantile(row_var)[2], ]
+marker_genes = c( "MKI67")
 
-expr_raw_save = expr_raw
-
-marker_genes = c()
 nr_marker_genes = 100
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_alpha_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_beta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
@@ -91,92 +132,30 @@ marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_ductal_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_hisc_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = unique(marker_genes)
-marker_genes = marker_genes[ marker_genes %in% rownames(expr_raw)]
-table(marker_genes %in% rownames(expr_raw))
+marker_genes = marker_genes[ marker_genes %in% rownames(train_mat)]
+which(!(marker_genes %in% rownames(train_mat)))
 
-expr_raw = expr_raw[marker_genes,]
-dim(expr_raw)
+train_mat = train_mat[marker_genes,]
+"MKI67" %in% rownames(train_mat)
 
-meta_data = meta_info[colnames(expr_raw),]
-dim(expr_raw)
-expr_raw = t(expr_raw)
+truth_vec = meta_info[colnames(train_mat),"Grading"]
+
+res = pred_data(
+    train_mat = t(train_mat),
+    truth_vec = truth_vec
+)
+d = res$byClass
 
 ###
 
-truth_vec = meta_info[rownames(expr_raw),"Grading"]
-truth_vec[truth_vec %in% c("G1","G2")] = "G1_G2"
-truth_vec[truth_vec %in% c("G3")] = "G3"
-dim(expr_raw)
-
-length(truth_vec)
-#truth_vec = factor(truth_vec, levels = c("G3","G2","G1"))
-
-bootControl = trainControl(
-    method = "LOOCV",
-    classProbs=T,
-    savePredictions = T#,
-    #number = 10
-    #summaryFunction = twoClassSummary
-)
-
-model = caret::train(
-    x = expr_raw,
-    y = truth_vec,
-    method = "multinom",
-    metric = "Accuracy",
-    trControl = bootControl,
-    scaled = FALSE,
-    tuneLength = 5,# model$finalModel$decay 0.0005623413
-    preProcess = c("center", "scale")
-)
-summary(model)
-#model$finalModel
-#plot(model, metric = "Accuracy")
-#plot(model, metric = "Kappa")
-#resampleHist(model)
-
-#predValues = extractPrediction(
-#    models = list(model)#,
-    #testX = t(expr_raw[good_genes,]),
-    #testY = truth_vec#,
-#    type = "prob"
-#)
-
-#plotClassProbs(predValues$obs)
-
-
-prediction_ml = model$pred$pred
-observations_ml = model$pred$obs
-#prediction_data = cell_type_predictions %>% filter(cell_type_predictions$Dataset %in% "RepSet") # Missiaglia RepSet Sadanandam Scarpa Wiedenmann
-#observations_ml = as.character(meta_info[as.character(prediction_data$sample_id),"Grading"])
-#observations_ml[observations_ml %in% c("G1","G2")] = "G1_G2"
-#prediction_ml = as.character(predict(model,newdata = prediction_data[,c("alpha","beta","gamma","delta","acinar","ductal","p_value")]))
-
-predictions = data.frame(
-    "predictions" = prediction_ml,
-    "observations" = observations_ml
-)
-m = confusionMatrix(
+svmROC <- pROC::multiclass.roc(
     as.factor(predictions$predictions),
-    as.factor(predictions$observations),
-    positive = "G3"
+    as.factor(predictions$observations)
+    #predValues$pred,
+    #predValues$obs
 )
-colMeans(m$byClass)
-svmROC <- pROC::roc(
-    predValues$pred,
-    predValues$obs
-)
-
-# Select a parameter setting
-selectedIndices <- predValues$pred$mtry == 2
-# Plot:
-plot.roc(
-    predValues$pred$obs,
-    predValues$pred$M
-)
-
-gbmImp <- varImp(model, scale = FALSE)
-plot(varImp(model), top = 20)
+gbmImp <- varImp(model_exp)
+plot(varImp(model_exp, scale = FALSE), top = 20)
 
 indices = list(
     "1" = seq(1,1+5),
@@ -228,19 +207,59 @@ sd(as.double(as.character(unlist(PPV)))[-9])
 ### visualization
 
 bench_data = read.table("~/Deko_Projekt/Results/Classification_Performance.tsv",sep="\t",stringsAsFactors = T,header = T)
-bench_data$Dataset = factor(bench_data$Dataset,levels = c("Missiaglia","Scarpa","RepSet","Riemer","Sadanandam","Average"))
-bench_data$Type = factor(bench_data$Type, levels = c("Unsupervised","Supervised"))
+bench_data = bench_data %>% filter(Dataset %in% c("RepSet"))
 
-p = ggplot(
+# accuracy
+# remotes::install_github("coolbutuseless/ggpattern")
+library("ggpattern")
+
+p_accuracy_plot = ggplot(
     data = bench_data,
     aes(
-        x = Dataset,
-        y = Accuracy,
-        fill = Type
-) )
-p = p + geom_bar(stat="identity", position=position_dodge())
-p = p + scale_fill_manual(values = c("Blue","red"))
-p = p + theme(legend.position="top") + xlab(label = "NEN data set")
-p = p + guides(fill=guide_legend(title="Classification model")) 
+        x = Grading,
+        y = Balanced.Accuracy*100,
+        fill = Model
+) )+ theme(legend.position="none") + theme(legend.text=element_text(size=14))
+p_accuracy_plot = p_accuracy_plot + geom_bar(stat="identity", position=position_dodge())
+p_accuracy_plot = p_accuracy_plot + scale_fill_manual(values = c("Blue","red"))
+p_accuracy_plot = p_accuracy_plot + xlab(label = "Accuracy") + ylab(label = "%")
+p_accuracy_plot = p_accuracy_plot + theme(axis.text=element_text(size=12,face="bold"), axis.title=element_text(size=14))
 
-p
+p_sensitivity_plot = ggplot(
+    data = bench_data,
+    aes(
+        x = Grading,
+        y = Sensitivity*100,
+        fill = Model
+    ) )+ theme(legend.position="none") + theme(legend.text=element_text(size=14))
+p_sensitivity_plot = p_sensitivity_plot + geom_bar(stat="identity", position=position_dodge())
+p_sensitivity_plot = p_sensitivity_plot + scale_fill_manual(values = c("Blue","red"))
+p_sensitivity_plot = p_sensitivity_plot + xlab(label = "Sensitivity") + ylab(label = "%")
+p_sensitivity_plot = p_sensitivity_plot + theme(axis.text=element_text(size=12,face="bold"), axis.title=element_text(size=14))
+
+p_specificity_plot = ggplot(
+    data = bench_data,
+    aes(
+        x = Grading,
+        y = Specificity * 100,
+        fill = Model
+    ) ) + theme(legend.position="none") + theme(legend.text=element_text(size=14))
+p_specificity_plot = p_specificity_plot + geom_bar(stat="identity", position=position_dodge())
+p_specificity_plot = p_specificity_plot + scale_fill_manual(values = c("Blue","red"))
+p_specificity_plot = p_specificity_plot  + xlab(label = "Specificity") + ylab(label = "%")
+p_specificity_plot = p_specificity_plot + theme(axis.text=element_text(size=12,face="bold"), axis.title=element_text(size=14))
+
+joint_plot = ggpubr::ggarrange(
+    p_accuracy_plot,
+    p_sensitivity_plot,
+    p_specificity_plot,
+    labels = c("", "", ""),
+    ncol = 3,
+    nrow = 1,
+    common.legend = TRUE
+    #legend.grob = get_legend(p_exo)
+)
+
+svg(filename = "~/Deko_Projekt/Results/Images/Figure_4_G1_vs_G2_vs_G3_Grading_classification.svg", width = 10, height = 10)
+joint_plot
+dev.off()

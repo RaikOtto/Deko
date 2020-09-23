@@ -20,10 +20,9 @@ meta_info$NEC_NET = meta_info$NEC_NET_PCA
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
-i = 14
+i = 13
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
-genes_of_interest_hgnc_t[i,1]
-#sad_genes = c("YAP1","ASCL1","NEUROD1","POU2F3")
+#sad_genes = genes_of_interest_hgnc_t[i,1]
 sad_genes = sad_genes[ sad_genes != ""]
 
 # Fadista 89
@@ -33,9 +32,9 @@ sad_genes = sad_genes[ sad_genes != ""]
 # Missiaglia 75
 # Wiedenmann 39
 
-expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer.S40.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.vis.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+#expr_raw[1:5,1:5]
 
 meta_data = meta_info[colnames(expr_raw),]
 table(meta_data$Grading)
@@ -45,12 +44,7 @@ table(meta_data$NEC_NET_Color)
 # G3 4 + 8 + 2 + 30 = 44
 #meta_data_2 = rbind(meta_data_2,meta_data)
 
-table(meta_data$Grading)
-#meta_data = meta_data[which(meta_data[,"Histology"] == "Pancreatic_NEN"),]
-expr_raw = expr_raw[,rownames(meta_data)]
-#meta_data[colnames(expr_raw),"mki_67"] = log(as.double(expr_raw["MKI67",])+1)
-#meta_data$mki_67[ which(meta_data$mki_67 > mean(meta_data$mki_67))] = "high"
-#meta_data$mki_67[meta_data$mki_67 != "high"] = "low"
+#expr_raw = expr_raw[,rownames(meta_data)]
 expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
 expr[1:5,1:5]
 dim(expr)
@@ -61,7 +55,7 @@ pcr = prcomp(t(correlation_matrix))
 #svg()
 pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","Grading", "NEC_NET","Study")],
+  annotation_col = meta_data[c("Alpha_mixed","Beta_mixed","Gamma_mixed","Delta_mixed","HISC","Acinar","Ductal","Grading", "NEC_NET_Color","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   show_colnames = F,
@@ -78,20 +72,21 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 8,
   alpha = 1,
-  groups = as.character(meta_data$Grading),
-  #groups = as.character(meta_data$NEC_NET_PCA),
+  groups = as.character(meta_data$NEC_NET_PCA),
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
-#p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p = p + scale_color_manual( values = c("Green","brown","Black","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_PCA) ))
+#p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+#p = p + scale_color_manual( values = c("Green","brown","Black","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
 p
 dev.off()
 
+p + xlim(c(-1.0,2.25)) + ylim(-1.5,1.0)
 # Plot 1
 
 data_t = read.table("~/Deko_Projekt/Results/ROC_curves.tsv",sep ="\t", header = T)
@@ -184,12 +179,19 @@ specificity = round(InformationValue::specificity(actuals = as.double(target_vec
 
 ## Figure 3 Segerstolpe Heatmap
 
-#deconvolution_results = readRDS("~/Deco/Results//TMP.RDS")
+#deconvolution_results = readRDS("~/Deko/Results//TMP.RDS")
 
 cell_m = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv",sep ="\t", header = T, stringsAsFactors = F)
 cell_m = cell_m %>% filter(Dataset %in% "RepSet")
 colnames(cell_m) = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","HISC", "Sample","Dataset","Model","P_value","Grading")
 cell_m$MKI67 = as.double(round(expr_raw["MKI67",cell_m$Sample] / max(expr_raw["MKI67",cell_m$Sample]) * 100,1))
+
+#pancreatic_samples = meta_info[meta_info$Histology == "Pancreatic","Name"]
+#non_pancreatic_samples = meta_info[!(meta_info$Histology == "Pancreatic"),"Name"]
+
+#dim(cell_m)
+#cell_m = cell_m %>% filter(Sample %in% non_pancreatic_samples)
+#dim(cell_m)
 
 cell_m_endo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Baron"))
 colnames(cell_m_endo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
@@ -261,6 +263,9 @@ vis_mat_hisc_g3$Grading = rep("G3",5)
 vis_mat_hisc = rbind(vis_mat_hisc_g1,vis_mat_hisc_g2,vis_mat_hisc_g3)
 colnames(vis_mat_hisc) = c("Celltype","Proportion","Grading")
 
+#vis_mat_endo = vis_mat_endo %>% filter(Grading != "G1")
+#vis_mat_exo = vis_mat_exo %>% filter(Grading != "G1")
+#vis_mat_hisc = vis_mat_hisc %>% filter(Grading != "G1")
 #svg(filename = "~/Deco/Results/Images/Figure_3_Proportion_MKI67_versus_Grading.svg", width = 10, height = 10)
 
 p_endo = ggplot(
@@ -317,7 +322,7 @@ p_hisc = ggplot(
 ) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","black"))+ theme(legend.position="none")  + ylab("") + xlab("")+ theme(legend.position="none",axis.text=element_text(size=12))
 p_hisc = p_hisc + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
-#svg(filename = "~/Deco/Results/Images/Figure_3_Cell_Type_fractions.svg", width = 10, height = 10)
+svg(filename = "~/Deko_Projekt/Results/Images/Figure_3_Cell_Type_fractions.svg", width = 10, height = 10)
 ggarrange(
   p_endo,
   p_exo,
@@ -341,6 +346,18 @@ data_t = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv"
 table(data_t$Dataset) / 3
 vis_mat = data_t
 vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
+
+###
+
+#vis_mat = vis_mat[ vis_mat$model %in% c("Alpha_Beta_Gamma_Delta_Baron") ,]
+#vis_mat = vis_mat[ vis_mat$p_value <= 0.05 ,]
+
+#grading = as.double(str_replace(vis_mat$grading,pattern = "G",""))
+#table(grading)
+
+#  cor.test(vis_mat$alpha, grading)
+
+####
 
 meta_data = meta_info[vis_mat$sample_id,]
 table(meta_data$Histology)
@@ -407,11 +424,11 @@ p = p + ylab(label = "P-value nu-SVR regression models")  + xlab(label = "Gradin
 p = p + geom_errorbar(aes(ymin = p_value,ymax = p_value+SD*.25),  position = "dodge")
 p = p + guides(fill=guide_legend(title="Deconvolution model")) 
 p = p + geom_hline( yintercept = 0.05, color= "red",size=2, linetype = "dashed")
-p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p = p + annotate("text", label = "P-value ≤ 0.05", x = 2, y = 0.045, size = 4, colour = "black") + annotate("text", label = "P-value > 0.05", x = 2, y = 0.055, size = 4, colour = "black")
+p = p + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + annotate("text", label = "P-value ≤ 0.05", x = 2, y = 0.045, size = 6, colour = "black") + annotate("text", label = "P-value > 0.05", x = 2, y = 0.055, size = 6, colour = "black")
 
-#svg(filename = "~/Deco/Results/Images/Figure_2_deconvolution_p_values.svg", width = 10, height = 10)
-p
+#svg(filename = "~/Deko_Projekt/Results/Images/Figure_2_deconvolution_p_values.svg", width = 10, height = 10)
+p 
 dev.off()
 
 # Fig Sup
@@ -776,16 +793,15 @@ dev.off()
 
 #### PCA Ductal Hisc gene signature
 
-expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
-expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.vis.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 meta_data = meta_info[colnames(expr_raw),]
 
 model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.RDS")
-model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe.RDS")
-model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor.RDS")
+#model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe.RDS")
+#model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor.RDS")
 hisc_genes = model[[3]]$hisc
 ductal_genes = model[[3]]$ductal
 
@@ -802,13 +818,13 @@ p_hisc = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 8,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET_PCA),
+  groups = as.character(meta_data$NEC_NET_Color),
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p_hisc = p_hisc + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_PCA) ))
-p_hisc = p_hisc + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p_hisc = p_hisc + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
+p_hisc = p_hisc + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_hisc = p_hisc + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 ### ductal
@@ -820,20 +836,22 @@ pcr = prcomp(t(correlation_matrix))
 
 p_ductal = ggbiplot::ggbiplot(
   pcr,
-  obs.scale =.75,
+  obs.scale =.46,
   var.scale = 2, 
   labels.size = 8,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET_PCA),
+  groups = as.character(meta_data$NEC_NET_Color),
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p_ductal = p_ductal + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_PCA) ))
-p_ductal = p_ductal + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p_ductal = p_ductal + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
+p_ductal = p_ductal + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_ductal = p_ductal + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 ### merge
+
+#svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_NEC_NET_PCA.svg", width = 10, height = 10)
 ggarrange(
   p_ductal,
   p_hisc,
@@ -843,3 +861,4 @@ ggarrange(
   common.legend = TRUE#,
   #legend.grob = get_legend(p_ductal)
 )
+dev.off()

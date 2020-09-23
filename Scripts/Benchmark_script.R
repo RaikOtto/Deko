@@ -4,14 +4,14 @@
 library(devtools)
 load_all("~/artdeco")
 source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
-library(stringr)
+library("stringr")
 library("bseqsc")
 library("MuSiC")
 
 ###
-transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep = "\t",header = T,row.names = 1)
-colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
-transcriptome_data[1:5,1:5]
+#transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Scarpa.S29.tsv",sep = "\t",header = T,row.names = 1)
+#colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
+#transcriptome_data[1:5,1:5]
 
 #models_ductal = list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Hisc_Baron"))
 
@@ -21,11 +21,6 @@ models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 
-#models_ductal = c(
-#    list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
-#    list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
-#    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor"))
-#)
 models_hisc = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron")),
     list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe")),
@@ -37,23 +32,25 @@ transcriptome_files = list.files("~/Deko_Projekt/Data/Bench_data/",full.names = 
 transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
-meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
 algorithm = "bseqsc" # NMF # music # bseqsc
-type = "ductal"
+type = "hisc"
 
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
-i = 19
+transcriptome_files
+i = 10
 fractions <<- matrix( as.character(), ncol = 6)
 
 #for( i in 1:length(transcriptome_files)){
-for( i in 16:18){
+#for( i in 16:18){
 
     dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
@@ -114,4 +111,4 @@ for( i in 16:18){
     
     write.table(res, path_benchmark_files, sep ="\t", quote = F, row.names = F)
     #fractions = rbind(fractions,res)
-}
+#}

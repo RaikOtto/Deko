@@ -77,10 +77,10 @@ run_benchmark = function(
         
         if ( type == "ductal")
             deconvolution_results = deconvolution_results[
-                grep(deconvolution_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal", value = F) ,]
+                grep(deconvolution_results$model, pattern = "Ductal", value = F) ,]
         if ( type == "hisc")
             deconvolution_results = deconvolution_results[
-                grep(deconvolu0.02432365tion_results$model, pattern = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc", value = F) ,]
+                grep(deconvolution_results$model, pattern = "Hisc", value = F) ,]
         
         if (algorithm == "bseqsc")
             deconvolution_results$P_value = as.double(deconvolution_results$P_value)
@@ -107,7 +107,12 @@ run_benchmark = function(
     
     #return(deconvolution_results)
     
-    meta_data = meta_info[ rownames(deconvolution_results),]
+    if (type == "hisc")
+        deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "Hisc", ignore.case = T),]
+    if (type == "ductal")
+        deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "ductal",ignore.case = T),]
+    
+    meta_data = meta_info[ deconvolution_results$Sample,]
 
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
         
@@ -329,12 +334,12 @@ run_benchmark = function(
     
     ### stats
     
-    if ( length(vis_mat$Grading) > 0){ ### case grading available
+    if ( length(vis_mat$grading) > 0){ ### case grading available
         
         off_set = rnorm(nrow(deconvolution_results),mean=0.001,sd=0.001)
         
         # numerical grading
-        grading_numeric = vis_mat$Grading
+        grading_numeric = vis_mat$grading
         grading_numeric = as.integer(str_replace_all(grading_numeric,pattern ="G",""))
         
         # MKI-67 vs. grading numeric
