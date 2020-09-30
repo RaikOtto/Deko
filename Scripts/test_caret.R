@@ -206,12 +206,13 @@ sd(as.double(as.character(unlist(PPV)))[-9])
 
 ### visualization
 
-bench_data = read.table("~/Deko_Projekt/Results/Classification_Performance.tsv",sep="\t",stringsAsFactors = T,header = T)
+bench_data = read.table("~/Deko_Projekt/Results/Classification_Performance.tsv",sep="\t",stringsAsFactors = F,header = T)
 bench_data = bench_data %>% filter(Dataset %in% c("RepSet"))
+bench_data$Model[bench_data$Model == "Expression"] = "Ki-67"
 
 # accuracy
 # remotes::install_github("coolbutuseless/ggpattern")
-library("ggpattern")
+#library("ggpattern")
 
 p_accuracy_plot = ggplot(
     data = bench_data,
@@ -260,6 +261,6 @@ joint_plot = ggpubr::ggarrange(
     #legend.grob = get_legend(p_exo)
 )
 
-svg(filename = "~/Deko_Projekt/Results/Images/Figure_4_G1_vs_G2_vs_G3_Grading_classification.svg", width = 10, height = 10)
+#svg(filename = "~/Deko_Projekt/Results/Images/Figure_4_G1_vs_G2_vs_G3_Grading_classification.svg", width = 10, height = 10)
 joint_plot
 dev.off()
