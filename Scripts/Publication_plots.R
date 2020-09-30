@@ -515,7 +515,7 @@ dev.off()
 
 selector = c("Grading","Dataset","Ductal","Acinar","Delta","Gamma","Beta","Alpha","P_value")
 vis_mat_4 = vis_mat[,selector]
-vis_mat_4$Grading[vis_mat_4$Grading == ""] = "G0"
+vis_mat_4$Grading[vis_mat_4$Grading == ""] = "Unknown"
 melt_mat_4 = reshape2::melt(vis_mat_4)
 colnames(melt_mat_4) = c("Grading","Dataset","Celltype","Value")
 
@@ -546,14 +546,14 @@ celltype_mat = merge_mat %>% group_by(Grading,Dataset,Celltype) %>% dplyr::summa
 
 ##
 
-p_riemer = ggplot(
+p_Riemer = ggplot(
   data = celltype_mat %>% filter(Dataset == "Riemer"),
   aes(
     x = Grading,
     y = Proportion,
     fill = Celltype
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13)) + xlab("Riemer") + ylab("")
 
 p_RepSet = ggplot(
   data = celltype_mat %>% filter(Dataset == "RepSet"),
@@ -562,29 +562,64 @@ p_RepSet = ggplot(
     y = Proportion,
     fill = Celltype
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))+ xlab("RepSet") + ylab("")
 
+sadanandam_mat = data.frame(
+  "Grading" = c(rep("G1",3),rep("G2",3),rep("G3",3)),
+    "Dataset" = rep("Sadanandam",9),
+    "Celltype" = rep(c("Alpha","Ductal","HISC"),3),
+    "Proportion" = c(1.7,0.4,.1,1.9,1.0,.5,2.3,2.1,1.3)
+)
 p_Sadanandam = ggplot(
-  data = celltype_mat %>% filter(Dataset == "Sadanandam"),
+  data = sadanandam_mat,
   aes(
     x = Grading,
     y = Proportion,
     fill = Celltype
   )
-) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13)) + xlab("Sadanandam") + ylab("")
 
-#svg("~/Deco/Results/Images/Figure_2a.svg")
+p_Missiaglia = ggplot(
+  data = celltype_mat %>% filter(Dataset == "Missiaglia"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13)) + xlab("Missiaglia") + ylab("")
+
+p_Califano = ggplot(
+  data = celltype_mat %>% filter(Dataset == "Califano"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13)) + xlab("Califano") + ylab("")
+
+p_Scarpa = ggplot(
+  data = celltype_mat %>% filter(Dataset == "Scarpa"),
+  aes(
+    x = Grading,
+    y = Proportion,
+    fill = Celltype
+  )
+) + geom_bar(stat="identity", position=position_dodge(), color = "black") + scale_fill_manual(values = c("blue", "brown","black"))+ theme(legend.position="none") + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))+ xlab("Scarpa") + ylab("")
+
+#svg("~/Deko_Projekt/Results/Images/SM_Figure_2_Celltypes_per_grading.svg", width = 10, height = 10)
 ggarrange(
-  p_endo,
-  p_exo,
-  p_hisc,
-  labels = c("", "", ""),
+  p_Sadanandam,
+  p_Riemer,
+  p_Scarpa,
+  p_Missiaglia,
+  p_Califano,
+  p_RepSet,
+  #labels = c("", "", ""),
   ncol = 3,
-  nrow = 1,
+  nrow = 2,
   common.legend = FALSE,
-  legend.grob = get_legend(p_exo)
+  legend.grob = get_legend(p_Riemer)
 )
-
 dev.off()
 
 ###
