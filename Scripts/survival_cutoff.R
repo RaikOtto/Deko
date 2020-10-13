@@ -262,6 +262,7 @@ if( type == "ductal"){
 }
 
 ratio_m = data.frame(
+    "alpha" = as.double(deconvolution_results[,"alpha"]),
     "ductal" = as.double(deconvolution_results[,"ductal"]),
     "hisc" = as.double(deconvolution_results[,"hisc"]),
     "grading" = deconvolution_results$Grading,
@@ -271,26 +272,29 @@ ratio_m = data.frame(
 ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
 
 #selector_var = "ductal"
+#selector_var = "grading"
+#selector_var = "alpha"
 
 agg=aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
 thresh_low = (agg[1,2] + agg[2,2]) / 2
 thresh_mid = (agg[2,2] + agg[3,2]) / 2
 
 value = ratio_m[,selector_var]
+thresh_mean = mean(value)
 classification = rep("high",length(value))
 classification[value <= thresh_mid] = "mid"
 classification[value <= thresh_low] = "low"
 classification = factor(classification, levels = c("low","mid","high"))
 ratio_m[,selector_var] = classification
 
-#selector_var = "grading"
+#ratio_m[,selector_var][ratio_m[,selector_var] %in% c("G1","G2")] = "G1_G2"
 
 fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
 surv_p_value = survminer::surv_pvalue(fit, data = ratio_m)$pval
 surv_p_value
 
 #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
-#pdf("~/Downloads/grading_rep_set_survival.pdf",onefile = FALSE)#,width="1024px",height="768px")
+#pdf("~/Downloads/Survival_grading_two_arms.pdf",onefile = FALSE)#,width="1024px",height="768px")
     print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
 #dev.off()
 
