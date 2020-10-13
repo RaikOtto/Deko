@@ -1,6 +1,6 @@
 algorithm = "bseqsc" # NMF # music # bseqsc
 type = "hisc"
-i =16
+i = 4
 
 ### benchmark runs
 # missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
@@ -269,20 +269,28 @@ ratio_m = data.frame(
     "Zensur" = vis_mat$Zensur
 )
 ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
+
+#selector_var = "ductal"
+
 agg=aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
+thresh_low = (agg[1,2] + agg[2,2]) / 2
+thresh_mid = (agg[2,2] + agg[3,2]) / 2
 
 value = ratio_m[,selector_var]
-#threshold = (agg$x[2] + agg$x[3]) / 2
-threshold = agg$x[3]
-value[value <= threshold] = "low"
-value[value != "low"] = "high"
-ratio_m[,selector_var] = value
+classification = rep("high",length(value))
+classification[value <= thresh_mid] = "mid"
+classification[value <= thresh_low] = "low"
+classification = factor(classification, levels = c("low","mid","high"))
+ratio_m[,selector_var] = classification
+
+#selector_var = "grading"
 
 fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
 surv_p_value = survminer::surv_pvalue(fit, data = ratio_m)$pval
 surv_p_value
 
 #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
+#pdf("~/Downloads/grading_rep_set_survival.pdf",onefile = FALSE)#,width="1024px",height="768px")
     print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
 #dev.off()
 
