@@ -1,9 +1,11 @@
 algorithm = "bseqsc" # NMF # music # bseqsc
 type = "hisc"
-i = 4
+selector_var ="ductal"
+#i = 4
 
 ### benchmark runs
 # missing_samples = c("105103","130002","PNET08","130003","145702","1344","127403","PNET55")
+if (F){
 
 library(devtools)
 load_all("~/artdeco")
@@ -12,16 +14,7 @@ library(stringr)
 library("bseqsc")
 library("MuSiC")
 
-###
-transcriptome_data = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep = "\t",header = T,row.names = 1)
-colnames(transcriptome_data) = str_replace(colnames(transcriptome_data) , pattern ="^X","")
-transcriptome_data[1:5,1:5]
-
-#deconvolution_results = artdeco::Deconvolve_transcriptome(
-#    transcriptome_data,
-#    models = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),
-#    deconvolution_algorithm = "bseqsc"
-#)
+}
 
 models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
@@ -44,11 +37,6 @@ rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
-
-high_threshold = 66
-low_threshold = 33
-confidence_threshold = 1.1
-
 fractions <<- matrix( as.character(), ncol = 6)
 
 dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
@@ -89,11 +77,6 @@ path_benchmark_files_dec_res = paste0(
 
 transcriptome_file = transcriptome_files[i]
 visualization_file = visualization_files[i]
-
-print(i)
-print(dataset_query)
-print(dataset_training)
-
 algorithm = str_to_lower(algorithm)
 transcriptome_data = read.table(transcriptome_file, sep ="\t",header = T, row.names = 1, stringsAsFactors = F)
 colnames(transcriptome_data) = str_replace_all(colnames(transcriptome_data),pattern="^X","")
@@ -139,8 +122,8 @@ model_path = str_replace_all(model_path, pattern = "/\\.","/")
 
 ###
 if (
-    file.exists(str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS")))
-{
+    file.exists(str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS"))
+){
     #benchmark_results_t = read.table(path_benchmark_files,sep="\t",stringsAsFactors = F,header = T)
     deconvolution_results = readRDS(
         str_replace(path_benchmark_files_dec_res, pattern = ".dec_res.tsv",".dec_res.RDS"))
@@ -217,24 +200,10 @@ deconvolution_results$Subtype = ""
 vis_mat = create_visualization_matrix(
     visualization_data = visualization_data,
     deconvolution_results = deconvolution_results,
-    confidence_threshold = confidence_threshold,
-    high_threshold = high_threshold,
-    low_threshold = low_threshold
+    confidence_threshold = 0.05,
+    high_threshold = 66,
+    low_threshold = 33
 )
-
-### results parsing
-
-graphics_path_heatmap = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
-graphics_path_heatmap = paste(graphics_path_heatmap,"Heatmap", sep ="/")
-if (! dir.exists(graphics_path_heatmap))
-    dir.create(graphics_path_heatmap)
-graphics_path_heatmap = paste(graphics_path_heatmap,name_datatype, sep ="/")
-if (! dir.exists(graphics_path_heatmap))
-    dir.create(graphics_path_heatmap)
-graphics_path_heatmap = paste(graphics_path_heatmap,name_query_data, sep ="/")
-if (! dir.exists(graphics_path_heatmap))
-    dir.create(graphics_path_heatmap)
-graphics_path_heatmap = paste(graphics_path_heatmap,paste0(name_training_data,".pdf"),sep = "/")
 
 ### survival curve
 
@@ -244,58 +213,52 @@ vis_mat$OS_Tissue[is.na(vis_mat$OS_Tissue)] = 1
 vis_mat$Grading = meta_data$Grading
 vis_mat$Zensur = meta_data$Zensur
 
-graphics_path_survival = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
-graphics_path_survival = paste(graphics_path_survival,"Survival", sep ="/")
-if (! dir.exists(graphics_path_survival))
-    dir.create(graphics_path_survival)
-graphics_path_survival = paste(graphics_path_survival,name_datatype, sep ="/")
-if (! dir.exists(graphics_path_survival))
-    dir.create(graphics_path_survival)
-graphics_path_survival = paste(graphics_path_survival,name_query_data, sep ="/")
-if (! dir.exists(graphics_path_survival))
-    dir.create(graphics_path_survival)
-
-if( type == "ductal"){
-    selector_var = "ductal"
-} else {
-    selector_var ="hisc"
-}
-
 ratio_m = data.frame(
     "alpha" = as.double(deconvolution_results[,"alpha"]),
     "ductal" = as.double(deconvolution_results[,"ductal"]),
-    "hisc" = as.double(deconvolution_results[,"hisc"]),
+    #"hisc" = as.double(deconvolution_results[,"hisc"]),
     "grading" = deconvolution_results$Grading,
     "OS_Tissue" = vis_mat$OS_Tissue,
-    "Zensur" = vis_mat$Zensur
+    "Zensur" = vis_mat$Zensur,
+    "MKi67"  =deconvolution_results[,"MKI67"]
 )
+if ("hisc" %in% colnames(deconvolution_results))
+    ratio_m$hisc = as.double(deconvolution_results[,"hisc"])
+
 ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
 
 #selector_var = "ductal"
-#selector_var = "grading"
+#selector_var = "MKi67"
 #selector_var = "alpha"
+#selector_var = "grading"
+#ratio_m$grading[ratio_m$grading %in% c("G1","G2")] = "G1_G2"
 
-agg=aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
+agg = aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
 thresh_low = (agg[1,2] + agg[2,2]) / 2
-thresh_mid = (agg[2,2] + agg[3,2]) / 2
+thresh_mid = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
+#thresh_mean = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
 
 value = ratio_m[,selector_var]
-thresh_mean = mean(value)
+#thresh_mean = mean(value)
 classification = rep("high",length(value))
+#classification[value <= thresh_mean] = "low_mid"
 classification[value <= thresh_mid] = "mid"
 classification[value <= thresh_low] = "low"
 classification = factor(classification, levels = c("low","mid","high"))
 ratio_m[,selector_var] = classification
 
-#ratio_m[,selector_var][ratio_m[,selector_var] %in% c("G1","G2")] = "G1_G2"
-
 fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
 surv_p_value = survminer::surv_pvalue(fit, data = ratio_m)$pval
+
+print(i)
+print(dataset_query)
+print(dataset_training)
+selector_var
+
 surv_p_value
 
 #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
-#pdf("~/Downloads/Survival_grading_two_arms.pdf",onefile = FALSE)#,width="1024px",height="768px")
-    print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = T, pval = T, censor.size = 10))
+#svg(filename = "~/Deko_Projekt/Results/Images/Figure_5_survival_grading_three.svg", width = 10, height = 10)
+#svg(filename = "~/Deko_Projekt/Results/Images/Figure_5_survival_ductal_three.svg", width = 10, height = 10)
+    #print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = F, pval = T, censor.size = 10))
 #dev.off()
-
-#plot(ratio)
