@@ -113,6 +113,7 @@ run_benchmark = function(
         deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "ductal",ignore.case = T),]
     
     meta_data = meta_info[ deconvolution_results$Sample,]
+    rownames(deconvolution_results) = deconvolution_results$Sample
 
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
         
