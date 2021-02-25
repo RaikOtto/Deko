@@ -107,13 +107,14 @@ run_benchmark = function(
     
     #return(deconvolution_results)
     
-    if (type == "hisc")
-        deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "Hisc", ignore.case = T),]
-    if (type == "ductal")
-        deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "ductal",ignore.case = T),]
+    #if (type == "hisc")
+    #    deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "Hisc", ignore.case = T),]
+    #if (type == "ductal")
+    #    deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "ductal",ignore.case = T),]
     
-    meta_data = meta_info[ deconvolution_results$Sample,]
-    rownames(deconvolution_results) = deconvolution_results$Sample
+    meta_data = meta_info[ rownames(deconvolution_results),]
+    #meta_data = meta_info[ deconvolution_results$Sample,]
+    #rownames(deconvolution_results) = deconvolution_results$Sample
 
     if (sum( meta_data[rownames(deconvolution_results),"Grading"] != "") > 0){
         
@@ -183,7 +184,8 @@ run_benchmark = function(
         if (! dir.exists(graphics_path_survival))
             dir.create(graphics_path_survival)
         
-        if ( "hisc" %in% colnames(deconvolution_results)){
+        #if ( "hisc" %in% colnames(deconvolution_results)){
+        if ( sum( deconvolution_results$hisc ) > 0 ){
             
             hisc = deconvolution_results$hisc
             agg = aggregate(deconvolution_results$hisc, FUN = mean, by = list(meta_info[rownames(deconvolution_results),"Grading"]))
@@ -215,7 +217,7 @@ run_benchmark = function(
         agg = aggregate(ductal_values, FUN = mean, by = list(meta_info[rownames(deconvolution_results),"Grading"]))
         
         ductal = rep("high",length(ductal_values))
-        #ductal[ductal <= mean( ductal )]   = "low"
+        #ductal[ductal_values <= mean( ductal_values )]   = "low"
         #ductal[ductal <= median( ductal )]   = "low"
         ductal[ductal_values <= tail( agg$x, 1 )]   = "low"
         #ductal[ductal <= ( ( tail( agg$x, 1 ) + tail( agg$x, 2 )[1] ) / 2 ) ]    = "low"

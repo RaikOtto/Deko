@@ -236,15 +236,15 @@ ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
 agg = aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
 thresh_low = (agg[1,2] + agg[2,2]) / 2
 thresh_mid = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
-#thresh_mean = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
+thresh_mean = agg$x[1]
 
 value = ratio_m[,selector_var]
 #thresh_mean = mean(value)
 classification = rep("high",length(value))
-#classification[value <= thresh_mean] = "low_mid"
-classification[value <= thresh_mid] = "mid"
-classification[value <= thresh_low] = "low"
-classification = factor(classification, levels = c("low","mid","high"))
+classification[value <= thresh_mean] = "low_mid"
+#classification[value <= thresh_mid] = "mid"
+#classification[value <= thresh_low] = "low"
+#classification = factor(classification, levels = c("low","mid","high"))
 ratio_m[,selector_var] = classification
 
 fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Zensur ) ~ ratio_m[,selector_var], data = ratio_m)
@@ -260,5 +260,5 @@ surv_p_value
 #pdf(graphics_path_survival_hisc,onefile = FALSE)#,width="1024px",height="768px")
 #svg(filename = "~/Deko_Projekt/Results/Images/Figure_5_survival_grading_three.svg", width = 10, height = 10)
 #svg(filename = "~/Deko_Projekt/Results/Images/Figure_5_survival_ductal_three.svg", width = 10, height = 10)
-    #print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = F, pval = T, censor.size = 10))
+    print(survminer::ggsurvplot(fit, data = ratio_m, risk.table = F, pval = T, censor.size = 10))
 #dev.off()

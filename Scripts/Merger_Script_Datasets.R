@@ -1,16 +1,17 @@
 library("stringr")
 
 #t1 = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.tsv"
-t1_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Groetzinger_Scarpa_57.primary_only.tsv"
-t2_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73338/GSE73338.tsv"
+t1_path = "~/MAPTor_NET/BAMs/Kallisto_three_groups/TPMs.Non_Norm.kallisto.Groetzinger.tsv"
+t2_path = "~/MAPTor_NET/BAMs/Kallisto_three_groups/TPMs.Non_Norm.kallisto.Scarpa.tsv"
 #t3_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE98894/GSE98894.primary.pancreas.tsv"
 #t4_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
 t1 = read.table(t1_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
 colnames(t1) = str_replace_all(colnames(t1),pattern = "^X", "")
+dim(t1)
 t2 = read.table(t2_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
 colnames(t2) = str_replace_all(colnames(t2),pattern = "^X", "")
-rownames(t2)
+dim(t2)
 #t3 = read.table(t3_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
 #colnames(t3) = str_replace_all(colnames(t3),pattern = "^X", "")
 #t4 = read.table(t4_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
@@ -18,7 +19,7 @@ rownames(t2)
 
 # variance selection
 
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 
 ### integrate

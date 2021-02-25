@@ -31,7 +31,7 @@ models_hisc = c(
 nr_models = length(models_ductal)
 
 transcriptome_files = list.files("~/Deko_Projekt/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
-transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,4))
+transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
 #meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
@@ -41,14 +41,15 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
-algorithm = "SCDC" # NMF # music # bseqsc
+algorithm = "bseqsc" # NMF # music # bseqsc # SCDC
 type = "ductal"
+#type = "HISC"
 
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
 transcriptome_files
-i = 5
+i = 4
 fractions <<- matrix( as.character(), ncol = 6)
 
 #for( i in 1:length(transcriptome_files)){
@@ -63,7 +64,7 @@ fractions <<- matrix( as.character(), ncol = 6)
         models = models_hisc#[[1]]
     }
     
-    models = models[(i-1) %% 4]
+    models = models[ (i - 1) %% 3 + 1]
     dataset_training = as.character(unlist(models))[2]
     
     path_benchmark_files = paste0(

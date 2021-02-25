@@ -17,7 +17,6 @@ rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Grötzinger.Immu.S55.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Riemer_Scarpa_69_samples_Deseq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 meta_data = meta_info[colnames(expr_raw),]
@@ -26,8 +25,8 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
-for(i in 33:62){
-#i = 13
+#for(i in 33:62){
+i = 13
 genes_of_interest_hgnc_t[i,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 #sad_genes = genes_of_interest_hgnc_t[i,1]
@@ -62,13 +61,13 @@ colnames(vis_mat) = c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","H
 vis_mat$Histology[vis_mat$Histology == "Gastric_not_specified"] = "Gastric"
 
 #svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_Correlation_Heatmap_RepSet.svg", width = 10, height = 10)
-file_stem = "~/Downloads/"
-filename = paste0(c(file_stem,genes_of_interest_hgnc_t[i,1],".pdf"),collapse="")
-pdf(filename)
+#file_stem = "~/Downloads/"
+#filename = paste0(c(file_stem,genes_of_interest_hgnc_t[i,1],".pdf"),collapse="")
+#pdf(filename)
 p=pheatmap::pheatmap(
   correlation_matrix,
-  #annotation_col = vis_mat[,c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","Histology","Grading","NEC_NET","Study")],
-  annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
+  annotation_col = vis_mat[,c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","Histology","Grading","NEC_NET","Study")],
+  #annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   show_colnames = T,
@@ -79,9 +78,9 @@ p=pheatmap::pheatmap(
   clustering_method = "ward.D"
 )
 print(p)
-dev.off()
+#dev.off()
 #genes_of_interest_hgnc_t[i,1]
-}
+#}
 
 
 #svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_3_PCA_RepSet.svg", width = 10, height = 10)
@@ -104,13 +103,14 @@ p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" 
 p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
 p
-dev.off()
+#dev.off()
 
 #p + xlim(c(-1.0,2.25)) + ylim(-1.5,1.0)
 
 ### prediction NEC NET
-
-mki_67 = deconvolution_results[rownames(meta_data),"MKI67"]
+deconvolution_results = readRDS("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.RDS")
+rownames(deconvolution_results) = deconvolution_results$name
+mki_67 = expr_raw["MKI67",rownames(deconvolution_results)]
 ductal = deconvolution_results[rownames(meta_data),"ductal"]
 hisc = deconvolution_results[rownames(meta_data),"hisc"]
 nec_net = meta_data$NEC_NET
@@ -344,16 +344,16 @@ melt_mat_hisc_agg = aggregate(melt_mat_hisc$P_value, by = list(melt_mat_hisc$Gra
 
 melt_mat_crine = rbind(
   melt_mat_endocrine_agg,
-  melt_mat_exocrine_agg#,
-  #melt_mat_hisc_agg
+  melt_mat_exocrine_agg,
+  melt_mat_hisc_agg
 )
 colnames(melt_mat_crine) = c( 'Grading','P_value' )
 
 sd_endocrine = aggregate( melt_mat_endocrine$P_value, by = list(melt_mat_endocrine$Grading), FUN = sd)
 sd_exocrine = aggregate( melt_mat_exocrine$P_value, by = list(melt_mat_exocrine$Grading), FUN = sd)
-#sd_hisc = aggregate( melt_mat_hisc$P_value, by = list(melt_mat_hisc$Grading), FUN = sd)
+sd_hisc = aggregate( melt_mat_hisc$P_value, by = list(melt_mat_hisc$Grading), FUN = sd)
 
-melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x)#,sd_hisc$x)
+melt_mat_crine$SD = c(sd_endocrine$x,sd_exocrine$x,sd_hisc$x)
 
 samples = as.character(vis_mat[
   (vis_mat$Dataset == "RepSet") &
@@ -366,10 +366,10 @@ samples = as.character(vis_mat[
 
 melt_mat_crine$SD = melt_mat_crine$SD
 #melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")
-melt_mat_crine$Model = c(rep("Endocrine-only",5),rep("Endocrine & Exocrine",5))#,rep("Endocrine & HISC",5))
-melt_mat_crine$Model = factor(melt_mat_crine$Model,  levels =  c("Endocrine-only","Endocrine & Exocrine"))#,"Endocrine & HISC"))
+melt_mat_crine$Model = c(rep("Endocrine-only",5),rep("Endocrine & Exocrine",5),rep("Endocrine & HISC",5))
+melt_mat_crine$Model = factor(melt_mat_crine$Model,  levels =  c("Endocrine-only","Endocrine & Exocrine","Endocrine & HISC"))
 melt_mat_crine = melt_mat_crine[,]
-melt_mat_crine = melt_mat_crine %>% filter(Grading != "G3_other")
+#melt_mat_crine = melt_mat_crine %>% filter(Grading != "G3_other")
 p = ggplot(
   data = melt_mat_crine,
   aes(
@@ -895,7 +895,7 @@ dev.off()
 
 ###
 
-expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.81_Samples_13_11_2017.Groetzinger_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.81_Samples_13_11_2017.Groetzinger_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 dim(expr_raw)
 cands = c("425","427","428","431","432","433","434","435","436","437","438","440","441","443","453","455","456","457","459","489","491","492","497","498","501","1444","PNET06","PNET37","1286","135602","PNET17","PNET22","1401","1418","PNET04","PNET21","PNET41","135604","139101","PNET05","PNET26","128802","140302","124101","124702","132502","112203","125701","131402","PC7A12","PC16","PC09","PC14","PC21","PC22")
