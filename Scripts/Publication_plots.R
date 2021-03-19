@@ -13,12 +13,15 @@ draw_colnames_45 <- function (coln, gaps, ...) {
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_info$NEC_NET = meta_info$NEC_NET_PCA
+#meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Riemer_Scarpa_69_samples_Deseq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Riemer_Scarpa_69_samples_Deseq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/GSE142720_rma_norm_log2_matrix.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+expr_raw[1:5,1:5]
 meta_data = meta_info[colnames(expr_raw),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")

@@ -9,8 +9,6 @@
 library(SCDC)
 metadata <- read.table(file = "~/Praktikum/Data/Clinial_data_Meta_information.tsv", sep = "\t", header = T)
 
-
-
 #### load Benchmark data sets ####
 # Califano
 alvarez <- read.table(file = "~/Praktikum/Data/Alverez.S105.tsv", sep = '\t', header = TRUE) 

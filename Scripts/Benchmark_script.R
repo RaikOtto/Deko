@@ -30,7 +30,7 @@ models_hisc = c(
 )
 nr_models = length(models_ductal)
 
-transcriptome_files = list.files("~/Deko_Projekt/Data/Bench_data/",full.names = T,pattern = "[0-9].tsv")
+transcriptome_files = list.files("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/",full.names = T,pattern = ".tsv")
 transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
 visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
@@ -59,7 +59,7 @@ fractions <<- matrix( as.character(), ncol = 6)
     dataset_query = str_replace_all(dataset_query,".tsv","")
 
     if (type == "ductal") {
-        models = models_ductal#[[1]]
+        models = models_ductal[[1]]
     } else if  (type == "hisc") {
         models = models_hisc#[[1]]
     }

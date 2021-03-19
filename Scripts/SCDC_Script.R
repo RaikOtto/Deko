@@ -10,7 +10,6 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$NEC_NET_PCA
 res_scdc = as.data.frame(meta_info)
 
-table(meta_info$Patient)
 #meta_info$Patient = rep("",nrow(meta_info))
 #h1_detect = str_detect(meta_info$Name,pattern ="human1")
 #h2_detect = str_detect(meta_info$Name,pattern ="human2")
@@ -25,7 +24,7 @@ table(meta_info$Patient)
 
 #expr_raw = read.table("~/MAPTor_NET/BAMs/Final_plot.TPMs.57.Wiedenmann_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T)
 
-expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/GSE142720_rma_norm_log2_matrix.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 fdata = rownames(expr_raw)
 pdata = cbind(bulk_sample = colnames(expr_raw))
@@ -45,29 +44,34 @@ dim(expr)
 # ScRNA EXO 
 
 #expr_scrna =  read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T)
-expr_scrna =  as.data.frame(read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_Segerstolpe.tsv", sep ="\t", header = T))
+expr_scrna =  as.data.frame(read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T))
 
-patient_vec = meta_info[colnames(expr_scrna),"Patient"]
-table(patient_vec)
+cell_type_vec = meta_info[colnames(expr_scrna),"Subtype"]
+#expr_scrna = expr_scrna[,!(cell_type_vec %in% c("Ductal","Acinar"))]
+table(cell_type_vec)
 
 fdata = rownames(expr_scrna)
-pdata = cbind(cellname = colnames(expr_scrna), subjects = patient_vec)
+pdata = cbind(cellname = colnames(expr_scrna), subjects = cell_type_vec)
 eset_scrna = getESET(expr_scrna, fdata = fdata, pdata = pdata)
 eset_scrna$Subtype = meta_info[eset_scrna$cellname,"Subtype"]
 
-#ct1 <- c("mediumorchid1","mediumpurple1","lightskyblue","seagreen1","yellow","tan1","azure3")
-#seger <- readRDS("~/Downloads/segerstolpe.rds")
-#DemoPlot(eset_scrna, cluster = "cluster", sample = "sample", select.ct = c("alpha","beta","delta","gamma","ductal","acinar"), Palette = ct1)
+sample_id = rep("",length(eset_scrna$Subtype))
+sample_id[grep(colnames(expr_scrna),pattern = "human1",value = F)] = "human1"
+sample_id[grep(colnames(expr_scrna),pattern = "human2",value = F)] = "human2"
+sample_id[grep(colnames(expr_scrna),pattern = "human3",value = F)] = "human3"
+sample_id[grep(colnames(expr_scrna),pattern = "human4",value = F)] = "human4"
+table(sample_id)
+eset_scrna$Sample = sample_id
 
 scrna.qc = SCDC_qc(
     eset_scrna,
     ct.varname = "Subtype",
-    sample = "subjects",
+    sample = "Sample",
     scsetname = "scRNA",
     ct.sub = unique(eset_scrna$Subtype),
     qcthreshold = 0.7
 )
-DemoPlot(eset_scrna, cluster = "Subtype", sample = "subjects", select.ct = unique(eset_scrna$Subtype))
+DemoPlot(eset_scrna, cluster = "Subtype", sample = "Sample", select.ct = unique(eset_scrna$Subtype))
 scrna.qc$heatfig
 
 
@@ -77,7 +81,7 @@ scdc_props = SCDC_prop(
     bulk.eset = eset_expr_raw,
     sc.eset = eset_scrna,
     ct.varname = "Subtype",
-    sample = "subjects",
+    sample = "Sample",
     ct.sub = unique(eset_scrna$Subtype),
     iter.max = 1000,
     nu = 1e-04,
@@ -93,7 +97,7 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 #colnames(props) = paste("SCDC",colnames(scdc_props$prop.est.mvw),sep = "_")
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_Segerstolpe.SCDC..dec_res.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/GSE142720_rma_norm_log2_matrix.HGNC.exocrine.tsv",sep = "\t")
 meta_info_maptor = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info_maptor) = meta_info_maptor$Name
 colnames(meta_info_maptor) = str_replace(colnames(meta_info_maptor),pattern = "\\.","_")
