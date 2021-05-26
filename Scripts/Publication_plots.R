@@ -14,14 +14,18 @@ assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("ph
 
 meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 #meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-#meta_info$NEC_NET = meta_info$NEC_NET_PCA
+meta_info$NEC_NET = meta_info$NEC_NET_Color
 
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Riemer_Scarpa_69_samples_Deseq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/GSE142720_rma_norm_log2_matrix.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Alvarez.S104.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+no_match
 meta_data = meta_info[colnames(expr_raw),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
@@ -57,34 +61,25 @@ dim(expr)
 correlation_matrix = cor(expr)
 pcr = prcomp(t(correlation_matrix))
 
-meta_data$Grading[meta_data$Grading == ""] = "G0"
-meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Healthy"
-vis_mat = meta_data[,c("Alpha_mixed","Beta_mixed","Gamma_mixed","Delta_mixed","HISC","Acinar","Ductal","Histology","Grading", "NEC_NET_Color","Study")]
-colnames(vis_mat) = c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","Histology","Grading","NEC_NET","Study")
-vis_mat$Histology[vis_mat$Histology == "Gastric_not_specified"] = "Gastric"
+meta_data$MKI67 = rep(0,nrow(meta_data))
+meta_data$MKI67 = as.double(expr_raw["MKI67",rownames(meta_data)])
+meta_data$Albumin = rep(0,nrow(meta_data))
+meta_data$Albumin = as.double(expr_raw["ALB",rownames(meta_data)])
+#meta_data$StromalScore = log(meta_data$StromalScore+1)
 
-#svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_Correlation_Heatmap_RepSet.svg", width = 10, height = 10)
-#file_stem = "~/Downloads/"
-#filename = paste0(c(file_stem,genes_of_interest_hgnc_t[i,1],".pdf"),collapse="")
-#pdf(filename)
 p=pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = vis_mat[,c("Alpha","Beta","Gamma","Delta","HISC","Acinar","Ductal","Histology","Grading","NEC_NET","Study")],
-  #annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
+  annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading","Study")],
+  #annotation_col = meta_data[,c("TumorPurity","Albumin","Ratio")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D"
+  clustering_method = "ward.D2"
 )
-print(p)
-#dev.off()
-#genes_of_interest_hgnc_t[i,1]
-#}
-
 
 #svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_3_PCA_RepSet.svg", width = 10, height = 10)
 p = ggbiplot::ggbiplot(
@@ -93,16 +88,17 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
+  groups = as.character(meta_data$NEC_NET_Color),
   #label = meta_data$Name,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
 p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
-p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+#p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-#p = p + scale_color_manual( values = c("Green","brown","Black","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + scale_color_manual( values = c("Purple","Red","Blue") ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+
 p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
 p
@@ -907,4 +903,4 @@ exp_set[1:5,1:5]
 dim(exp_set)
 exp_set = expr_raw
 
-#write.table(exp_set,"~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Grötzinger.Immu.S55.tsv",sep="\t",quote =F)
+#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep="\t",quote =F,row.names = F)
