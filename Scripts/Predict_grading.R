@@ -5,109 +5,96 @@ library("stringr")
 library("e1071")
 set.seed(1)
 
+# scRNA section
+
+path_transcriptome_file = "~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv"
+
+cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = T, row.names = 1)
+cell_type_predictions[1:5,1:5]
+
+###
+
 fitControl <- trainControl(
-    method = "cv",
-    number = 5,
+    method = "repeatedcv",
+    number = 10,
     sampling = "down",
     savePred=T
 )
 
-pred_data = function(
+pred_grading = function(
     train_mat,
     truth_vec,
     model = ""
 ){
     if ( model == ""){
-        model = caret::train(
+        grading_model = caret::train(
             x = train_mat,
             y = truth_vec,
             method = "rf",
             norm.votes=T,
             #predict.all=FALSE,
+            #preProcess = c("scale","center"),
             type = "Classification",
             metric= "Accuracy",
             ntree = 500,
             trControl = fitControl)
     }
-
-    truth_vec = factor(truth_vec, levels = c("G1","G2","G3"))
-    prediction_ml = predict(model, train_mat)
-    con_mat = confusionMatrix(
-        prediction_ml,
-        truth_vec,
-        positive = "G3"
-    )
-
-    return(con_mat)
+    return(grading_model)
 }
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+rownames(meta_info) = meta_info$Sample
 
-# scRNA section
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+#expr_raw[1:5,1:5]
 
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer.S40.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Scarpa.S29.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Sadanandam.S29.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/Missaglia.S75.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv"
+matcher = match(rownames(cell_type_predictions),meta_info$Sample,nomatch = 0)
+rownames(cell_type_predictions)[matcher == 0]
+rownames(cell_type_predictions)[matcher == 0] = paste("X",rownames(cell_type_predictions)[matcher == 0],sep ="")
+matcher = match(rownames(cell_type_predictions),meta_info$Sample,nomatch = 0)
+matcher == 0
+meta_data = meta_info[rownames(cell_type_predictions),]
+#
 
-cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = T)
+selector = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","RMSE","Correlation","P_value")
+train_mat = cell_type_predictions[,selector]
 
-colnames(cell_type_predictions) = str_replace(colnames(cell_type_predictions), pattern = "^X", "")
-colnames(cell_type_predictions) = str_replace_all(colnames(cell_type_predictions), pattern = "\\.", "_")
-colnames(cell_type_predictions) = str_replace_all(colnames(cell_type_predictions), pattern = "-", "_")
-colnames(cell_type_predictions) = str_to_lower(colnames(cell_type_predictions))
-rownames(cell_type_predictions) = 1:nrow(cell_type_predictions)
-cell_type_predictions = cell_type_predictions %>% filter(model %in% "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")
-rownames(cell_type_predictions) = str_replace(cell_type_predictions$sample, pattern = "^X", "")
+randomizer_test = sample(1:nrow(train_mat),size = nrow(train_mat)*.80)
+randomizer_hold_out = 1:200
+randomizer_hold_out = randomizer_hold_out[-randomizer_test]
 
-remove(train_mat)
-train_mat = cell_type_predictions[,
-   match(c("alpha","beta","gamma","delta","acinar","ductal","p_value","correlation","rmse"), colnames(cell_type_predictions), nomatch = 0)
-]
+train_mat_test = train_mat[randomizer_test,]
+train_mat_hold_out = train_mat[randomizer_hold_out,]
+
 truth_vec = meta_info[rownames(train_mat),"Grading"]
+truth_vec_test = meta_info[rownames(train_mat[randomizer_test,]),"Grading"]
+truth_vec_hold_out = meta_info[rownames(train_mat[randomizer_hold_out,]),"Grading"]
 
-res = pred_data(
+grading_model = pred_grading(
     train_mat = train_mat,
     truth_vec = truth_vec
 )
-d = res$byClass
 
-gbmImp <- varImp(model_deco, scale = FALSE)
-plot(varImp(model_deco), top = 20)
+predictions = predict(grading_model, train_mat)
+predictions_hold_out = predict(grading_model, train_mat_hold_out)
+truth_hold_out = factor(truth_vec_hold_out, levels = c("G1","G2","G3"))
+
+con_mat = confusionMatrix(
+    predictions_hold_out,
+    truth_hold_out,
+    #factor(truth_vec,levels = c("G1","G2","G3")),
+    positive = "G3"
+)
+
+con_mat$byClass
+
+gbmImp <- varImp(grading_model, scale = FALSE)
+plot(varImp(grading_model), top = 8)
+
+#meta_info[rownames(train_mat),"Predicted_Grading"] = as.character(prediction_ml)
 
 # discern NECs from NETs
-
-meta_data = meta_info[rownames(train_mat),]
-train_mat = t(train_mat)
-truth_vec = as.character(meta_data$NEC_NET)
-train_mat[1:5,1:5]
-
-model = caret::train(
-    x = train_mat,
-    y = truth_vec,
-    method = "multinom",
-    metric = "Accuracy",
-    trControl = bootControl,
-    scaled = FALSE,
-    tuneLength = 5,# model$finalModel$decay 0.0005623413
-    preProcess = c("center", "scale")
-)
-
-prediction_ml = model$pred$pred
-observations_ml = model$pred$obs
-predictions = data.frame(
-    "predictions" = prediction_ml,
-    "observations" = observations_ml
-)
-m = confusionMatrix(
-    as.factor(predictions$predictions),
-    as.factor(predictions$observations),
-    positive = "NEC"
-)
 
 # supervised RNA-seq section
 

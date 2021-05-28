@@ -1,8 +1,12 @@
 library("stringr")
 
-t1_path = "~/MAPTor_NET/BAMs_new/Groetzinger.New.HGNC.S51.tsv"
-t2_path = "~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.tsv"
-t3_path = "~/MAPTor_NET/BAMs_new/Master.pre.S39.HGNC.tsv"
+# Sadanandam, Missiaglia
+# Califano
+
+t1_path = "~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.tsv"  # Groetzinger, Scarpa, Master
+t2_path = "~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sadanandam/Sadanandam.tsv"
+#t2_path = "~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Missiaglia/GSE73339.all.tsv"
+#t3_path = "~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sadanandam/Sadanandam.tsv"
 #t4_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
 t1 = read.table(t1_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
@@ -16,8 +20,6 @@ t2 = t2[,str_detect(colnames(t2),pattern = "_",negate = T)]
 dim(t2)
 t2[1:5,]
 
-t2 = t2[,83:84]
-
 t3 = read.table(
     file=t3_path,
     row.names = 1,
@@ -30,13 +32,10 @@ colnames(t3) = str_replace(colnames(t3), pattern = "XX", "")
 no_match = (colnames(t3) %in% meta_info$Sample) == F
 no_match
 
-t3 = t3[,str_detect(colnames(t3),pattern = "_",negate = T)]
-dim(t3)
-t3[1:5,1:5]
-
 # variance selection
 
-meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 
 ### integrate
@@ -46,8 +45,8 @@ rownames(meta_info) = meta_info$Sample
 "INS" %in% rownames(t3)
 #"INS" %in% rownames(t4)
 
-merge_genes = intersect(rownames(t1),rownames(t2))
-#merge_genes = intersect(merge_genes, rownames(t3))
+merge_genes = intersect(str_to_upper(rownames(t1)),str_to_upper(rownames(t2)))
+merge_genes = intersect(merge_genes, rownames(t3))
 #merge_genes = intersect(merge_genes, rownames(t4))
 
 length(merge_genes)
@@ -56,8 +55,8 @@ length(merge_genes)
 new_mat = as.data.frame(
     cbind(
         t1[merge_genes,],
-        t2[merge_genes,]#,
-        #t3[merge_genes,]
+        t2[merge_genes,],
+        t3[merge_genes,]
     )
 )
 rownames(new_mat) = merge_genes
@@ -71,7 +70,7 @@ new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 new_mat = new_mat[,colnames(new_mat) %in% meta_info[meta_info$Grading != "","Sample"]]
 "132502" %in% colnames(new_mat)
 
-table(meta_data$NEC_NET_Ori)
+table(meta_data$NEC_NET)
 table(meta_data$Study)
 table(meta_data$Grading)
 
@@ -81,10 +80,23 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S95.HGNC.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(expr_raw_2, "~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv", sep ="\t", quote =F , row.names = T)
+write.table(new_mat[,], "~/Deko_Projekt/Data/All_dataset_merge.S197.tsv", sep ="\t", quote =F , row.names = T)
 
 #meta_data = meta_info[colnames(bam_data_1),]
 #meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
 #bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
 #bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
+
+meta_info_map = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info_deko = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info_deko) = meta_info_deko$Sample
+
+matcher = match(meta_info_map$Sample,meta_info_deko$Sample, nomatch = 0)
+
+meta_info_deko$NEC_NET = rep("",nrow(meta_info_deko))
+meta_info_deko[matcher,"NEC_NET"] = meta_info_map[matcher != 0,"NEC_NET_PCA"]
+
+meta_data = meta_info_deko[colnames(expr_raw),]
+met_tab = meta_data[which(meta_data$NEC_NET == ""),]
+
+#write.table(meta_info_deko, "~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t", quote =F , row.names = T)

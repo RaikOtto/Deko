@@ -5,6 +5,8 @@ library("ggplot2")
 library("dplyr")
 library("grid")
 
+#443 407 444 579 450 409 452 PNET08
+
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord = pheatmap:::find_coordinates(length(coln), gaps)
   x = coord$coord - 0.5 * coord$size
@@ -12,14 +14,14 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_info$NEC_NET = meta_info$NEC_NET_Color
+#meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Alvarez.S104.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Sadanandam.S29.vis.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -61,26 +63,22 @@ dim(expr)
 correlation_matrix = cor(expr)
 pcr = prcomp(t(correlation_matrix))
 
-meta_data$MKI67 = rep(0,nrow(meta_data))
-meta_data$MKI67 = as.double(expr_raw["MKI67",rownames(meta_data)])
-meta_data$Albumin = rep(0,nrow(meta_data))
-meta_data$Albumin = as.double(expr_raw["ALB",rownames(meta_data)])
-#meta_data$StromalScore = log(meta_data$StromalScore+1)
+meta_data$Predicted_NEC_NET[meta_data$Predicted_NEC_NET == 1] = "NEC"
+meta_data$Predicted_NEC_NET[meta_data$Predicted_NEC_NET != "NEC"] = "NET"
 
-p=pheatmap::pheatmap(
+pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading","Study")],
-  #annotation_col = meta_data[,c("TumorPurity","Albumin","Ratio")],
+  annotation_col = meta_data[,c("Predicted_NEC_NET","NEC_NET","Predicted_Grading","Grading","Study")],
+  #annotation_col = meta_data[,c("Grading","Study")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = F,
+  show_colnames = T,
   #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D2"
+  clustering_method = "average"
 )
-
 #svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_3_PCA_RepSet.svg", width = 10, height = 10)
 p = ggbiplot::ggbiplot(
   pcr,
@@ -88,13 +86,13 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET_Color),
-  #label = meta_data$Name,
+  groups = as.character(meta_data$NEC_NET),
+  label = meta_data$Name,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
 #p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p = p + scale_color_manual( values = c("Purple","Red","Blue") ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
@@ -821,86 +819,54 @@ dev.off()
 
 #### PCA Ductal Hisc gene signature
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs/Kallisto_three_groups/Groetzinger_Scarpa.TPM.filtered.HGNC.Voom.TMM.normalized.tsv",sep="\t", stringsAsFactors =  F, header = T)
-expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-
-meta_data = meta_info[colnames(expr_raw),]
-
-model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Baron.RDS")
-#model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Segerstolpe.RDS")
-#model = readRDS("~/Deko_Projekt/Models/bseqsc/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Hisc_Lawlor.RDS")
-hisc_genes = model[[3]]$hisc
-ductal_genes = model[[3]]$ductal
-
-# hisc
-
-sad_genes = hisc_genes
-expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
-correlation_matrix = cor(expr)
-pcr = prcomp(t(correlation_matrix))
-
-p_hisc = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale =.75,
-  var.scale = 2, 
-  labels.size = 8,
-  alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p_hisc = p_hisc + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
-p_hisc = p_hisc + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p_hisc = p_hisc + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-
-### ductal
-
-sad_genes = ductal_genes
-expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
-correlation_matrix = cor(expr)
-pcr = prcomp(t(correlation_matrix))
-
-p_ductal = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale =.46,
-  var.scale = 2, 
-  labels.size = 8,
-  alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p_ductal = p_ductal + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET_Color) ))
-p_ductal = p_ductal + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p_ductal = p_ductal + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-
-### merge
-
-#svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_NEC_NET_PCA.svg", width = 10, height = 10)
-ggarrange(
-  p_ductal,
-  p_hisc,
-  labels = c("Ductal", "HISC"),
-  ncol = 2,
-  nrow = 1,
-  common.legend = TRUE#,
-  #legend.grob = get_legend(p_ductal)
-)
-dev.off()
-
 
 ###
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.81_Samples_13_11_2017.Groetzinger_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-dim(expr_raw)
-cands = c("425","427","428","431","432","433","434","435","436","437","438","440","441","443","453","455","456","457","459","489","491","492","497","498","501","1444","PNET06","PNET37","1286","135602","PNET17","PNET22","1401","1418","PNET04","PNET21","PNET41","135604","139101","PNET05","PNET26","128802","140302","124101","124702","132502","112203","125701","131402","PC7A12","PC16","PC09","PC14","PC21","PC22")
-exp_set = expr_raw[,cands]
-exp_set[1:5,1:5]
-dim(exp_set)
-exp_set = expr_raw
+meta_data = meta_info[rownames(train_mat),]
+meta_data$Albumin = log(meta_data$Albumin+1)
+meta_data$MKI67 = log(meta_data$MKI67+1)
 
-#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep="\t",quote =F,row.names = F)
+meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
+meta_data$Predicted_NEC_NETNEC_NET[meta_data$Predicted_NEC_NET == ""] = "Unknown"
+
+meta_data_reduced = meta_data[meta_data$NEC_NET != "",]
+train_mat_reduced = train_mat[meta_data_reduced$Sample,]
+
+#correlation_matrix = cor(t(train_mat_reduced))#[,c("Alpha","Beta","Gamma","Delta","Ductal","Acinar")]))
+correlation_matrix = cor(t(train_mat_reduced))#[,c("Alpha","Ductal","Correlation","P_value")]))
+pcr = prcomp(correlation_matrix)
+
+pheatmap::pheatmap(
+  correlation_matrix,
+  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
+  #annotation_col = meta_data[,c("TumorPurity","Albumin","Ratio")],
+  annotation_colors = aka3,
+  show_rownames = F,
+  show_colnames = F,
+  #treeheight_col = 0,
+  treeheight_row = 0,
+  legend = T,
+  fontsize_col = 7,
+  clustering_method = "average"
+)
+
+correlation_matrix = cor(t(train_mat_reduced[,c("Alpha","Ductal","Correlation")]))
+pcr = prcomp(correlation_matrix)
+
+p = ggbiplot::ggbiplot(
+  pcr,
+  obs.scale =.75,
+  var.scale = 2, 
+  labels.size = 4,
+  alpha = 1,
+  groups = as.character(meta_data_reduced$NEC_NET),
+  #label = meta_data$Name,
+  ellipse = TRUE,
+  circle = TRUE,
+  var.axes = F
+)
+p
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+
+library(M3C)
+umap(correlation_matrix, labels = meta_data[,"NEC_NET"])
