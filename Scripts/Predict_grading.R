@@ -16,8 +16,9 @@ cell_type_predictions[1:5,1:5]
 
 fitControl <- trainControl(
     method = "repeatedcv",
-    number = 10,
+    number = 5,
     sampling = "down",
+    repeats = 10,
     savePred=T
 )
 
@@ -98,13 +99,20 @@ plot(varImp(grading_model), top = 8)
 
 # supervised RNA-seq section
 
-path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer_Scarpa.S69.tsv"
+path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Scarpa.S29.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer.S40.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Sadanandam.S29.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Missaglia.S75.tsv"
+
 train_mat = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(train_mat) = str_replace(colnames(train_mat), pattern = "^X", "")
+train_mat[1:5,1:5]
+no_match = colnames(train_mat) %in% meta_info$Sample == F
+colnames(train_mat)[no_match] = paste("X",colnames(train_mat)[no_match],sep ="")
+no_match = colnames(train_mat) %in% meta_info$Sample == F
+no_match
+meta_data = meta_info[colnames(train_mat),]
 
 row_var = apply( train_mat, FUN = var, MARGIN = 1)
 train_mat = train_mat[ row_var > quantile(row_var)[2], ]
@@ -125,13 +133,34 @@ which(!(marker_genes %in% rownames(train_mat)))
 train_mat = train_mat[marker_genes,]
 "MKI67" %in% rownames(train_mat)
 
-truth_vec = meta_info[colnames(train_mat),"Grading"]
+row_var = as.double(apply(train_mat,MARGIN = 1, FUN =var))
+train_mat = train_mat[row_var > 10,]
 
-res = pred_data(
+col_names = colnames(train_mat)
+row_names = rownames(train_mat)
+train_mat = matrix(as.double(as.character(unlist(train_mat))), ncol = ncol(train_mat),nrow=nrow(train_mat))
+colnames(train_mat) = col_names
+rownames(train_mat) = row_names
+
+dim(train_mat)
+
+truth_vec = factor(meta_info[colnames(train_mat),"Grading"],levels = c("G1","G2","G3"))
+
+expression_model_grading = pred_grading(
     train_mat = t(train_mat),
     truth_vec = truth_vec
 )
-d = res$byClass
+
+predictions = predict(expression_model_grading, t(train_mat))
+#predictions_hold_out = predict(grading_model, train_mat_hold_out)
+#truth_hold_out = factor(truth_vec_hold_out, levels = c("G1","G2","G3"))
+
+con_mat = confusionMatrix(
+    predictions,
+    #truth_hold_out,
+    truth_vec,
+    positive = "G3"
+)
 
 ###
 

@@ -14,14 +14,16 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 #meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/Deko_Projekt/Data/Bench_data/Sadanandam.S29.vis.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.VOOM.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -29,46 +31,56 @@ colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
+#"132502" %in% colnames(expr_raw)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+#genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
-#for(i in 33:62){
+liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
 i = 13
 genes_of_interest_hgnc_t[i,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
-#sad_genes = genes_of_interest_hgnc_t[i,1]
 sad_genes = sad_genes[ sad_genes != ""]
+sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
+length(sad_genes)
 
-# Fadista 89
-# Alvarez 105
-# Scarpa 29
-# Sdanandam 29
-# Missiaglia 75
-# Wiedenmann 39
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Riemer_Scarpa_69_samples_Deseq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw[1:5,1:5]
-
-# G1 46 + 7 + 14 + 0 = 67
-# G2 25 + 12 + 13 + 30 = 80
-# G3 4 + 8 + 2 + 30 = 44
-#meta_data_2 = rbind(meta_data_2,meta_data)
-
-#expr_raw = expr_raw[,rownames(meta_data)]
-expr = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr) = colnames(expr_raw);rownames(expr) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
+expr_mat = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr_mat) = colnames(expr_raw);rownames(expr_mat) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
+#expr_mat = expr_mat[,meta_data[meta_data$NEC_NET %in% "NEC","Sample"]]
+expr = expr_mat
 expr[1:5,1:5]
 dim(expr)
+
+###
+
+selector = c(
+  "Alpha",
+  "Beta",
+  "Gamma",
+  "Delta",
+  "Ductal",
+  "Acinar",
+  "P_value",
+  "Correlation",
+  "RMSE")
+#expr = t(meta_data[,selector])
+
+###
 
 correlation_matrix = cor(expr)
 pcr = prcomp(t(correlation_matrix))
 
-meta_data$Predicted_NEC_NET[meta_data$Predicted_NEC_NET == 1] = "NEC"
-meta_data$Predicted_NEC_NET[meta_data$Predicted_NEC_NET != "NEC"] = "NET"
+#meta_data$MKI67 = log(as.double(expr_raw["MKI67",rownames(meta_data)]))
+#meta_data$MKI67 = log(meta_data$MKI67)
+#meta_data$MKI67 = meta_data$MKI67 + -1*min(meta_data$MKI67)
+#meta_data$Albumin = log(meta_data$Albumin)
+meta_data$NEC_NET = meta_data$NEC_NET_PCA
 
-pheatmap::pheatmap(
+#svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
+p  =pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[,c("Predicted_NEC_NET","NEC_NET","Predicted_Grading","Grading","Study")],
+  annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
   #annotation_col = meta_data[,c("Grading","Study")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -79,7 +91,7 @@ pheatmap::pheatmap(
   fontsize_col = 7,
   clustering_method = "average"
 )
-#svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_3_PCA_RepSet.svg", width = 10, height = 10)
+
 p = ggbiplot::ggbiplot(
   pcr,
   obs.scale =.75,
@@ -87,12 +99,13 @@ p = ggbiplot::ggbiplot(
   labels.size = 4,
   alpha = 1,
   groups = as.character(meta_data$NEC_NET),
-  label = meta_data$Name,
+  #label = meta_data$Name,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
 p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+p
 #p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p = p + scale_color_manual( values = c("Purple","Red","Blue") ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
