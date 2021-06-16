@@ -7,22 +7,17 @@ library("grid")
 
 #443 407 444 579 450 409 452 PNET08
 
-draw_colnames_45 <- function (coln, gaps, ...) {
-  coord = pheatmap:::find_coordinates(length(coln), gaps)
-  x = coord$coord - 0.5 * coord$size
-  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...))
-  return(res)}
-assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
+#draw_colnames_45 <- function (coln, gaps, ...) {
+#  coord = pheatmap:::find_coordinates(length(coln), gaps)
+#  x = coord$coord - 0.5 * coord$size
+#  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
+#  return(res)}
+#assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
 meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 #meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-#meta_info$NEC_NET = meta_info$NEC_NET_PCA
-
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.VOOM.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -39,11 +34,11 @@ genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",s
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
+i = 65
 genes_of_interest_hgnc_t[i,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
-sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
+#sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
 expr_mat = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr_mat) = colnames(expr_raw);rownames(expr_mat) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
@@ -79,11 +74,12 @@ meta_data$NEC_NET = meta_data$NEC_NET_PCA
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  correlation_matrix,
-  annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
-  #annotation_col = meta_data[,c("Grading","Study")],
+  #correlation_matrix,
+  expr,
+  #annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
+  #annotation_col = meta_data["Study"],
   annotation_colors = aka3,
-  show_rownames = F,
+  show_rownames = T,
   show_colnames = T,
   #treeheight_col = 0,
   treeheight_row = 0,
