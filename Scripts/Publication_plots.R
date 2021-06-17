@@ -14,15 +14,14 @@ draw_colnames_45 <- function (coln, gaps, ...) {
   return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-#meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.VOOM.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -31,19 +30,27 @@ colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
+
+#meta_info$SUV39H1 = rep("",nrow(meta_info))
+#meta_info$SUV39H2 = rep("",nrow(meta_info))
+#matcher = match(rownames(meta_info), colnames(expr_raw),nomatch = 0)
+#meta_info[matcher != 0, "SUV39H1"] = as.double(expr_raw[grep(rownames(expr_raw),pattern = "SUV39H1", value = F),matcher])
+#meta_info[matcher != 0, "SUV39H2"] = as.double(expr_raw[grep(rownames(expr_raw),pattern = "SUV39H2", value = F),matcher])
+
 #"132502" %in% colnames(expr_raw)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+#genes_of_interest_hgnc_t = read.table("~/SeneSys/Misc/SeneSys_gene_sets.tsv",sep ="\t", stringsAsFactors = F, header = F)
 #genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
-liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
-genes_of_interest_hgnc_t[i,1]
+liver_genes = as.character(genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)])
+i =  13#13
+genes_of_interest_hgnc_t[i,1]#genes_of_interest_hgnc_t[,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
-sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
+#sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
 expr_mat = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr_mat) = colnames(expr_raw);rownames(expr_mat) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
@@ -54,37 +61,26 @@ dim(expr)
 
 ###
 
-selector = c(
-  "Alpha",
-  "Beta",
-  "Gamma",
-  "Delta",
-  "Ductal",
-  "Acinar",
-  "P_value",
-  "Correlation",
-  "RMSE")
-#expr = t(meta_data[,selector])
-
-###
-
 correlation_matrix = cor(expr)
 pcr = prcomp(t(correlation_matrix))
 
-#meta_data$MKI67 = log(as.double(expr_raw["MKI67",rownames(meta_data)]))
 #meta_data$MKI67 = log(meta_data$MKI67)
-#meta_data$MKI67 = meta_data$MKI67 + -1*min(meta_data$MKI67)
-#meta_data$Albumin = log(meta_data$Albumin)
-meta_data$NEC_NET = meta_data$NEC_NET_PCA
+#meta_data$FLT3L = log(meta_data$FLT3L)
+#meta_data$Albumin = log(meta_data$Albumin+1)
+meta_data$SUV39H1 = log(meta_data$SUV39H1+1)
+meta_data$SUV39H2 = log(meta_data$SUV39H2+1)
+meta_data$FLT3L[57] =4
+meta_data$SUV39H2[57] =1.4
+meta_data$SUV39H2[57] =1.4
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
+  annotation_col = meta_data[,c("SUV39H2","SUV39H1","NEC_NET","Grading","Study")],
   #annotation_col = meta_data[,c("Grading","Study")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
@@ -99,7 +95,7 @@ p = ggbiplot::ggbiplot(
   labels.size = 4,
   alpha = 1,
   groups = as.character(meta_data$NEC_NET),
-  #label = meta_data$Name,
+  #label = meta_data$Sample,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
@@ -372,7 +368,7 @@ samples = as.character(vis_mat[
   "Sample"
 ])
 
-#write.table(data_t,"~/Deco/Results/Cell_fraction_predictions/Baron_Bseqsc_All_Datasets.tsv",sep ="\t",quote =F , row.names = F)
+#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F , row.names = F)
 
 melt_mat_crine$SD = melt_mat_crine$SD
 #melt_mat_crine$model = c("endocrine","endocrine","endocrine","endocrine","exocrine","exocrine","exocrine","exocrine","hisc","hisc","hisc","hisc")

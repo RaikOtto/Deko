@@ -1,11 +1,11 @@
-library(caret)
-library(ranger)
-library(tidyverse)
-library(e1071)
-library(readr) # Useful for importing data
-library(knitr) # Useful for creating nice tables
-library(data.table)
-library(tm) #Text Manager
+library("caret")
+library("ranger")
+library("tidyverse")
+library("e1071")
+#library("readr") # Useful for importing data
+#library("knitr") # Useful for creating nice tables
+#library("data.table")
+#library("tm") #Text Manager
 
 opt.cut = function( perf, pred ){
     cut.ind = mapply( FUN = function( x, y, p ){

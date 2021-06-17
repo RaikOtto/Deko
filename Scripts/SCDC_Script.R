@@ -121,11 +121,16 @@ deconvolution_results = Deconvolve_transcriptome(
 )
 
 #write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S80.exocrine.CIBERSORT.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S84.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F)
+props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, row.names = 1,header = T)
 rownames(props) = str_replace(rownames(props), pattern = "^X", "")
 no_match = rownames(props) %in% meta_info$Sample == F
 rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
+no_match = rownames(props) %in% meta_info$Sample == F
+
 meta_data = meta_info[rownames(props),]
+props = props[meta_data$Study %in% c("Riemer","Scarpa","Master","Sadanandam","Missiaglia","Alvarez"),]
+meta_data = meta_info[rownames(props),]
+rownames(meta_data) = meta_data$Sample
 
 ###
 
@@ -134,35 +139,46 @@ selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 
-meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
+#meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
 #meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
-meta_data[,selection] = props[,selection]
-#max_selection = max(meta_data[,selection])
-meta_data[,selection] = meta_data[,selection] / max(meta_data[,selection])
+#meta_data[,selection] = props[,selection]
 
-#meta_data$Ratio = meta_data$Ratio/max(meta_data$Ratio)
+#matcher = match(rownames(meta_data),rownames(meta_info))
+#meta_info[ matcher,"Ratio"] = meta_data$Ratio
 
+#meta_info[rownames(meta_data), selection] = meta_data[,selection]
+#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names = F)
 ###
 
+selector = c(
+    "Alpha",
+    #"Beta",
+    #"Gamma",
+    #"Delta",
+    "Ductal",
+    #"Acinar",
+    #"P_value",
+    "Correlation",
+    "RMSE")
+#expr = t(meta_data[,selector])
 
-for ( i in 1:nrow(meta_data)){
-    meta_data[i,selection] = meta_data[i,selection] / max(meta_data[i,selection] )
-    #res_scdc[rownames(props),colname] = as.double(res_scdc[rownames(props),colname])
-}
-#### visualization
+#outlier = c("440","459","441","500","1286","PNET08")
+outlier = ""
 
-expr = expr[,str_detect(colnames(expr),pattern = "_",negate = T)]
-vis_mat = vis_mat[str_detect(rownames(vis_mat),pattern = "_",negate = T),]
+vis_mat = props[ !(rownames(props) %in% outlier),selector]
+vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
 
-correlation_matrix = cor(expr)
+correlation_matrix = cor(t(vis_mat))
 pcr = prcomp(t(correlation_matrix))
 
-#svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_Correlation_Heatmap_RepSet.svg", width = 10, height = 10)
-pheatmap::pheatmap(
+meta_data[meta_data$NEC_NET == "","NEC_NET"] = "Unknown"
+meta_data[meta_data$Grading == "","Grading"] = "Unknown"
+meta_data[meta_data$Histology == "","Histology"] = "Unknown"
+
+p  =pheatmap::pheatmap(
     correlation_matrix,
-    #annotation_col = vis_mat[,c("Alpha","SCDC_Alpha","Beta","SCDC_Beta","Gamma","SCDC_Gamma","Delta","SCDC_Delta","Acinar","SCDC_Acinar","Ductal","SCDC_Ductal","Grading")],
-    #annotation_col = vis_mat[,c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","Grading")],
-    annotation_col = vis_mat[,c("alpha","beta","gamma","delta","acinar","ductal","NEC_NET","Grading")],
+    annotation_col = meta_data[,c("Grading","NEC_NET","Ratio","Study")],
+    #annotation_col = meta_data[,c("Grading","Study")],
     annotation_colors = aka3,
     show_rownames = F,
     show_colnames = F,
@@ -170,10 +186,11 @@ pheatmap::pheatmap(
     treeheight_row = 0,
     legend = T,
     fontsize_col = 7,
-    clustering_method = "median"
+    clustering_method = "average"
 )
 
-#
+ #### visualization
+
 
 cell_m = as.data.frame(props[colnames(expr_raw),])
 cell_m$MKI67 = as.double(round(expr_raw["MKI67",rownames(cell_m)] / max(expr_raw["MKI67",rownames(cell_m)]) * 100,1))

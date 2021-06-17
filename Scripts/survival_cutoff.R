@@ -207,36 +207,41 @@ vis_mat = create_visualization_matrix(
 
 ### survival curve
 
-vis_mat = vis_mat[rownames(deconvolution_results),]
+target_genes = expr_raw[sad_genes[sad_genes %in% rownames(expr_raw)] ,]
+target_genes = as.double(apply(target_genes, FUN = mean, MARGIN = 2))
+
+#vis_mat = vis_mat[rownames(deconvolution_results),]
+vis_mat = vis_mat[rownames(meta_data),]
 vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
 vis_mat$OS_Tissue[is.na(vis_mat$OS_Tissue)] = 1
 vis_mat$Grading = meta_data$Grading
 vis_mat$Zensur = meta_data$Zensur
 
 ratio_m = data.frame(
-    "alpha" = as.double(deconvolution_results[,"alpha"]),
-    "ductal" = as.double(deconvolution_results[,"ductal"]),
+    #"alpha" = as.double(deconvolution_results[,"alpha"]),
+    #"ductal" = as.double(deconvolution_results[,"ductal"]),
     #"hisc" = as.double(deconvolution_results[,"hisc"]),
-    "grading" = deconvolution_results$Grading,
+    "grading" = meta_data$Grading,
     "OS_Tissue" = vis_mat$OS_Tissue,
     "Zensur" = vis_mat$Zensur,
-    "MKi67"  =deconvolution_results[,"MKI67"]
+    "MKi67"  = meta_data[,"MKI67"],
+    "target_genes" = target_genes 
 )
-if ("hisc" %in% colnames(deconvolution_results))
-    ratio_m$hisc = as.double(deconvolution_results[,"hisc"])
+#if ("hisc" %in% colnames(deconvolution_results))
+#    ratio_m$hisc = as.double(deconvolution_results[,"hisc"])
 
 ratio_m = ratio_m[!is.na(ratio_m$Zensur),]
 
 #selector_var = "ductal"
 #selector_var = "MKi67"
 #selector_var = "alpha"
-#selector_var = "grading"
+selector_var = "target_genes"
 #ratio_m$grading[ratio_m$grading %in% c("G1","G2")] = "G1_G2"
 
-agg = aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
-thresh_low = (agg[1,2] + agg[2,2]) / 2
-thresh_mid = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
-thresh_mean = agg$x[1]
+#agg = aggregate(ratio_m[,selector_var], FUN = mean, by = list(ratio_m$grading))
+#thresh_low = (agg[1,2] + agg[2,2]) / 2
+#thresh_mid = (tail(agg[,2],1) + tail(agg[,2],2)[1]) /2
+thresh_mean = mean(target_genes)#agg$x[1]
 
 value = ratio_m[,selector_var]
 #thresh_mean = mean(value)
@@ -251,8 +256,6 @@ fit = survival::survfit( survival::Surv( as.double(ratio_m$OS_Tissue), ratio_m$Z
 surv_p_value = survminer::surv_pvalue(fit, data = ratio_m)$pval
 
 print(i)
-print(dataset_query)
-print(dataset_training)
 selector_var
 
 surv_p_value
