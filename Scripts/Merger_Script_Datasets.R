@@ -3,11 +3,10 @@ library("stringr")
 # Sadanandam, Missiaglia
 # Califano
 
-t1_path = "~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv"  # Groetzinger, Scarpa, Master
-t2_path = "~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.tsv"
+t1_path = "~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv"  # Groetzinger, Scarpa, Master
+t2_path = "~/MAPTor_NET/BAMs_new/Exp_tpm_bon_qgp_knih6.HGNC.tsv"
 #t2_path = "~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Missiaglia/GSE73339.all.tsv"
 #t3_path = "~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sadanandam/Sadanandam.tsv"
-#t4_path = "~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/GSE73339.tsv"
 
 t1 = read.table(t1_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
 colnames(t1) = str_replace_all(colnames(t1),pattern = "^X", "")
@@ -16,7 +15,8 @@ t1[1:5,]
 
 t2 = read.table(t2_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
 colnames(t2) = str_replace_all(colnames(t2),pattern = "^X", "")
-t2 = t2[,str_detect(colnames(t2),pattern = "_",negate = T)]
+colnames(t2) = str_replace_all(colnames(t2),pattern = "^TPM_", "")
+#t2 = t2[,str_detect(colnames(t2),pattern = "_",negate = T)]
 dim(t2)
 t2[1:5,]
 no_match = (colnames(t2) %in% meta_info$Sample) == F
@@ -68,7 +68,6 @@ row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN
 new_mat = new_mat[which( row_var >= 1),]
 new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
-new_mat = new_mat[,colnames(new_mat) %in% meta_info[meta_info$Grading != "","Sample"]]
 "132502" %in% colnames(new_mat)
 
 table(meta_data$NEC_NET)
@@ -78,10 +77,11 @@ table(meta_data$Grading)
 dim(new_mat)
 
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
+new_mat = new_mat[!(is.na(new_mat[,1])) , ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-#write.table(new_mat[,], "~/Deko_Projekt/Data/All_dataset_merge.S197.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S57_Bon_control.HGNC.tsv", sep ="\t", quote =F , row.names = T)
 
 #meta_info$Albumin = rep("",nrow(meta_info))
 #meta_info[colnames(expr_raw),"Albumin"] = as.double(expr_raw["ALB",])
