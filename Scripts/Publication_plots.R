@@ -850,17 +850,16 @@ rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))]
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   correlation_matrix,
-  #expr,
-  #annotation_col = meta_data[,c("Ductal","Acinar","Alpha","Beta","Gamma","Delta","NEC_NET","Study")],
   annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   show_colnames = F,
-  #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "complete"
+  clustering_method = "average"
 )
 
 ###
+mydata
+M3C::M3C(expr)
