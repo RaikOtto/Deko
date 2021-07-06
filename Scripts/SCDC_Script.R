@@ -22,10 +22,10 @@ res_scdc = as.data.frame(meta_info)
 
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.S9.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
-colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
+#colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 
@@ -103,7 +103,7 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 #colnames(props) = paste("SCDC",colnames(scdc_props$prop.est.mvw),sep = "_")
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S84.Cibersort.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato.S35.SCDC.tsv",sep = "\t")
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 library(devtools)
@@ -120,16 +120,22 @@ deconvolution_results = Deconvolve_transcriptome(
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S80.exocrine.CIBERSORT.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S84.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F)
-rownames(props) = str_replace(rownames(props), pattern = "^X", "")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Controls.CCL.S9.CIBERSORT.tsv",sep = "\t")
+
+props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+rownames(props) = props$Sample
+colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+
 no_match = rownames(props) %in% meta_info$Sample == F
 rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
+no_match = rownames(props) %in% meta_info$Sample == F
+sum(no_match)
+
+props = props[colnames(expr_raw),]
 meta_data = meta_info[rownames(props),]
 
 ###
 
-colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
@@ -142,8 +148,12 @@ meta_data[,selection] = meta_data[,selection] / max(meta_data[,selection])
 
 #meta_data$Ratio = meta_data$Ratio/max(meta_data$Ratio)
 
-###
+matcher = match(rownames(props),meta_info$Sample,nomatch = 0)
+meta_info[matcher,selection] = props[,selection]
 
+#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote = F)
+###
+#meta_data_save = meta_data
 
 for ( i in 1:nrow(meta_data)){
     meta_data[i,selection] = meta_data[i,selection] / max(meta_data[i,selection] )
@@ -160,9 +170,7 @@ pcr = prcomp(t(correlation_matrix))
 #svg(filename = "~/Deko_Projekt/Results/Images/SM_Figure_4_Correlation_Heatmap_RepSet.svg", width = 10, height = 10)
 pheatmap::pheatmap(
     correlation_matrix,
-    #annotation_col = vis_mat[,c("Alpha","SCDC_Alpha","Beta","SCDC_Beta","Gamma","SCDC_Gamma","Delta","SCDC_Delta","Acinar","SCDC_Acinar","Ductal","SCDC_Ductal","Grading")],
-    #annotation_col = vis_mat[,c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","Grading")],
-    annotation_col = vis_mat[,c("alpha","beta","gamma","delta","acinar","ductal","NEC_NET","Grading")],
+    annotation_col = vis_mat[,c("Alpha","SCDC_Alpha","Beta","SCDC_Beta","Gamma","SCDC_Gamma","Delta","SCDC_Delta","Acinar","SCDC_Acinar","Ductal","SCDC_Ductal","Grading")],
     annotation_colors = aka3,
     show_rownames = F,
     show_colnames = F,

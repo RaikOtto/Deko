@@ -14,10 +14,18 @@ library("grid")
 #  return(res)}
 #assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+#expr_raw = read.table("~/Deko_Projekt/Data/JGA/RepSet_Sato_S92.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.RepSet.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X\\.)", "")
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X)", "")
+expr_raw[1:5,1:5]
+#expr_raw = expr_raw[,str_detect( colnames(expr_raw), pattern = "_", negate = T)]
+dim(expr_raw)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -34,58 +42,55 @@ genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",s
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 65
+i = 13
 genes_of_interest_hgnc_t[i,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 #sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
-expr_mat = matrix(as.double(as.character(unlist(expr_raw[ rownames(expr_raw) %in% sad_genes,]))), ncol = ncol(expr_raw));colnames(expr_mat) = colnames(expr_raw);rownames(expr_mat) = rownames(expr_raw)[rownames(expr_raw) %in% sad_genes]
-#expr_mat = expr_mat[,meta_data[meta_data$NEC_NET %in% "NEC","Sample"]]
-expr = expr_mat
+expr_raw_normalized = matrix(as.double(as.character(unlist(expr_raw))), ncol = ncol(expr_raw));
+expr_raw_normalized = apply(expr_raw_normalized, FUN =scale, MARGIN = 2)
+colnames(expr_raw_normalized) = colnames(expr_raw);
+rownames(expr_raw_normalized) = rownames(expr_raw)
+
+expr = expr_raw_normalized[rownames(expr_raw_normalized) %in% sad_genes,]
+#expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
 expr[1:5,1:5]
 dim(expr)
 
 ###
 
-selector = c(
-  "Alpha",
-  "Beta",
-  "Gamma",
-  "Delta",
-  "Ductal",
-  "Acinar",
-  "P_value",
-  "Correlation",
-  "RMSE")
-#expr = t(meta_data[,selector])
+expr = cbind(props[,c(selection,"P_value","Correlation")],meta_data$Ratio)
+expr = matrix(as.double(as.character(unlist(expr))), ncol = 9,nrow = nrow(expr))
+colnames(expr) = c(selection,"P_value","Correlation","Ratio")
+rownames(expr) = props$Sample
 
-###
-
-correlation_matrix = cor(expr)
+correlation_matrix = cor(t(expr))
 pcr = prcomp(t(correlation_matrix))
 
-#meta_data$MKI67 = log(as.double(expr_raw["MKI67",rownames(meta_data)]))
-#meta_data$MKI67 = log(meta_data$MKI67)
-#meta_data$MKI67 = meta_data$MKI67 + -1*min(meta_data$MKI67)
-#meta_data$Albumin = log(meta_data$Albumin)
-meta_data$NEC_NET = meta_data$NEC_NET_PCA
+meta_data$Study[meta_data$Study == "Riemer"] = "Charite"
+meta_data$Grading[meta_data$Grading == ""] ="CCL"
+meta_data$NEC_NET_Color = str_replace_all(meta_data$NEC_NET_Color,pattern = " ","")
+meta_data$NEC_NET_Color = as.character(meta_data$NEC_NET_Color)
+meta_data$P_value = props$P_value
+meta_data$P_value[meta_data$P_value >= 0.05] = "not_sig"
+meta_data$P_value[meta_data$P_value != "not_sig"] = "sig"
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  #correlation_matrix,
-  expr,
-  #annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
-  #annotation_col = meta_data["Study"],
+  correlation_matrix,
+  #expr,
+  #annotation_col = meta_data[,c("Ductal","Acinar","Alpha","Beta","Gamma","Delta","NEC_NET","Study")],
+  annotation_col = meta_data[,c("Grading","NEC_NET_Color","P_value","Study")],
   annotation_colors = aka3,
-  show_rownames = T,
+  show_rownames = F,
   show_colnames = T,
   #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "complete"
 )
 
 p = ggbiplot::ggbiplot(
