@@ -2,9 +2,11 @@ library("stringr")
 
 # Sadanandam, Missiaglia
 # Califano
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t", header  =T, as.is = T)
+rownames(meta_info) = meta_info$Sample
 
 t1_path = "~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv"  # Groetzinger, Scarpa, Master
-t2_path = "~/Deko_Projekt/Data/JGA/Sato.S35.HGNC.tsv"
+t2_path = "~/MAPTor_NET/BAMs_new/Master.pre.S27.HGNC.tsv"
 #t3_path = "~/MAPTor_NET/BAMs_new/CCL_Controls.EGA.HGNC.tsv"
 
 t1 = read.table(t1_path,sep="\t",header=T,row.names = 1, stringsAsFactors = F)
@@ -24,7 +26,6 @@ colnames(t2) = str_replace(colnames(t2), pattern = "XX", "")
 no_match = which((colnames(t2) %in% meta_info$Sample) == F)
 no_match
 
-
 #t3 = read.table(
 #    file=t3_path,
 #    row.names = 1,
@@ -33,10 +34,6 @@ no_match
 #t3[1:5,]
 
 # variance selection
-
-meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Sample
 
 ### integrate
 
@@ -62,6 +59,7 @@ new_mat = as.data.frame(
 rownames(new_mat) = merge_genes
 
 meta_data = meta_info[colnames(new_mat[,]),]
+meta_data$NEC_NET
 dim(new_mat)
 
 row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN = 1))
@@ -81,7 +79,7 @@ new_mat = new_mat[!(is.na(new_mat[,1])) , ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
-#write.table(new_mat[,], "~/Deko_Projekt/Data/JGA/RepSet_Sato_S92.HGNC.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_Master_S84.HGNC.tsv", sep ="\t", quote =F , row.names = T)
 
 #meta_info$Albumin = rep("",nrow(meta_info))
 #meta_info[colnames(expr_raw),"Albumin"] = as.double(expr_raw["ALB",])

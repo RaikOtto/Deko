@@ -19,8 +19,8 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#expr_raw = read.table("~/Deko_Projekt/Data/JGA/RepSet_Sato_S92.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.RepSet.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_Master_S84.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.RepSet.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X\\.)", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X)", "")
 expr_raw[1:5,1:5]
@@ -117,32 +117,6 @@ p
 #dev.off()
 
 #p + xlim(c(-1.0,2.25)) + ylim(-1.5,1.0)
-
-### prediction NEC NET
-deconvolution_results = readRDS("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.RDS")
-rownames(deconvolution_results) = deconvolution_results$name
-mki_67 = expr_raw["MKI67",rownames(deconvolution_results)]
-ductal = deconvolution_results[rownames(meta_data),"ductal"]
-hisc = deconvolution_results[rownames(meta_data),"hisc"]
-nec_net = meta_data$NEC_NET
-target_vector = nec_net
-target_vector[target_vector=="NEC"] = 0
-target_vector[target_vector != 0] = 1
-
-t_data = data.frame(
-    "mki_67" = mki67,
-    "nec_net" = nec_net,
-    "ductal" = ductal,
-    "hisc" = hisc
-)
-
-rf_fit <- glm(
-    nec_net ~ hisc, data = t_data, family=binomial(link="logit")
-)
-predicted <- plogis(predict(rf_fit, t_data))  # predicted scores
-optCutOff <- optimalCutoff(target_vector, predicted)[1] 
-sensitivity = round(InformationValue::sensitivity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
-specificity = round(InformationValue::specificity(actuals = as.double(target_vector),predicted, threshold = optCutOff),2)
 
 ## Figure 3 Segerstolpe Heatmap
 
@@ -833,27 +807,52 @@ dev.off()
 
 #### PCA Ductal Hisc gene signature
 
+props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+rownames(props) = props$Sample
+colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+
+no_match = rownames(props) %in% meta_info$Sample == F
+rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
+no_match = rownames(props) %in% meta_info$Sample == F
+sum(no_match)
+
+colnames(expr_raw)[colnames(expr_raw) %in% rownames(props) == F] = paste("X",colnames(expr_raw)[colnames(expr_raw) %in% rownames(props) == F],sep ="")
+colnames(expr_raw)[colnames(expr_raw) %in% rownames(props) == F] = str_replace(colnames(expr_raw)[colnames(expr_raw) %in% rownames(props) == F],pattern ="^XX","")
+colnames(expr_raw)[colnames(expr_raw) %in% rownames(props) == F]
+
+matcher = match( colnames(expr_raw), rownames(props), nomatch = 0)
+props = props[matcher,]
+dim(props)
+meta_data = meta_info[rownames(props),]
 
 ###
 
-meta_data = meta_info[rownames(train_mat),]
-meta_data$Albumin = log(meta_data$Albumin+1)
-meta_data$MKI67 = log(meta_data$MKI67+1)
+selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
+exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
+endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 
-meta_data$NEC_NET[meta_data$NEC_NET == ""] = "Unknown"
-meta_data$Predicted_NEC_NETNEC_NET[meta_data$Predicted_NEC_NET == ""] = "Unknown"
+meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
 
-meta_data_reduced = meta_data[meta_data$NEC_NET != "",]
-train_mat_reduced = train_mat[meta_data_reduced$Sample,]
+expr = cbind(props[,c(selection,"P_value","Correlation")],meta_data$Ratio)
+expr = matrix(as.double(as.character(unlist(expr))), ncol = 9,nrow = nrow(expr))
+colnames(expr) = c(selection,"P_value","Correlation","Ratio")
+rownames(expr) = props$Sample
 
-#correlation_matrix = cor(t(train_mat_reduced))#[,c("Alpha","Beta","Gamma","Delta","Ductal","Acinar")]))
-correlation_matrix = cor(t(train_mat_reduced))#[,c("Alpha","Ductal","Correlation","P_value")]))
-pcr = prcomp(correlation_matrix)
+correlation_matrix = cor(t(expr))
+pcr = prcomp(t(correlation_matrix))
 
-pheatmap::pheatmap(
+meta_data$P_value = props$P_value
+meta_data$P_value[meta_data$P_value >= 0.05] = "not_sig"
+meta_data$P_value[meta_data$P_value != "not_sig"] = "sig"
+rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))] = str_replace(rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))], pattern ="^X","")
+rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))] 
+
+#svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
+p  =pheatmap::pheatmap(
   correlation_matrix,
-  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
-  #annotation_col = meta_data[,c("TumorPurity","Albumin","Ratio")],
+  #expr,
+  #annotation_col = meta_data[,c("Ductal","Acinar","Alpha","Beta","Gamma","Delta","NEC_NET","Study")],
+  annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   show_colnames = F,
@@ -861,26 +860,7 @@ pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "complete"
 )
 
-correlation_matrix = cor(t(train_mat_reduced[,c("Alpha","Ductal","Correlation")]))
-pcr = prcomp(correlation_matrix)
-
-p = ggbiplot::ggbiplot(
-  pcr,
-  obs.scale =.75,
-  var.scale = 2, 
-  labels.size = 4,
-  alpha = 1,
-  groups = as.character(meta_data_reduced$NEC_NET),
-  #label = meta_data$Name,
-  ellipse = TRUE,
-  circle = TRUE,
-  var.axes = F
-)
-p
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
-
-library(M3C)
-umap(correlation_matrix, labels = meta_data[,"NEC_NET"])
+###
