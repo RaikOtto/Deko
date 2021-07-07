@@ -1,4 +1,3 @@
-expr_raw = bam_data
 
 hgnc_list = results[match(rownames(expr_raw),results[,1]),2]
 
@@ -52,5 +51,4 @@ length(hgnc_list_uni)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
-bam_data = expr_raw
-#write.table(expr_raw,"~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/GSE142720_rma_norm_log2_matrix.HGNC.tsv",sep="\t",quote = F)
+#write.table(expr_raw,"~/Deko_Projekt/Data/JGA/Sato.S35.HGNC.tsv",sep="\t",quote = F)
