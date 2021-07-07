@@ -18,13 +18,10 @@ library("grid")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-<<<<<<< HEAD
 
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-=======
->>>>>>> 2a8481de5655be3628026ff0f4ae981cce23aeaa
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -48,15 +45,10 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
-<<<<<<< HEAD
-liver_genes = as.character(genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)])
-i =  13#13
-genes_of_interest_hgnc_t[i,1]#genes_of_interest_hgnc_t[,1]
-=======
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
 i = 65
 genes_of_interest_hgnc_t[i,1]
->>>>>>> 2a8481de5655be3628026ff0f4ae981cce23aeaa
+
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 #sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
@@ -84,14 +76,6 @@ meta_data$SUV39H2[57] =1.4
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-<<<<<<< HEAD
-  correlation_matrix,
-  annotation_col = meta_data[,c("SUV39H2","SUV39H1","NEC_NET","Grading","Study")],
-  #annotation_col = meta_data[,c("Grading","Study")],
-  annotation_colors = aka3,
-  show_rownames = F,
-  show_colnames = F,
-=======
   #correlation_matrix,
   expr,
   #annotation_col = meta_data[,c("Albumin","MKI67","NEC_NET","Grading")],
@@ -99,7 +83,6 @@ p  =pheatmap::pheatmap(
   annotation_colors = aka3,
   show_rownames = T,
   show_colnames = T,
->>>>>>> 2a8481de5655be3628026ff0f4ae981cce23aeaa
   #treeheight_col = 0,
   treeheight_row = 0,
   legend = T,
