@@ -7,7 +7,9 @@ set.seed(1)
 
 # scRNA section
 
-path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S96.CIBERSORT.tsv"
+#path_transcriptome_file = "~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S96.CIBERSORT.tsv"
+path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv"
+path_cell_type_predictions_file = "~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv"
 
 cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = T, row.names = 1)
 cell_type_predictions[1:5,1:5]
