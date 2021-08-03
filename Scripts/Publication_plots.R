@@ -30,6 +30,8 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
+#expr_raw = expr_raw[,meta_data$NEC_NET == "NET"]
+
 #meta_info$SUV39H1 = rep("",nrow(meta_info))
 #meta_info$SUV39H2 = rep("",nrow(meta_info))
 #matcher = match(rownames(meta_info), colnames(expr_raw),nomatch = 0)
@@ -45,7 +47,7 @@ genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",s
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
+i = 64
 genes_of_interest_hgnc_t[i,1]
 
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
@@ -70,7 +72,7 @@ expr = matrix(as.double(as.character(unlist(expr))), ncol = 9,nrow = nrow(expr))
 colnames(expr) = c(selection,"P_value","Correlation","Ratio")
 rownames(expr) = props$Sample
 
-correlation_matrix = cor(t(expr))
+correlation_matrix = cor((expr))
 pcr = prcomp(t(correlation_matrix))
 
 meta_data$Study[meta_data$Study == "Riemer"] = "Charite"
@@ -85,16 +87,15 @@ meta_data$P_value[meta_data$P_value != "not_sig"] = "sig"
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  #annotation_col = meta_data[,c("Ductal","Acinar","Alpha","Beta","Gamma","Delta","NEC_NET","Study")],
-  annotation_col = meta_data[,c("Grading","NEC_NET_Color","P_value","Study")],
+  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
+  #annotation_col = meta_data[,c("Grading","NEC_NET_Color","P_value","Study")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
-  #treeheight_col = 0,
+  show_colnames = F,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "complete"
+  clustering_method = "average"
 )
 
 p = ggbiplot::ggbiplot(
