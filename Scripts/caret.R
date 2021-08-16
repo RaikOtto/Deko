@@ -18,9 +18,17 @@ opt.cut = function( perf, pred ){
 set.seed(23489)
 
 # fit a random forest model (using ranger)
-rf_fit <- train(as.factor(old) ~ ., 
-                data = abalone_train, 
-                method = "ranger")
+rf_fit <- train(
+    as.factor(old) ~ ., 
+    data = abalone_train, 
+    method = "ranger")
+
+
+rf_fit <- train(
+    as.factor(truth_vec) ~ ., 
+    data = train_mat, 
+    method = "ranger")
+
 
 rf_fit
 
@@ -29,10 +37,15 @@ rf_fit
 library("stringr")
 library("grid")
 
-path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
+#path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
+path_transcriptome_file = "~/Downloads/RepSet.S84.Cibersort.tsv"
 
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+
+train_mat = expr_raw[,!(colnames(expr_raw) %in% c("Grading","Grading_binary") )]
+truth_vec = as.character(expr_raw[,"Grading_binary"])
+
 
 draw_colnames_45 <- function (coln, gaps, ...) {
     coord = pheatmap:::find_coordinates(length(coln), gaps)
@@ -41,16 +54,23 @@ draw_colnames_45 <- function (coln, gaps, ...) {
     return(res)}
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
 
-meta_info = read.table("~/Deco//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_data = meta_info[colnames(expr_raw),]
+meta_data = meta_info[rownames(expr_raw),]
+
+rownames(expr_raw)[which(!(rownames(expr_raw) %in% rownames(meta_info)))]
 
 truth_vec = meta_data$Grading
 truth_vec[truth_vec %in% c("G1","G2")] = 0
+truth_vec[truth_vec %in% c("G1_G2")] = 0
 truth_vec[truth_vec %in% c("G3")] = 1
 
+plot(train_mat$ductal,truth_vec)
+aggregate(train_mat$ductal,by=list(meta_data$Grading),FUN=mean)
+
 train_mat = t(expr_raw)[,1:50]
+train_mat = scale(train_mat)
 
 t_data = data.frame(
     cbind(
@@ -99,3 +119,6 @@ perf_vec = ROCR::performance(
 perf_vec <<- c(perf_vec,perf)
 res_vec = c(dataset_query, subtype,sensitivity,specificity,F1_score,rocr_auc)
 res_mat =  rbind(res_mat,res_vec)
+
+predictor_mat = cbind(train_mat,meta_data$Grading)
+#write.table(predictor_mat,"~/Downloads/ml_data.tsv",quot =F, sep ="\t")

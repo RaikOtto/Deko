@@ -8,19 +8,24 @@ set.seed(1)
 # scRNA section
 
 path_transcriptome_file = "~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv"
+path_transcriptome_file = "~/Downloads/ml_data.tsv"
 
 cell_type_predictions = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = T, row.names = 1)
 cell_type_predictions[1:5,1:5]
 
+train_mat = cell_type_predictions[,!(colnames(cell_type_predictions) %in% c("Grading","Grading_binary") )]
+truth_vec = cell_type_predictions[,"Grading_binary"]
+
+train_mat_real = matrix(as.double(as.character(unlist(train_mat))), ncol = ncol(train_mat), nrow = nrow(train_mat))
+colnames(train_mat_real) = colnames(train_mat)
 ###
 
 fitControl <- trainControl(
-    method = "repeatedcv",
+    method = "cv",
     number = 5,
-    sampling = "down",
-    repeats = 10,
     savePred=T
 )
+preProcValues <- preProcess(train_mat, method = c("center", "scale"))
 
 pred_grading = function(
     train_mat,
@@ -30,15 +35,13 @@ pred_grading = function(
     if ( model == ""){
         grading_model = caret::train(
             x = train_mat,
-            y = truth_vec,
+            y = (truth_vec),
             method = "rf",
-            norm.votes=T,
             #predict.all=FALSE,
-            #preProcess = c("scale","center"),
+            preProcess = c("scale","center"),
             type = "Classification",
-            metric= "Accuracy",
-            ntree = 500,
-            trControl = fitControl)
+            metric= "Accuracy"
+            )
     }
     return(grading_model)
 }
@@ -59,6 +62,7 @@ meta_data = meta_info[rownames(cell_type_predictions),]
 #
 
 selector = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","RMSE","Correlation","P_value")
+selector = c("alpha","beta","gamma","delta","acinar","ductal","RMSE","Correlation","P_value")
 train_mat = cell_type_predictions[,selector]
 
 randomizer_test = sample(1:nrow(train_mat),size = nrow(train_mat)*.80)
@@ -82,8 +86,8 @@ predictions_hold_out = predict(grading_model, train_mat_hold_out)
 truth_hold_out = factor(truth_vec_hold_out, levels = c("G1","G2","G3"))
 
 con_mat = confusionMatrix(
-    predictions_hold_out,
-    truth_hold_out,
+    predictions,
+    as.factor(truth_vec),
     #factor(truth_vec,levels = c("G1","G2","G3")),
     positive = "G3"
 )
@@ -99,7 +103,7 @@ plot(varImp(grading_model), top = 8)
 
 # supervised RNA-seq section
 
-path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S96.HGNC.tsv"
+path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Scarpa.S29.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Riemer.S40.tsv"
 path_transcriptome_file = "~/Deko_Projekt/Data/Bench_data/Sadanandam.S29.tsv"
@@ -118,7 +122,8 @@ row_var = apply( train_mat, FUN = var, MARGIN = 1)
 train_mat = train_mat[ row_var > quantile(row_var)[2], ]
 marker_genes = c( "MKI67")
 
-nr_marker_genes = 100
+nr_marker_genes = 600
+marker_genes = "MKI67"
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_alpha_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_beta_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_gamma_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
@@ -127,14 +132,15 @@ marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_ductal_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = c( marker_genes, read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/Dif_exp_hisc_400.tsv", stringsAsFactors = F,header = T)[1:nr_marker_genes,1] )
 marker_genes = unique(marker_genes)
-marker_genes = marker_genes[ marker_genes %in% rownames(train_mat)]
-which(!(marker_genes %in% rownames(train_mat)))
+marker_genes = marker_genes[ marker_genes %in% rownames(expr_raw)]
+which(!(marker_genes %in% rownames(expr_raw)))
 
-train_mat = train_mat[marker_genes,]
+train_mat = expr_raw[marker_genes,]
 "MKI67" %in% rownames(train_mat)
 
 row_var = as.double(apply(train_mat,MARGIN = 1, FUN =var))
-train_mat = train_mat[row_var > 10,]
+train_mat = train_mat[row_var > 100,]
+dim(train_mat)
 
 col_names = colnames(train_mat)
 row_names = rownames(train_mat)
@@ -142,7 +148,10 @@ train_mat = matrix(as.double(as.character(unlist(train_mat))), ncol = ncol(train
 colnames(train_mat) = col_names
 rownames(train_mat) = row_names
 
-dim(train_mat)
+#write.table(train_mat,"~/Downloads/Deconvolution_RepSet_S84.946genes.training_set.tsv",sep="\t",quote =F)
+truth_vec_binary = as.character(truth_vec)
+truth_vec_binary[as.character(truth_vec_binary) %in% c("G1","G2")] = "G1_G2"
+#write.table(cbind(meta_data$Sample,truth_vec_binary),"~/Downloads/Target_vector_binary.tsv",sep="\t",quote =F,row.names = F)
 
 truth_vec = factor(meta_info[colnames(train_mat),"Grading"],levels = c("G1","G2","G3"))
 
