@@ -22,7 +22,9 @@ res_scdc = as.data.frame(meta_info)
 
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.S9.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Downloads/NEC_2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+colnames(expr_raw) = c("C_NEC2","C_NEC2")
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.S9.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 #colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
@@ -112,26 +114,17 @@ source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
 library("stringr")
 library("bseqsc")
 
+colnames(expr_raw) = c("C_NEC2","C_NEC2_2")
 deconvolution_results = Deconvolve_transcriptome(
-    transcriptome_data = expr_raw,
+    transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
     models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     nr_permutations = 1000,
     output_file = ""
 )
 
-<<<<<<< HEAD
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S80.exocrine.CIBERSORT.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, row.names = 1,header = T)
-rownames(props) = str_replace(rownames(props), pattern = "^X", "")
-no_match = rownames(props) %in% meta_info$Sample == F
-rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
-no_match = rownames(props) %in% meta_info$Sample == F
 
-meta_data = meta_info[rownames(props),]
-props = props[meta_data$Study %in% c("Riemer","Scarpa","Master","Sadanandam","Missiaglia","Alvarez"),]
-=======
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Controls.CCL.S9.CIBERSORT.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Downloads/C_NEC2.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 rownames(props) = props$Sample
@@ -143,9 +136,6 @@ no_match = rownames(props) %in% meta_info$Sample == F
 sum(no_match)
 
 props = props[colnames(expr_raw),]
->>>>>>> dcf03aa9aed145f66f33a3daf9c7fee19dc85d67
-meta_data = meta_info[rownames(props),]
-rownames(meta_data) = meta_data$Sample
 
 ###
 
@@ -160,7 +150,7 @@ endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 #matcher = match(rownames(meta_data),rownames(meta_info))
 #meta_info[ matcher,"Ratio"] = meta_data$Ratio
 
-<<<<<<< HEAD
+
 #meta_info[rownames(meta_data), selection] = meta_data[,selection]
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names = F)
 ###
@@ -184,25 +174,7 @@ vis_mat = props[ !(rownames(props) %in% outlier),selector]
 vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
 
 correlation_matrix = cor(t(vis_mat))
-=======
-matcher = match(rownames(props),meta_info$Sample,nomatch = 0)
-meta_info[matcher,selection] = props[,selection]
 
-#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote = F)
-###
-#meta_data_save = meta_data
-
-for ( i in 1:nrow(meta_data)){
-    meta_data[i,selection] = meta_data[i,selection] / max(meta_data[i,selection] )
-    #res_scdc[rownames(props),colname] = as.double(res_scdc[rownames(props),colname])
-}
-#### visualization
-
-expr = expr[,str_detect(colnames(expr),pattern = "_",negate = T)]
-vis_mat = vis_mat[str_detect(rownames(vis_mat),pattern = "_",negate = T),]
-
-correlation_matrix = cor(expr)
->>>>>>> dcf03aa9aed145f66f33a3daf9c7fee19dc85d67
 pcr = prcomp(t(correlation_matrix))
 
 meta_data[meta_data$NEC_NET == "","NEC_NET"] = "Unknown"
@@ -211,13 +183,11 @@ meta_data[meta_data$Histology == "","Histology"] = "Unknown"
 
 p  =pheatmap::pheatmap(
     correlation_matrix,
-<<<<<<< HEAD
+
     annotation_col = meta_data[,c("Grading","NEC_NET","Ratio","Study")],
     #annotation_col = meta_data[,c("Grading","Study")],
-=======
-    annotation_col = vis_mat[,c("Alpha","SCDC_Alpha","Beta","SCDC_Beta","Gamma","SCDC_Gamma","Delta","SCDC_Delta","Acinar","SCDC_Acinar","Ductal","SCDC_Ductal","Grading")],
->>>>>>> dcf03aa9aed145f66f33a3daf9c7fee19dc85d67
-    annotation_colors = aka3,
+
+        annotation_colors = aka3,
     show_rownames = F,
     show_colnames = F,
     #treeheight_col = 0,
