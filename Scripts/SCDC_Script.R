@@ -22,12 +22,10 @@ res_scdc = as.data.frame(meta_info)
 
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t")
 
-expr_raw = read.table("~/Downloads/NEC_2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-colnames(expr_raw) = c("C_NEC2","C_NEC2")
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/CCL_Controls.S9.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
-#colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
+colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 
@@ -106,7 +104,7 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
 
 #write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato.S35.SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S84.Cibersort.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 library(devtools)
 load_all("~/artdeco")
@@ -114,7 +112,6 @@ source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
 library("stringr")
 library("bseqsc")
 
-colnames(expr_raw) = c("C_NEC2","C_NEC2_2")
 deconvolution_results = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
@@ -124,10 +121,10 @@ deconvolution_results = Deconvolve_transcriptome(
 )
 
 
-#write.table(deconvolution_results,"~/Downloads/C_NEC2.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Master.S91.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
-rownames(props) = props$Sample
+rownames(props) = props$Sample# SCDC
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -136,6 +133,7 @@ no_match = rownames(props) %in% meta_info$Sample == F
 sum(no_match)
 
 props = props[colnames(expr_raw),]
+dim(props)
 
 ###
 
@@ -180,23 +178,24 @@ pcr = prcomp(t(correlation_matrix))
 meta_data[meta_data$NEC_NET == "","NEC_NET"] = "Unknown"
 meta_data[meta_data$Grading == "","Grading"] = "Unknown"
 meta_data[meta_data$Histology == "","Histology"] = "Unknown"
+meta_data$Ratio = as.double(meta_data$Ratio)
 
 p  =pheatmap::pheatmap(
     correlation_matrix,
 
-    annotation_col = meta_data[,c("Grading","NEC_NET","Ratio","Study")],
+    annotation_col = meta_data[,c("Grading","NEC_NET_Color","Ratio","Study")],
     #annotation_col = meta_data[,c("Grading","Study")],
 
         annotation_colors = aka3,
     show_rownames = F,
-    show_colnames = F,
+    show_colnames = T,
     #treeheight_col = 0,
     treeheight_row = 0,
-    legend = T,
+    legend = F,
     fontsize_col = 7,
     clustering_method = "average"
-)
-
+) 
+p +  theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
  #### visualization
 
 

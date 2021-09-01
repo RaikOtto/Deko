@@ -19,8 +19,7 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/Master.S34.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_Master_S84.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -30,19 +29,7 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
-#expr_raw = expr_raw[,meta_data$NEC_NET == "NET"]
-
-#meta_info$SUV39H1 = rep("",nrow(meta_info))
-#meta_info$SUV39H2 = rep("",nrow(meta_info))
-#matcher = match(rownames(meta_info), colnames(expr_raw),nomatch = 0)
-#meta_info[matcher != 0, "SUV39H1"] = as.double(expr_raw[grep(rownames(expr_raw),pattern = "SUV39H1", value = F),matcher])
-#meta_info[matcher != 0, "SUV39H2"] = as.double(expr_raw[grep(rownames(expr_raw),pattern = "SUV39H2", value = F),matcher])
-
-#"132502" %in% colnames(expr_raw)
-
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-#genes_of_interest_hgnc_t = read.table("~/SeneSys/Misc/SeneSys_gene_sets.tsv",sep ="\t", stringsAsFactors = F, header = F)
-#genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc//Stem_signatures.gmt",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
@@ -55,43 +42,25 @@ sad_genes = sad_genes[ sad_genes != ""]
 sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
-expr_raw_normalized = matrix(as.double(as.character(unlist(expr_raw))), ncol = ncol(expr_raw));
-expr_raw_normalized = apply(expr_raw_normalized, FUN =scale, MARGIN = 2)
-colnames(expr_raw_normalized) = colnames(expr_raw);
-rownames(expr_raw_normalized) = rownames(expr_raw)
-
-expr = expr_raw_normalized[rownames(expr_raw_normalized) %in% sad_genes,]
-#expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
+expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
 expr[1:5,1:5]
 dim(expr)
 
 ###
 
-expr = cbind(props[,c(selection,"P_value","Correlation")],meta_data$Ratio)
-expr = matrix(as.double(as.character(unlist(expr))), ncol = 9,nrow = nrow(expr))
-colnames(expr) = c(selection,"P_value","Correlation","Ratio")
-rownames(expr) = props$Sample
-
 correlation_matrix = cor((expr))
 pcr = prcomp(t(correlation_matrix))
 
-meta_data$Study[meta_data$Study == "Riemer"] = "Charite"
-meta_data$Grading[meta_data$Grading == ""] ="CCL"
-meta_data$NEC_NET_Color = str_replace_all(meta_data$NEC_NET_Color,pattern = " ","")
-meta_data$NEC_NET_Color = as.character(meta_data$NEC_NET_Color)
-meta_data$P_value = props$P_value
-meta_data$P_value[meta_data$P_value >= 0.05] = "not_sig"
-meta_data$P_value[meta_data$P_value != "not_sig"] = "sig"
+#meta_data$Grading[meta_data$Grading == ""] ="CCL"
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
-  #annotation_col = meta_data[,c("Grading","NEC_NET_Color","P_value","Study")],
+  annotation_col = meta_data[,c("NEC_NET_Color","Grading","Study")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = F,
+  show_colnames = T,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
@@ -131,13 +100,6 @@ cell_m = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv"
 cell_m = cell_m %>% filter(Dataset %in% "RepSet")
 colnames(cell_m) = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","HISC", "Sample","Dataset","Model","P_value","Grading")
 cell_m$MKI67 = as.double(round(expr_raw["MKI67",cell_m$Sample] / max(expr_raw["MKI67",cell_m$Sample]) * 100,1))
-
-#pancreatic_samples = meta_info[meta_info$Histology == "Pancreatic","Name"]
-#non_pancreatic_samples = meta_info[!(meta_info$Histology == "Pancreatic"),"Name"]
-
-#dim(cell_m)
-#cell_m = cell_m %>% filter(Sample %in% non_pancreatic_samples)
-#dim(cell_m)
 
 cell_m_endo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Baron"))
 colnames(cell_m_endo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
@@ -293,16 +255,6 @@ table(data_t$Dataset) / 3
 vis_mat = data_t
 vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
 
-###
-
-#vis_mat = vis_mat[ vis_mat$model %in% c("Alpha_Beta_Gamma_Delta_Baron") ,]
-#vis_mat = vis_mat[ vis_mat$p_value <= 0.05 ,]
-
-#grading = as.double(str_replace(vis_mat$grading,pattern = "G",""))
-#table(grading)
-
-#  cor.test(vis_mat$alpha, grading)
-
 ####
 
 meta_data = meta_info[vis_mat$Sample,]
@@ -311,13 +263,6 @@ vis_mat$Histology = meta_data$Histology
 vis_mat$Grading[
   (vis_mat$Grading == "G3") & (vis_mat$Histology != "Pancreatic")
 ] = "G3_other"
-#vis_mat$grading[
-#  (vis_mat$grading == "G2") & (vis_mat$Histology != "Pancreatic")
-#  ] = "G2_other"
-#table(vis_mat$grading)
-#sum(table(meta_data$Histology)) / 3 - 69
-
-#data_t = data_t[ data_t$Dataset %in% c("Wiedenmann","Scarpa","Sadanandam","Missiaglia") ,]
 
 # p-value
 
@@ -454,7 +399,7 @@ p_average = p_average + geom_hline( yintercept = 0.05, color= "red",size=2, line
 p_average = p_average + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
 p_wiedenmann = ggplot(
-  data = res_mat %>% filter(Study == "Riemer"),
+  data = res_mat %>% filter(Study == "Charite"),
   aes(
     x = Grading,
     y = P_value,
@@ -528,7 +473,6 @@ vis_mat_4$Grading[vis_mat_4$Grading == ""] = "Unknown"
 melt_mat_4 = reshape2::melt(vis_mat_4)
 colnames(melt_mat_4) = c("Grading","Dataset","Celltype","Value")
 
-#melt_mat = melt_mat_4 %>% group_by(Celltype,Grading) %>% summarize(Value = mean(Value))
 melt_mat_4$Dataset = as.factor(melt_mat_4$Dataset)
 melt_mat_4$Grading = as.factor(melt_mat_4$Grading)
 melt_mat = melt_mat_4 %>% filter( Celltype %in% c("Alpha","Ductal","HISC")) %>% group_by(Grading,Dataset,Celltype) %>% dplyr::summarize( mean(Value))
@@ -894,15 +838,6 @@ umap_result = umap::umap(
 
 umap_result$layout = as.data.frame(umap_result$layout)
 colnames(umap_result$layout) = c("x","y")
-
-#plotly::plot_ly(
-#  x=umap_result$layout$x,
-#  y=umap_result$layout$y,
-#  z=umap_result$layout$z,
-#  type="scatter3d",
-#  mode="markers",
-  #name = rownames(umap_result$layout),
-#  color=meta_data$Study  )
 
 umap_p = ggplot(
   umap_result$layout,
