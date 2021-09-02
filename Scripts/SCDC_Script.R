@@ -10,19 +10,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$Subtype
 res_scdc = as.data.frame(meta_info)
 
-#meta_info$Patient = rep("",nrow(meta_info))
-#h1_detect = str_detect(meta_info$Name,pattern ="human1")
-#h2_detect = str_detect(meta_info$Name,pattern ="human2")
-#h3_detect = str_detect(meta_info$Name,pattern ="human3")
-#h4_detect = str_detect(meta_info$Name,pattern ="human4")
-#meta_info[h1_detect,"Patient"] = "human_1"
-#meta_info[h2_detect,"Patient"] = "human_2"
-#meta_info[h3_detect,"Patient"] = "human_3"
-#meta_info[h4_detect,"Patient"] = "human_4"
-
-#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv", sep ="\t")
-
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S84.HGNC.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
@@ -30,8 +18,7 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 
 meta_data = meta_info[colnames(expr_raw),]
-meta_data$Sample
-#expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/GSE142720_rma_norm_log2_matrix.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+table(meta_data$Study)
 
 fdata = rownames(expr_raw)
 pdata = cbind(bulk_sample = colnames(expr_raw))
@@ -120,10 +107,10 @@ deconvolution_results = Deconvolve_transcriptome(
     output_file = ""
 )
 
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t")
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Master.S91.tsv",sep = "\t")
-
-props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+#props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 rownames(props) = props$Sample# SCDC
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
@@ -175,20 +162,20 @@ correlation_matrix = cor(t(vis_mat))
 
 pcr = prcomp(t(correlation_matrix))
 
-meta_data[meta_data$NEC_NET == "","NEC_NET"] = "Unknown"
+meta_data[meta_data$NEC_NET_Color == "","NEC_NET"] = "Unknown"
 meta_data[meta_data$Grading == "","Grading"] = "Unknown"
 meta_data[meta_data$Histology == "","Histology"] = "Unknown"
 meta_data$Ratio = as.double(meta_data$Ratio)
 
+vis_mat$Ratio = (vis_mat$Ratio / vis_mat$Ratio)
 p  =pheatmap::pheatmap(
-    correlation_matrix,
-
+    #correlation_matrix,
+    t(vis_mat),
     annotation_col = meta_data[,c("Grading","NEC_NET_Color","Ratio","Study")],
     #annotation_col = meta_data[,c("Grading","Study")],
-
-        annotation_colors = aka3,
-    show_rownames = F,
-    show_colnames = T,
+    annotation_colors = aka3,
+    show_rownames = T,
+    show_colnames = F,
     #treeheight_col = 0,
     treeheight_row = 0,
     legend = F,
@@ -196,8 +183,8 @@ p  =pheatmap::pheatmap(
     clustering_method = "average"
 ) 
 p +  theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
- #### visualization
 
+#### visualization
 
 cell_m = as.data.frame(props[colnames(expr_raw),])
 cell_m$MKI67 = as.double(round(expr_raw["MKI67",rownames(cell_m)] / max(expr_raw["MKI67",rownames(cell_m)]) * 100,1))
