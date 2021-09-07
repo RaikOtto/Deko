@@ -5,8 +5,6 @@ library("ggplot2")
 library("dplyr")
 library("grid")
 
-#443 407 444 579 450 409 452 PNET08
-
 #draw_colnames_45 <- function (coln, gaps, ...) {
 #  coord = pheatmap:::find_coordinates(length(coln), gaps)
 #  x = coord$coord - 0.5 * coord$size
@@ -19,15 +17,18 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Diedisheim.S66.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
+dim(expr_raw)
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
+
+#expr_raw = expr_raw[(meta_data$Histology == "pancreas") || (meta_data$NEC_NET_Color != "Primary") ,]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
@@ -42,13 +43,20 @@ sad_genes = sad_genes[ sad_genes != ""]
 sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
+hox_genes = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
+sad_genes = hox_genes
+#expr_raw = expr_raw[,meta_data$Grading %in% c("G1","G2","G3")]
+meta_data = meta_info[colnames(expr_raw),]
+
 expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
 expr[1:5,1:5]
 dim(expr)
 
 ###
 
-correlation_matrix = cor((expr))
+expr = props[,c("Alpha","Beta","Gamma","Delta","Ductal","Ratio","Correlation","RMSE","P_value")]
+expr = expr[expr$P_value <= 0.05,]
+correlation_matrix = cor(t(expr))
 pcr = prcomp(t(correlation_matrix))
 
 #meta_data$Grading[meta_data$Grading == ""] ="CCL"
@@ -57,10 +65,11 @@ pcr = prcomp(t(correlation_matrix))
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("NEC_NET_Color","Grading","Study")],
+  annotation_col = meta_data[,c("NET_NEC_PCA","Grading","Study")],
+  #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
@@ -73,13 +82,13 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
+  groups = as.character(meta_data$Grading),
   #label = meta_data$Sample,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
 p
 #p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
@@ -628,11 +637,14 @@ meta_data = meta_info[rownames(props),]
 
 props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep ="\t", header = T, as.is=TRUE)
 rownames(props ) = props$Sample
+
 no_matcher = which(!(colnames(expr_raw) %in% rownames(props)))
 colnames(expr_raw)[no_matcher] = str_replace(colnames(expr_raw)[no_matcher], pattern ="^X","")
 no_matcher = which(!(colnames(expr_raw) %in% rownames(props)))
 no_matcher
 props = props[colnames(expr_raw),]
+
+props %>% filter()
 
 selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
@@ -665,91 +677,5 @@ p  =pheatmap::pheatmap(
   legend = T,
   fontsize_col = 7,
   clustering_method = "complete"
-)
-dev.off()
-###
-library("umap")
-
-col_vec_nec_net = meta_data$NEC_NET
-col_vec_nec_net[col_vec_nec_net == "NET"] = "blue"
-col_vec_nec_net[col_vec_nec_net != "blue"] = "red"
-
-custom.config = umap.defaults
-custom.config$random_state = sample(1:1000,size = 1)
-custom.config$random_state = 350
-custom.config$n_components=2
-
-umap_result = umap::umap(
-  correlation_matrix,
-  colvec = col_vec_nec_net,
-  preserve.seed = FALSE,
-  config=custom.config
-  )
-
-umap_result$layout = as.data.frame(umap_result$layout)
-colnames(umap_result$layout) = c("x","y")
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
-umap_p = umap_p + theme(legend.position = "none") + xlab("") + ylab("")
-umap_p = umap_p + geom_vline( xintercept=0, size = 2, linetype = 2) + geom_hline( yintercept = 0, size = 2, linetype = 2)  
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NEC_NET), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("darkgreen","yellow","red","darkred","#33ACFF")) ##33ACFF ##FF4C33
-umap_p = umap_p + annotate("text", x = 3.5, y = -3.5, label = "NEC",col = "darkred",size =8)
-umap_p = umap_p + annotate("text", x = -1, y = 2.5, label = "NET",col = "#33ACFF",size =8)
-umap_p
-custom.config$random_state # 188 #350
-
-library("gridExtra")
-
-grading_map = as.data.frame(cbind(as.double(umap_result$layout[,1]),meta_data$Grading))
-colnames(grading_map) = c("x","Grading")
-grading_map$x = as.double(as.character(unlist(grading_map$x)))
-
-xdensity = ggplot(
-  grading_map,
-  aes(x))
-xdensity = xdensity + geom_density(alpha=.5,aes(fill=as.factor(meta_data$Grading)), )
-xdensity = xdensity + geom_vline(xintercept = 0.35, size = 2, linetype= 2)
-xdensity = xdensity + theme(legend.position = "none") + xlab("") + ylab("")
-xdensity = xdensity + guides(fill=guide_legend(title = "Grading"))
-xdensity = xdensity + theme(axis.title.x = element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-xdensity = xdensity + scale_fill_manual( values = c("darkgreen","yellow","red")) ##33ACFF ##FF4C33
-xdensity = xdensity + annotate("text", x = -1.6, y = .25, label = "G1",size = 8) + annotate("text", x = -3.1, y = .4, label = "G2",size = 8) + annotate("text", x = 3.25, y = .15, label = "G3",size= 8)
-
-#scale_fill_manual(values = c('#999999','#E69F00')) + 
-
-nec_net_map = as.data.frame(cbind(as.double(umap_result$layout[,2]),meta_data$NEC_NET))
-colnames(grading_map) = c("y","NEC_NET")
-grading_map$y = as.double(as.character(unlist(grading_map$y)))
-
-grading_map$y = grading_map$y
-
-ydensity = ggplot(
-    grading_map,
-    aes(y))
-ydensity = ydensity + geom_density(alpha=.5,aes(fill=as.factor(meta_data$NEC_NET)), )
-ydensity = ydensity + scale_fill_manual(values=c("#33ACFF","darkred"))
-ydensity = ydensity + theme(legend.position = "none") + xlab("") + ylab("")
-ydensity = ydensity + guides(fill=guide_legend(title="NEC_NET"))
-ydensity = ydensity + geom_vline(xintercept = 8.325,size= 2, linetype= 2)
-ydensity = ydensity + annotate("text", x = 5.2, y = 0.2, label = "NEC",size = 8) + annotate("text", x = 11.5, y = 0.2, label = "NET",size = 8)
-ydensity = ydensity + coord_flip()  + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-blankPlot = ggplot() + geom_blank(aes(10,10)) + annotate("text", x = 1, y = 1, label = "") + annotate("text", x = 10, y = 10, label = "") +theme(plot.background = element_blank(),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border = element_blank(),panel.background = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(),axis.text.y = element_blank(),axis.ticks = element_blank())
-blankPlot = blankPlot + annotate("text", x = 3.5, y = 8, label = "Grading",col = "black",size =8) + annotate("text", x = 7, y = 2, label = "Subtype",col = "black",size =8) + annotate("segment", x = 1, xend = 10, y = 1, yend = 10)
-
-svg(filename = "~/Downloads/Umap.svg", width = 10, height = 10)
-grid.arrange(
-  xdensity,
-  blankPlot,
-  umap_p,
-  ydensity,
-  ncol=2,
-  nrow=2,
-  widths=c(4, 1.4), heights=c(1.4, 4)
 )
 dev.off()

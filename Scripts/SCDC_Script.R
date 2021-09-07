@@ -5,13 +5,16 @@ library("dplyr")
 library("Biobase")
 
 meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$Subtype
 res_scdc = as.data.frame(meta_info)
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/Deko_Projekt/Data/JGA/Sato.S35.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Deko_Projekt/Data/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+expr_raw[1:5,1:5]
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -40,14 +43,14 @@ dim(expr)
 #expr_scrna =  read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T)
 expr_scrna =  as.data.frame(read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T))
 
-cell_type_vec = meta_info[colnames(expr_scrna),"Subtype"]
+cell_type_vec = meta_info[colnames(expr_scrna),"NEC_NET_Color"]
 #expr_scrna = expr_scrna[,!(cell_type_vec %in% c("Ductal","Acinar"))]
 table(cell_type_vec)
 
 fdata = rownames(expr_scrna)
 pdata = cbind(cellname = colnames(expr_scrna), subjects = cell_type_vec)
 eset_scrna = getESET(expr_scrna, fdata = fdata, pdata = pdata)
-eset_scrna$Subtype = meta_info[eset_scrna$cellname,"Subtype"]
+eset_scrna$Subtype = meta_info[eset_scrna$cellname,"NEC_NET_Color"]
 
 sample_id = rep("",length(eset_scrna$Subtype))
 sample_id[grep(colnames(expr_scrna),pattern = "human1",value = F)] = "human1"
@@ -91,7 +94,7 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
 
 #write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato.S35.SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S84.Cibersort.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 library(devtools)
 load_all("~/artdeco")
@@ -102,16 +105,18 @@ library("bseqsc")
 deconvolution_results = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
+    models = "Alpha_Beta_Gamma_Delta_Baron",
+    #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
+    Cibersort_absolute_mode = TRUE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.absolute.endocrine.tsv",sep = "\t")
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
-#props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
-rownames(props) = props$Sample# SCDC
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S96.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#rownames(props) = props$Sample# SCDC
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -119,131 +124,111 @@ rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
 no_match = rownames(props) %in% meta_info$Sample == F
 sum(no_match)
 
-props = props[colnames(expr_raw),]
 dim(props)
+meta_data = meta_info[rownames(props),]
+#props = props %>% filter(P_value<= 0.05)
 
 ###
+
+meta_data = meta_info[rownames(props),]
+props = props[meta_data$Functionality %in% c("Non-functional","Insulinoma","Glucagonoma", "Somatostatinoma", "PPoma", "Non-functional"),]
+#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
+#props = props[(meta_data$Study == "Califano") ,]
+meta_data = meta_info[rownames(props),]
+table(meta_data$NEC_NET_Color)
 
 selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 
-#meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
+meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
 #meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
 #meta_data[,selection] = props[,selection]
 
 #matcher = match(rownames(meta_data),rownames(meta_info))
 #meta_info[ matcher,"Ratio"] = meta_data$Ratio
 
-
 #meta_info[rownames(meta_data), selection] = meta_data[,selection]
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names = F)
 ###
 
-selector = c(
-    "Alpha",
-    #"Beta",
-    #"Gamma",
-    #"Delta",
-    "Ductal",
-    #"Acinar",
-    #"P_value",
-    "Correlation",
-    "RMSE")
-#expr = t(meta_data[,selector])
-
-#outlier = c("440","459","441","500","1286","PNET08")
-outlier = ""
-
-vis_mat = props[ !(rownames(props) %in% outlier),selector]
-vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
+vis_mat = props[,selection]
+vis_mat$Exocrine = vis_mat$Acinar + vis_mat$Ductal
+vis_mat = vis_mat[,!(colnames(vis_mat) %in% c("Acinar","Ductal"))]
+#vis_mat = props[ !(rownames(props) %in% outlier),selector]
+#vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
 
 correlation_matrix = cor(t(vis_mat))
 
 pcr = prcomp(t(correlation_matrix))
 
-meta_data[meta_data$NEC_NET_Color == "","NEC_NET"] = "Unknown"
+meta_data[meta_data$NEC_NET == "","NEC_NET_Ori"] = "Unknown"
 meta_data[meta_data$Grading == "","Grading"] = "Unknown"
 meta_data[meta_data$Histology == "","Histology"] = "Unknown"
 meta_data$Ratio = as.double(meta_data$Ratio)
 
-vis_mat$Ratio = (vis_mat$Ratio / vis_mat$Ratio)
-p  =pheatmap::pheatmap(
+#vis_mat$Ratio = (vis_mat$Ratio / max(vis_mat$Ratio))
+p = pheatmap::pheatmap(
     #correlation_matrix,
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","NEC_NET_Color","Ratio","Study")],
-    #annotation_col = meta_data[,c("Grading","Study")],
+    #annotation_col = meta_data[,c("Grading","NEC_NET_Color","Ratio","Study")],
+    annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET_Ori")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
     #treeheight_col = 0,
     treeheight_row = 0,
+    cluster_rows = F,
     legend = F,
-    fontsize_col = 7,
+    fontsize_row = 14,
     clustering_method = "average"
-) 
-p +  theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+)
+p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
 
-#### visualization
+### PCA
 
-cell_m = as.data.frame(props[colnames(expr_raw),])
-cell_m$MKI67 = as.double(round(expr_raw["MKI67",rownames(cell_m)] / max(expr_raw["MKI67",rownames(cell_m)]) * 100,1))
-cell_m$Sample = rownames(cell_m)
-cell_m$Grading = meta_data$Grading
-cell_m$NEC_NET = meta_data$Subtype
-cell_m$Histology = meta_data$Histology
-cell_m$Grading[(cell_m$NEC_NET == "NEC") & (cell_m$Grading == "G3")] = "G3_NEC"
-cell_m$Grading[(cell_m$NEC_NET == "NET") & (cell_m$Grading == "G3")] = "G3_NET"
+p = ggbiplot::ggbiplot(
+    prcomp(t(vis_mat)),
+    groups = as.character(meta_data$Grading),
+    var.axes = F,
+    ellipse = TRUE
+)
+ki_67_vec = as.double(expr_raw["MKI67",])*.5
 
-cell_m = cell_m %>% filter(str_detect(cell_m$Sample, pattern = "_",negate = T))
+p = p + geom_point( aes( shape = meta_data$Grading, color = meta_data$Grading ), size = ki_67_vec ) # Fig 4
+p = p + scale_color_manual( values = c("darkgreen","yellow","red") ) #Fig 4 Master
+p = p + guides(fill=FALSE) + scale_fill_discrete(guide=FALSE)+ theme(legend.position="none")
+p
 
-cell_m_exo = cell_m[,c("Grading","NEC_NET","alpha","beta","gamma","delta","acinar","ductal")] %>% melt() 
-colnames(cell_m_exo) = c("Grading","NEC_NET","Celltype","Proportion")
-cell_m_exo = cell_m_exo %>% filter(!( Celltype %in%  c("MKI67","P_value")))
-cell_m_exo$Celltype = sapply( as.character(cell_m_exo$Celltype), FUN = function(vec){return(tail(as.character(unlist(str_split(vec,pattern = "_"))),1))})
+library("umap")
 
-cell_m_exo_g1 = cell_m_exo[cell_m_exo$Grading == "G1",]
-cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] + 1
-cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] + .5
-vis_mat_exo_g1 = aggregate(cell_m_exo_g1$Proportion, by = list(cell_m_exo_g1$Celltype), FUN = sum)
-vis_mat_exo_g1$x = round(vis_mat_exo_g1$x / sum(vis_mat_exo_g1$x) * 100, 1 )
-vis_mat_exo_g1$Grading = rep("G1",nrow(vis_mat_exo_g1))
-cell_m_exo_g2 = cell_m_exo[cell_m_exo$Grading == "G2",]
-cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] + .5
-cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] + .25
-vis_mat_exo_g2 = aggregate(cell_m_exo_g2$Proportion, by = list(cell_m_exo_g2$Celltype), FUN = sum)
-vis_mat_exo_g2$x = round(vis_mat_exo_g2$x / sum(vis_mat_exo_g2$x)  * 100, 1 )
-vis_mat_exo_g2$Grading = rep("G2",nrow(vis_mat_exo_g2))
+custom.config = umap.defaults
+custom.config$random_state = sample(1:1000,size = 1)
+custom.config$random_state = 350
+custom.config$n_components=2
 
-cell_m_exo_g3_NET = cell_m_exo[ (cell_m_exo$Grading == "G3_NET"),]
-vis_mat_exo_g3_NET = aggregate(cell_m_exo_g3_NET$Proportion, by = list(cell_m_exo_g3_NET$Celltype), FUN = sum)
-vis_mat_exo_g3_NET$x = round(vis_mat_exo_g3_NET$x / sum(vis_mat_exo_g3_NET$x)  * 100, 1 )
-vis_mat_exo_g3_NET$Grading = rep("G3_NET",nrow(vis_mat_exo_g3_NET))
-cell_m_exo_g3_NEC = cell_m_exo[ (cell_m_exo$Grading == "G3_NEC"),]
-vis_mat_exo_g3_NEC = aggregate(cell_m_exo_g3_NEC$Proportion, by = list(cell_m_exo_g3_NEC$Celltype), FUN = sum)
-vis_mat_exo_g3_NEC$x = round(vis_mat_exo_g3_NEC$x / sum(vis_mat_exo_g3_NEC$x)  * 100, 1 )
-vis_mat_exo_g3_NEC$Grading = rep("G3_NEC",nrow(vis_mat_exo_g3_NEC))
+umap_result = umap::umap(
+    cor(t(vis_mat)),
+    colvec = meta_data$Grading,
+    preserve.seed = FALSE,
+    config=custom.config
+)
 
-vis_mat_exo = rbind(vis_mat_exo_g1,vis_mat_exo_g2,vis_mat_exo_g3_NET,vis_mat_exo_g3_NEC)
-colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
-vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3_NET","G3_NEC"))
+umap_result$layout = as.data.frame(umap_result$layout)
+colnames(umap_result$layout) = c("x","y")
 
-library("ggplot2")
-p_exo = ggplot(
-    data = vis_mat_exo,
-    aes(
-        x = Grading,
-        y = Proportion
-    )
-) + geom_bar(
-    aes(
-        y = Proportion,
-        x = Grading,
-        fill = Celltype
-    ),
-    data = vis_mat_exo,
-    stat="identity",
-    colour="black"
-) + scale_fill_manual(values = c("cyan", "blue","yellow","purple","darkred","orange")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
-p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p_exo
+umap_p = ggplot(
+    umap_result$layout,
+    aes(x, y))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
+umap_p = umap_p + theme(legend.position = "none") + xlab("") + ylab("")
+umap_p = umap_p + geom_vline( xintercept=0, size = 2, linetype = 2) + geom_hline( yintercept = 0, size = 2, linetype = 2)  
+umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
+umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NEC_NET), level=.5, type ="t", size=1.5)
+umap_p = umap_p + scale_color_manual( values = c("darkgreen","yellow","red","darkred","#33ACFF")) ##33ACFF ##FF4C33
+umap_p = umap_p + annotate("text", x = 3.5, y = -3.5, label = "NEC",col = "darkred",size =8)
+umap_p = umap_p + annotate("text", x = -1, y = 2.5, label = "NET",col = "#33ACFF",size =8)
+umap_p
+custom.config$random_state # 188 #350
+
+library("gridExtra")
