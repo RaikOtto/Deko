@@ -38,9 +38,11 @@ p = pheatmap::pheatmap(
     show_rownames = T,
     show_colnames = F,
     treeheight_row = 0,
+    cellheight = 20,
     cluster_rows = F,
-    legend = F,
+    legend = T,
     fontsize_row = 14,
     clustering_method = "average"
 )
-p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
+p = p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
+p

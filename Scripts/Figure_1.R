@@ -24,7 +24,7 @@ vis_mat$Location = factor(vis_mat$Location, levels = c("Primary","Metastasis"))
 vis_mat$P_value = as.double(vis_mat$P_value)
 
 vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Baron"] = "Endocrine"
-vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"] = "Exocrine"
+vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"] = "Endocrine & Exocrine"
 
 p_values = ggplot(
     data = vis_mat,
