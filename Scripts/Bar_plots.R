@@ -153,29 +153,4 @@ p_histo
 p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_exo
 
-### p-values Califano
 
-meta_data = meta_info[props$Sample,]
-props$Location = meta_data$NEC_NET_Color
-props$Location[props$Location != "Primary"] = "Metastasis"
-vis_mat = reshape2::melt(props[,c("Location","P_value","model")])
-colnames(vis_mat) = c("Location","Model","Variable","P_value")
-vis_mat$Location = factor(vis_mat$Location, levels = c("Primary","Metastasis"))
-vis_mat$P_value = as.double(vis_mat$P_value)
-
-vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Baron"] = "Endocrine"
-vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"] = "Exocrine"
-
-p_values = ggplot(
-    data = vis_mat,
-    aes(
-        x = Model,
-        y = P_value,
-        fill = Location
-    )
-) + geom_boxplot()
-p_values = p_values + scale_fill_manual(values = c("blue", "red","blue", "red")) + ylab("P-value") + xlab("Model")+ theme(legend.position = "top",axis.text=element_text(size=12))
-p_values = p_values + geom_hline(yintercept = 0.05, linetype= "dashed", color = "black")
-p_values = p_values + annotate("text", x = 2, y = .055, label = "P-value == 0.05",col = "black",size =6)
-p_values = p_values + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p_values

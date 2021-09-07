@@ -114,9 +114,8 @@ deconvolution_results = Deconvolve_transcriptome(
 
 #write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.absolute.endocrine.tsv",sep = "\t")
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet.S96.CIBERSORT.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-#rownames(props) = props$Sample# SCDC
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -126,16 +125,13 @@ sum(no_match)
 
 dim(props)
 meta_data = meta_info[rownames(props),]
-#props = props %>% filter(P_value<= 0.05)
 
 ###
 
+props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
 meta_data = meta_info[rownames(props),]
-props = props[meta_data$Functionality %in% c("Non-functional","Insulinoma","Glucagonoma", "Somatostatinoma", "PPoma", "Non-functional"),]
-#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
-#props = props[(meta_data$Study == "Califano") ,]
+props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
-table(meta_data$NEC_NET_Color)
 
 selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
@@ -162,21 +158,12 @@ correlation_matrix = cor(t(vis_mat))
 
 pcr = prcomp(t(correlation_matrix))
 
-meta_data[meta_data$NEC_NET == "","NEC_NET_Ori"] = "Unknown"
-meta_data[meta_data$Grading == "","Grading"] = "Unknown"
-meta_data[meta_data$Histology == "","Histology"] = "Unknown"
-meta_data$Ratio = as.double(meta_data$Ratio)
-
-#vis_mat$Ratio = (vis_mat$Ratio / max(vis_mat$Ratio))
 p = pheatmap::pheatmap(
-    #correlation_matrix,
     t(vis_mat),
-    #annotation_col = meta_data[,c("Grading","NEC_NET_Color","Ratio","Study")],
     annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET_Ori")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
-    #treeheight_col = 0,
     treeheight_row = 0,
     cluster_rows = F,
     legend = F,
@@ -200,35 +187,3 @@ p = p + scale_color_manual( values = c("darkgreen","yellow","red") ) #Fig 4 Mast
 p = p + guides(fill=FALSE) + scale_fill_discrete(guide=FALSE)+ theme(legend.position="none")
 p
 
-library("umap")
-
-custom.config = umap.defaults
-custom.config$random_state = sample(1:1000,size = 1)
-custom.config$random_state = 350
-custom.config$n_components=2
-
-umap_result = umap::umap(
-    cor(t(vis_mat)),
-    colvec = meta_data$Grading,
-    preserve.seed = FALSE,
-    config=custom.config
-)
-
-umap_result$layout = as.data.frame(umap_result$layout)
-colnames(umap_result$layout) = c("x","y")
-
-umap_p = ggplot(
-    umap_result$layout,
-    aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
-umap_p = umap_p + theme(legend.position = "none") + xlab("") + ylab("")
-umap_p = umap_p + geom_vline( xintercept=0, size = 2, linetype = 2) + geom_hline( yintercept = 0, size = 2, linetype = 2)  
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NEC_NET), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("darkgreen","yellow","red","darkred","#33ACFF")) ##33ACFF ##FF4C33
-umap_p = umap_p + annotate("text", x = 3.5, y = -3.5, label = "NEC",col = "darkred",size =8)
-umap_p = umap_p + annotate("text", x = -1, y = 2.5, label = "NET",col = "#33ACFF",size =8)
-umap_p
-custom.config$random_state # 188 #350
-
-library("gridExtra")
