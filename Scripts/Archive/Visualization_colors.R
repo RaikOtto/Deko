@@ -1,5 +1,6 @@
 
 aka3 = list(
+<<<<<<< HEAD
     #Histology   = c(
     #    Pancreatic = "BLACK",
     #    Colorectal = "Orange",
@@ -33,9 +34,31 @@ aka3 = list(
     NEC_NET_Color = c("NEC"= "darkred", "NET" = "blue", "MiNEN" = "purple",SCLC = "brown"),
     Study = c(Charite = "#FF99CC", Scarpa = "#55B2E2","Master" = "#00FFCC"),
     MKI67 = c(high = "white", medium = "yellow", low = "red"),
+=======
+    Histology   = c(
+        Pancreatic = "blue",
+        Colorectal = "Orange",
+        Intestinal = "Yellow",
+        Gastric = "purple",
+        Gastric_not_specified = "cyan",
+        "not specified (CUP)" = "orange"),
+    Deco_type = c(alpha = "Blue",beta = "Yellow",gamma = "Orange",delta = "Purple", e13.5 = "Brown", hsc = "white"),
+    #NEC_NET = c( NET = "white", NEC= "darkred"),
+    NEC_NET = c( NET = "white", NEC= "darkred"),
+    FLT3LG = c(high = "green", medium="yellow", low = "red"),
+    average_expression = c(high = "black", low = "white"),
+    SUV39H1= c(high = "green", medium="yellow", low = "red"),
+    SUV39H2= c(high = "green", medium="yellow", low = "red"),
+    NEC_NET_PCA = c(NEC= "red", NET = "blue", Unknown = "white"),
+    NEC_NET_Color = c(NEC= "red", NET = "blue", Ambiguous = "purple"),
+    Study = c(Charite = "gray", Scarpa = "darkgreen", Master = "yellow"),
+    #Study = c(Charite = "black", Scarpa = "darkgreen",Master = "yellow","Missiaglia" = "purple", Alvarez = "gray","Sadanandam" = "cyan"),
+    MKI67 = c(high = "White",  low = "red"),
+>>>>>>> 91557d4cc2b8245e843127c4c83e07359ebab000
     Correlation = c(high = "Red", medium = "Yellow", low = "Green"),
     Deco_similarity = c(low = "Red", medium = "Yellow", high = "Green"),
     StromalScore = c(high = "White", medium = "gray", low = "Black"),
+    Ratio = c("low"="white","high"="darkred"),
     Alpha = c(low = "white", high = "blue"),
     Beta = c(low = "white", high = "darkgreen"),
     Gamma = c(low = "white", high = "orange"),
@@ -69,8 +92,12 @@ aka3 = list(
     Grading = c( G1 = "#CBDB34",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray"),
     Predicted_Grading = c( G0 = "white",G1 = "Green",G2 = "Yellow", G3 = "Red"),
     Differentiation_type = c( Alpha = "blue", Beta ="green", Gamma = "Orange", Delta = "Purple", Progenitor = "Yellow", HESC = "brown", not_sig = "gray"),
+<<<<<<< HEAD
     #Subtype = c( Alpha = "blue", Beta ="green", Delta = "Purple", Ductal = "orange", endothelial = "brown", Acinar = "cyan", Gamma = "yellow"),
     Subtype = c( Alpha = "blue", Beta ="green", Delta = "Purple", Ductal = "orange", endothelial = "brown", Acinar = "cyan", Gamma = "yellow",mesenchymal = "red"),
+=======
+    Subtype = c( Alpha = "blue", Beta ="green", Gamma = "Orange", Delta = "Purple", Acinar = "cyan", Ductal = "brown", "endothelial" = "black","Stellate" = "gray",mesenchymal = "white"),
+>>>>>>> 91557d4cc2b8245e843127c4c83e07359ebab000
     De_differentiatedness = c(low = "red", medium = "white", high = "green"),
     Differentiatedness = c(low = "white", high = "darkgreen"),
     Ratio = c(low="white",high="black"),
@@ -81,9 +108,22 @@ aka3 = list(
         stem_cell = "red",
         progenitor     = "orange",
         Not_significant= "gray"
+<<<<<<< HEAD
     ),
     Senescence_UP =c( "high" = "black", "low" = "white"),
     "TIS down" = c("high" = "darkred", "low" = "white"),
     "NF-kB activation"= c("high" = "darkgreen", "low" = "white"),
     P_value = c("not_sig" = "black","sig" = "white")
+=======
+    ),Location = c(
+        Primary = "red",
+        Metastasis = "white",
+        #Liver_Met = "Darkgreen",
+        #Control = "White",
+        #Lymph_node_Met = "Yellow",
+        #Peritoneum_Met = "Black",
+        #Spleen_Met = "Cyan",
+        #Lung_Met = "Blue",
+        missing = "gray")
+>>>>>>> 91557d4cc2b8245e843127c4c83e07359ebab000
 )
