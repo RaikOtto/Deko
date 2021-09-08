@@ -13,13 +13,19 @@ sum(no_match)
 dim(props)
 meta_data = meta_info[props$Sample,]
 
-props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
+#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
+props  = props[ meta_data$Histology == "pancreas" ,]
+dim(props)
 meta_data = meta_info[props$Sample,]
 
+meta_data$Location = meta_data$NEC_NET_Color
+props = props[ meta_data$Location != "Outlier" ,]
+meta_data = meta_info[props$Sample,]
 props$Location = meta_data$NEC_NET_Color
-props$Location[props$Location != "Primary"] = "Metastasis"
+
 vis_mat = reshape2::melt(props[,c("Location","P_value","model")])
 colnames(vis_mat) = c("Location","Model","Variable","P_value")
+vis_mat$Location[vis_mat$Location == "liver_met"] = "Metastasis"
 vis_mat$Location = factor(vis_mat$Location, levels = c("Primary","Metastasis"))
 vis_mat$P_value = as.double(vis_mat$P_value)
 
@@ -39,3 +45,4 @@ p_values = p_values + geom_hline(yintercept = 0.05, linetype= "dashed", color = 
 p_values = p_values + annotate("text", x = 2, y = .055, label = "P-value == 0.05",col = "black",size =6)
 p_values = p_values + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_values
+
