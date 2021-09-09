@@ -107,12 +107,12 @@ deconvolution_results = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     #models = "Alpha_Beta_Gamma_Delta_Baron",
     models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    Cibersort_absolute_mode = TRUE,
+    Cibersort_absolute_mode = FALSE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato.S29.Ninon.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim.S66.exokrine.relative.tsv",sep = "\t")
 
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
