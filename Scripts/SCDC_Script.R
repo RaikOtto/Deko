@@ -194,3 +194,34 @@ p
 
 meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Cell
+
+library("devtools")
+library("NMF")
+load_all("~/artdeco/")
+
+meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Name
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+### add models
+
+scRNA_file_path = "~/Downloads/exprMatrix.tsv"
+model_name = "Tosti"
+
+t = read.table(scRNA_file_path, sep ="\t", header = T)
+dim(t)
+
+meta_data = meta_info[colnames(t),]
+subtype_vector = str_to_lower(meta_data$Subtype)
+table(subtype_vector)
+
+transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
+
+add_deconvolution_training_model_bseqsc(
+    transcriptome_data = transcriptome_data,
+    model_name = model_name,
+    subtype_vector =  str_to_lower(subtype_vector),
+    training_p_value_threshold = 0.05,
+    training_nr_permutations = 0,
+    training_nr_marker_genes = 800
+)
