@@ -1,9 +1,13 @@
 library("devtools")
 library("NMF")
 load_all("~/artdeco/")
+source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
+library("stringr")
+library("bseqsc")
 
-meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+
+meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### add models
@@ -17,13 +21,14 @@ colnames(t) = str_replace_all(colnames(t),pattern ="\\.","_")
 colnames(t) = str_replace_all(colnames(t),pattern ="^X","")
 dim(t)
 meta_data = meta_info[colnames(t),]
-subtype_vector = str_to_lower(meta_data$Subtype)
+#subtype_vector = str_to_lower(meta_data$Subtype)
+subtype_vector = str_to_lower(meta_data$Cluster)
 table(subtype_vector)
 
-transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
+expr_raw = read.table(scRNA_file_path,sep="\t",header  = T)
 
 add_deconvolution_training_model_bseqsc(
-    transcriptome_data = transcriptome_data,
+    transcriptome_data = expr_raw,
     model_name = model_name,
     subtype_vector =  str_to_lower(subtype_vector),
     training_p_value_threshold = 0.05,

@@ -1,20 +1,24 @@
+library("devtools")
+library("NMF")
+library(devtools)
+load_all("~/artdeco")
+source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
+library("stringr")
+library("bseqsc")
 library("SCDC")
 library("stringr")
 library("reshape2")
+library("bseqsc")
 library("dplyr")
 library("Biobase")
 
-#meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 
 rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_info$NEC_NET = meta_info$Subtype
-res_scdc = as.data.frame(meta_info)
 
-#expr_raw = read.table("~/Deko_Projekt/Data/JGA/Sato.S35.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-expr_raw = read.table("~/Deko_Projekt/Data/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -43,31 +47,29 @@ dim(expr)
 # ScRNA EXO 
 
 #expr_scrna =  read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T)
-expr_scrna =  as.data.frame(read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T))
+expr_scrna =  as.data.frame(read.table("~/Dropbox/Tosti.S3573.RepSet_genes.tsv", sep ="\t", header = T))
 
 cell_type_vec = meta_info[colnames(expr_scrna),"NEC_NET_Color"]
+cell_type_vec
 #expr_scrna = expr_scrna[,!(cell_type_vec %in% c("Ductal","Acinar"))]
 table(cell_type_vec)
 
 fdata = rownames(expr_scrna)
-pdata = cbind(cellname = colnames(expr_scrna), subjects = cell_type_vec)
+pdata = cbind(cellname = colnames(expr_scrna), cell_type_vec = cell_type_vec)
 eset_scrna = getESET(expr_scrna, fdata = fdata, pdata = pdata)
-eset_scrna$Subtype = meta_info[eset_scrna$cellname,"NEC_NET_Color"]
+#eset_scrna$Subtype = meta_info[eset_scrna$cellname,"NEC_NET_Color"]
 
-sample_id = rep("",length(eset_scrna$Subtype))
-sample_id[grep(colnames(expr_scrna),pattern = "human1",value = F)] = "human1"
-sample_id[grep(colnames(expr_scrna),pattern = "human2",value = F)] = "human2"
-sample_id[grep(colnames(expr_scrna),pattern = "human3",value = F)] = "human3"
-sample_id[grep(colnames(expr_scrna),pattern = "human4",value = F)] = "human4"
-table(sample_id)
-eset_scrna$Sample = sample_id
+
+eset_scrna$Donor_id = meta_data$patient_ID
+table(eset_scrna$Donor_id)
+
 
 scrna.qc = SCDC_qc(
     eset_scrna,
-    ct.varname = "Subtype",
-    sample = "Sample",
+    ct.varname = "cell_type_vec",
+    sample = "Donor_id",
     scsetname = "scRNA",
-    ct.sub = unique(eset_scrna$Subtype),
+    ct.sub = unique(eset_scrna$cell_type_vec),
     qcthreshold = 0.7
 )
 #DemoPlot(eset_scrna, cluster = "Subtype", sample = "Sample", select.ct = unique(eset_scrna$Subtype))
@@ -78,9 +80,9 @@ scrna.qc$heatfig
 scdc_props = SCDC_prop(
     bulk.eset = eset_expr_raw,
     sc.eset = eset_scrna,
-    ct.varname = "Subtype",
-    sample = "Sample",
-    ct.sub = unique(eset_scrna$Subtype),
+    ct.varname = "cell_type_vec",
+    sample = "Donor_id",
+    ct.sub = unique(eset_scrna$cell_type_vec),
     iter.max = 1000,
     nu = 1e-04,
     epsilon = 0.01,
@@ -95,29 +97,24 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 #colnames(props) = paste("SCDC",colnames(scdc_props$prop.est.mvw),sep = "_")
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato.S35.SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim_S66.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t")
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
-library(devtools)
-load_all("~/artdeco")
-source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
-library("stringr")
-library("bseqsc")
 
 deconvolution_results = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    #models = "Alpha_Beta_Gamma_Delta_Baron",
-    models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    Cibersort_absolute_mode = FALSE,
+    models = "Tosti_50",
+    #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
+    Cibersort_absolute_mode = TRUE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Diedisheim.S66.exokrine.relative.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_50.Absolute.tsv",sep = "\t")
 
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -130,17 +127,21 @@ meta_data = meta_info[rownames(props),]
 
 ###
 
-props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
+#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
 meta_data = meta_info[rownames(props),]
-props = props[(meta_data$Study == "Alvarez") ,]
+#props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
-selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
-exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
+#selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
+selection = c("acinar-s","acinar-i","acinar-reg+","endothelial","Ductal",
+"activated stellate","quiescent stellate","Beta","schwann","Delta","muc5b+ ductal",
+"macrophage","Alpha","Gamma")
+#exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
+exocrines = as.double(rowSums(props[,c("Ductal","acinar-s","acinar-i","acinar-reg+","muc5b+ ductal")]))
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 
 meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
-#meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
+meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
 #meta_data[,selection] = props[,selection]
 
 #matcher = match(rownames(meta_data),rownames(meta_info))
@@ -151,26 +152,27 @@ meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
 ###
 
 vis_mat = props[,selection]
-vis_mat$Exocrine = vis_mat$Acinar + vis_mat$Ductal
-vis_mat = vis_mat[,!(colnames(vis_mat) %in% c("Acinar","Ductal"))]
+#vis_mat$Exocrine = vis_mat$Acinar + vis_mat$Ductal
+#vis_mat = vis_mat[,!(colnames(vis_mat) %in% c("Acinar","Ductal"))]
 #vis_mat = props[ !(rownames(props) %in% outlier),selector]
-#vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
+vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
+vis_mat[,"Ratio"] = vis_mat[,"Ratio"] / max(vis_mat[,"Ratio"])
 
-correlation_matrix = cor(t(vis_mat))
+correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 
-pcr = prcomp(t(correlation_matrix))
-
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET_Ori")],
+    #correlation_matrix,
+    annotation_col = meta_data[,c("Grading","NET_NEC_PCA")],
     annotation_colors = aka3,
     show_rownames = T,
-    show_colnames = F,
+    show_colnames = T,
     treeheight_row = 0,
     cluster_rows = F,
     legend = F,
     fontsize_row = 14,
-    clustering_method = "average"
+    clustering_method = "complete"
 )
 p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
 
@@ -195,33 +197,47 @@ p
 meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Cell
 
-library("devtools")
-library("NMF")
-load_all("~/artdeco/")
+scRNA_file_path = "~/Dropbox/Tosti.S3573.RepSet_genes.tsv"
 
-meta_info = read.table("~/Deco/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+expr_raw = read.table(scRNA_file_path, sep ="\t", header = T)
+expr_raw[1:5,1:5]
+dim(expr_raw)
 
-### add models
-
-scRNA_file_path = "~/Downloads/exprMatrix.tsv"
-model_name = "Tosti"
-
-t = read.table(scRNA_file_path, sep ="\t", header = T)
-dim(t)
-
-meta_data = meta_info[colnames(t),]
-subtype_vector = str_to_lower(meta_data$Subtype)
+meta_data = meta_info[colnames(expr_raw),]
+cell_type_vec = str_to_lower(meta_data$Cluster)
 table(subtype_vector)
 
-transcriptome_data = read.table(scRNA_file_path,sep="\t",header  = T)
+#saveRDS(t,"~/Downloads/Tosti.scRNA.RDS")
+ 
+### subsampling
+
+selected_samples = c()
+
+for ( cell_type in unique(subtype_vector)){
+    coords = which(subtype_vector == cell_type )
+    
+    if (length(coords) >= 300)
+        coords = sample(coords, size = 300)
+    
+    selected_samples = c(selected_samples, coords)
+}
+length(selected_samples)
+
+meta_data = meta_info[colnames(expr_raw),]
+subtype_vec = meta_data$Cluster
+model_name = "Tosti_50"
 
 add_deconvolution_training_model_bseqsc(
-    transcriptome_data = transcriptome_data,
+    transcriptome_data = expr_raw,
     model_name = model_name,
-    subtype_vector =  str_to_lower(subtype_vector),
+    subtype_vector =  str_to_lower(subtype_vec),
     training_p_value_threshold = 0.05,
     training_nr_permutations = 0,
-    training_nr_marker_genes = 800
+    training_nr_marker_genes = 50
 )
+
+###
+
+selected_matrix = selected_matrix[rownames(selected_matrix) %in% rownames(expr_raw),]
+selected_matrix[1:5,1:5]
+dim(selected_matrix)
