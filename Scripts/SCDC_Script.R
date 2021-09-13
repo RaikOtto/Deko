@@ -4,9 +4,11 @@ library("reshape2")
 library("dplyr")
 library("Biobase")
 
-meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-#meta_info = read.table("~/MAPTor_NET///Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+#meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
+
 rownames(meta_info) = meta_info$Sample
+
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$Subtype
 res_scdc = as.data.frame(meta_info)
@@ -187,3 +189,8 @@ p = p + scale_color_manual( values = c("darkgreen","yellow","red") ) #Fig 4 Mast
 p = p + guides(fill=FALSE) + scale_fill_discrete(guide=FALSE)+ theme(legend.position="none")
 p
 
+
+### tosti parsing
+
+meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Cell
