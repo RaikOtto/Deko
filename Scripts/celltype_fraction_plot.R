@@ -1,3 +1,7 @@
+library("stringr")
+library("ggplot2")
+library("pheatmap")
+
 ## Figure 3 Segerstolpe Heatmap
 
 cell_m = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv",sep ="\t", header = T, stringsAsFactors = F)
@@ -142,11 +146,25 @@ ggarrange(
 )
 #dev.off()
 
-######
+########## NEW PLOT ####
 
-cell_m_exo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
-colnames(cell_m_exo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+cell_m = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_50.Absolute.tsv",sep ="\t", header = T, stringsAsFactors = F)
+#cell_m = cell_m %>% filter(Dataset %in% "RepSet")
+#colnames(cell_m) = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal","HISC", "Sample","Dataset","Model","P_value","Grading")
+
+#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+meta_data = meta_info[rownames(cell_m),]
+
+#cell_m_exo = reshape2::melt(cell_m %>% filter(Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
+#colnames(cell_m_exo) = c("Sample","Dataset","Model","Grading","Celltype","Proportion")
+cell_m$Sample = rownames(cell_m)
+cell_m_exo = reshape2::melt(cell_m)
+colnames(cell_m_exo) = c("Model","Subtype","Sample","Celltype","Proportion")
 cell_m_exo = cell_m_exo %>% filter(!( Celltype %in%  c("MKI67","P_value")))
+cell_m_exo$Grading = meta_info[cell_m_exo$Sample,"Grading"]
 
 ## g1
 
@@ -155,7 +173,7 @@ cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] = cell_m_exo_g1[cel
 cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] + .5
 vis_mat_exo_g1 = aggregate(cell_m_exo_g1$Proportion, by = list(cell_m_exo_g1$Celltype), FUN = sum)
 vis_mat_exo_g1$x = round(vis_mat_exo_g1$x / sum(vis_mat_exo_g1$x) * 100, 1 )
-vis_mat_exo_g1$Grading = rep("G1",7)
+vis_mat_exo_g1$Grading = rep("G1",nrow(vis_mat_exo_g1))
 
 ## g2
 
@@ -164,55 +182,57 @@ cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] = cell_m_exo_g2[cel
 cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] + .25
 vis_mat_exo_g2 = aggregate(cell_m_exo_g2$Proportion, by = list(cell_m_exo_g2$Celltype), FUN = sum)
 vis_mat_exo_g2$x = round(vis_mat_exo_g2$x / sum(vis_mat_exo_g2$x)  * 100, 1 )
-vis_mat_exo_g2$Grading = rep("G2",7)
+vis_mat_exo_g2$Grading = rep("G2",nrow(vis_mat_exo_g2))
 
 ## g3
 
 cell_m_exo_g3 = cell_m_exo[cell_m_exo$Grading == "G3",]
-cell_m_exo_g3 = cell_m_exo_g3 %>% dplyr::filter(Celltype != "HISC") 
-
-#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Sample
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_data = meta_info[cell_m_exo_g3$Sample,]
+cell_m_exo_g3 = cell_m_exo_g3 %>% dplyr::filter(Celltype != "HISC")  
 
 cell_m_exo_g3 = cell_m_exo[cell_m_exo$Grading == "G3",]
 
-cell_m_exo_g3[ meta_data$NEC_NET_PCA == "NEC", "Grading" ] = "G3_NEC"
-cell_m_exo_g3[ meta_data$NEC_NET_PCA == "NET", "Grading" ] = "G3_NET"
+cell_m_exo_g3[ meta_info[cell_m_exo_g3$Sample,"NEC_NET_PCA"] == "NEC", "Grading" ] = "G3_NEC"
+cell_m_exo_g3[ meta_info[cell_m_exo_g3$Sample,"NEC_NET_PCA"] == "NET", "Grading" ] = "G3_NET"
 
 cell_m_exo_g3_NET = cell_m_exo_g3[cell_m_exo_g3$Grading == "G3_NET",]
 cell_m_exo_g3_NEC = cell_m_exo_g3[cell_m_exo_g3$Grading == "G3_NEC",]
 
 vis_mat_exo_g3_NET = aggregate(cell_m_exo_g3_NET$Proportion, by = list(cell_m_exo_g3_NET$Celltype), FUN = sum)
 vis_mat_exo_g3_NET$x = round(vis_mat_exo_g3_NET$x / sum(vis_mat_exo_g3_NET$x)  * 100, 1 )
-vis_mat_exo_g3_NET$Grading = rep("G3_NET",7)
+vis_mat_exo_g3_NET$Grading = rep("G3_NET",nrow(vis_mat_exo_g3_NET))
 
 vis_mat_exo_g3_NEC = aggregate(cell_m_exo_g3_NEC$Proportion, by = list(cell_m_exo_g3_NEC$Celltype), FUN = sum)
 vis_mat_exo_g3_NEC$x = round(vis_mat_exo_g3_NEC$x / sum(vis_mat_exo_g3_NEC$x)  * 100, 1 )
-vis_mat_exo_g3_NEC$Grading = rep("G3_NEC",7)
+vis_mat_exo_g3_NEC$Grading = rep("G3_NEC",nrow(vis_mat_exo_g3_NEC))
 
 vis_mat_exo = rbind(vis_mat_exo_g1,vis_mat_exo_g2,vis_mat_exo_g3_NET,vis_mat_exo_g3_NEC)
 colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
-vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3_NET","G3_NEC"))
+vis_mat_exo = vis_mat_exo[vis_mat_exo$Celltype != "Strength_subtype",]
+vis_mat_exo = vis_mat_exo[vis_mat_exo$Celltype != "RMSE",]
+vis_mat_exo = vis_mat_exo[vis_mat_exo$Celltype != "Correlation",]
+vis_mat_exo = vis_mat_exo[vis_mat_exo$Celltype != "Sig_score",]
+vis_mat_exo = vis_mat_exo[vis_mat_exo$Celltype != "P_value",]
+#vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3_NET","G3_NEC"))
+
+vis_mat_exo = as.data.frame(vis_mat_exo)
 
 p_exo = ggplot(
     data = vis_mat_exo,
     aes(
         x = Grading,
-        y = Proportion
+        y = Proportion,
+        fill = Celltype
     )
 ) + geom_bar(
     aes(
-        y = Proportion,
         x = Grading,
+        y = Proportion,
         fill = Celltype
     ),
-    data = vis_mat_exo,
+    #data = vis_mat_exo,
     #stat="identity",
-    stat= position_dodge(),
-    colour="black"
-) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","cyan","darkred","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
+    position = "dodge2"
+)
+p_exo = p_exo+ scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","cyan","darkred","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
 p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_exo

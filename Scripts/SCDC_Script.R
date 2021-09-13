@@ -172,7 +172,7 @@ p = pheatmap::pheatmap(
     cluster_rows = F,
     legend = F,
     fontsize_row = 14,
-    clustering_method = "complete"
+    clustering_method = "average"
 )
 p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
 
