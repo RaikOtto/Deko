@@ -18,9 +18,11 @@ rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
+
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -94,8 +96,8 @@ scdc_props = SCDC_prop(
 
 props = matrix(scdc_props$prop.est.mvw,nrow = nrow(scdc_props$prop.est.mvw))
 colnames(props) = colnames(scdc_props$prop.est.mvw)
-#colnames(props) = paste("SCDC",colnames(scdc_props$prop.est.mvw),sep = "_")
 rownames(props)  = rownames(scdc_props$prop.est.mvw) 
+rownames(props) = str_replace(rownames(props), pattern = "^X","")
 
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t")
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
@@ -111,7 +113,7 @@ deconvolution_results = Deconvolve_transcriptome(
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_400.Absolute.tsv",sep = "\t")
+#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato_S35.Ninon.Tosti_400.Absolute.tsv",sep = "\t")
 
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
@@ -133,15 +135,13 @@ meta_data = meta_info[rownames(props),]
 meta_data = meta_info[rownames(props),]
 
 #selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
-selection = c("acinar-s","acinar-i","acinar-reg+","endothelial","Ductal",
-"activated stellate","quiescent stellate","Beta","schwann","Delta","muc5b+ ductal",
-"macrophage","Alpha","Gamma")
+selection = c("acinar-s","acinar-i","acinar-reg+","endothelial","Ductal","activated stellate","quiescent stellate","Beta","schwann","Delta","muc5b+ ductal","macrophage","Alpha","Gamma")
 #exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
 exocrines = as.double(rowSums(props[,c("Ductal","acinar-s","acinar-i","acinar-reg+","muc5b+ ductal")]))
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
 
-meta_data$Ratio = log((exocrines+.1) / (endocrines+.1))
-meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
+Ratio = log((exocrines+.1) / (endocrines+.1))
+Ratio = ((exocrines+.1) / (endocrines+.1))
 #meta_data[,selection] = props[,selection]
 
 #matcher = match(rownames(meta_data),rownames(meta_info))
@@ -151,11 +151,12 @@ meta_data$Ratio = ((exocrines+.1) / (endocrines+.1))
 #write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names = F)
 ###
 
+props = as.data.frame(props)
 vis_mat = props[,selection]
 #vis_mat$Exocrine = vis_mat$Acinar + vis_mat$Ductal
 #vis_mat = vis_mat[,!(colnames(vis_mat) %in% c("Acinar","Ductal"))]
 #vis_mat = props[ !(rownames(props) %in% outlier),selector]
-vis_mat[,"Ratio"] = as.double(meta_data[rownames(vis_mat),"Ratio"])
+vis_mat$Ratio = as.double(Ratio)
 vis_mat[,"Ratio"] = vis_mat[,"Ratio"] / max(vis_mat[,"Ratio"])
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))

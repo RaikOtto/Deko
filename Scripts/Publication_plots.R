@@ -17,8 +17,8 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#expr_raw = read.table("~/Deko_Projekt/Data/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = as.data.frame(read.csv2("~/Downloads/results_gene.csv",header = T, sep =" "))
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -34,12 +34,17 @@ meta_data = meta_info[colnames(expr_raw),]
 #expr_raw = expr_raw[(meta_data$Histology == "pancreas") || (meta_data$NEC_NET_Color != "Primary") ,]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-genes_of_interest_hgnc_t = read.table("~/MAPTor_NET//Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t = read.table("~/Deko_Projekt///Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
+i = 63
 genes_of_interest_hgnc_t[i,1]
+
+#genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
+#genes$gene = str_to_upper(genes$gene)
+#genes = genes[order(genes$p_val, decreasing = F),]
+#sad_genes = genes[genes$p_val == 0,"gene"]
 
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
@@ -47,7 +52,7 @@ sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
 hox_genes = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
-sad_genes = hox_genes
+#sad_genes = hox_genes
 #expr_raw = expr_raw[,meta_data$Grading %in% c("G1","G2","G3")]
 meta_data = meta_info[colnames(expr_raw),]
 
@@ -57,10 +62,10 @@ dim(expr)
 
 ###
 
-expr = props[,c("Alpha","Beta","Gamma","Delta","Ductal","Ratio","Correlation","RMSE","P_value")]
-expr = expr[expr$P_value <= 0.05,]
-correlation_matrix = cor(t(expr))
-pcr = prcomp(t(correlation_matrix))
+#expr = props[,c("Alpha","Beta","Gamma","Delta","Ductal","Ratio","Correlation","RMSE","P_value")]
+#expr = expr[expr$P_value <= 0.05,]
+correlation_matrix = cor((expr))
+pcr = prcomp((correlation_matrix))
 
 #meta_data$Grading[meta_data$Grading == ""] ="CCL"
 
@@ -68,15 +73,15 @@ pcr = prcomp(t(correlation_matrix))
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("NET_NEC_PCA","Grading","Study")],
+  annotation_col = meta_data[,c("NEC_NET_Color","Location","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = F,
+  show_colnames = T,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "single"
 )
 
 p = ggbiplot::ggbiplot(
@@ -85,15 +90,15 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$Grading),
+  groups = as.character(meta_data$Location),
   #label = meta_data$Sample,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$Grading) ))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$Location) ))
 p
-#p = p + scale_color_manual( values = c("Purple","Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p = p + scale_color_manual( values = c("green","yellow","darkred","blue","red"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p = p + scale_color_manual( values = c("Purple","Red","Blue") ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
