@@ -166,7 +166,7 @@ p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
     annotation_col = meta_data[,c("Grading","NET_NEC_PCA")],
-    annotation_colors = aka3,
+    #annotation_colors = aka3,
     show_rownames = T,
     show_colnames = T,
     treeheight_row = 0,
