@@ -18,7 +18,7 @@ rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -106,7 +106,7 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_
 deconvolution_results = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    models = "Tosti_400",
+    models = "Tosti_50",
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = TRUE,
     nr_permutations = 1000,
@@ -168,7 +168,7 @@ p = pheatmap::pheatmap(
     annotation_col = meta_data[,c("Grading","NET_NEC_PCA")],
     #annotation_colors = aka3,
     show_rownames = T,
-    show_colnames = T,
+    show_colnames = F,
     treeheight_row = 0,
     cluster_rows = F,
     legend = F,
@@ -198,7 +198,7 @@ p
 meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Cell
 
-scRNA_file_path = "~/Dropbox/Tosti.S3573.RepSet_genes.tsv"
+scRNA_file_path = "~/Downloads/exprMatrix.tsv"
 
 expr_raw = read.table(scRNA_file_path, sep ="\t", header = T)
 expr_raw[1:5,1:5]
@@ -206,7 +206,7 @@ dim(expr_raw)
 
 meta_data = meta_info[colnames(expr_raw),]
 cell_type_vec = str_to_lower(meta_data$Cluster)
-table(subtype_vector)
+table(cell_type_vec)
 
 #saveRDS(t,"~/Downloads/Tosti.scRNA.RDS")
  
