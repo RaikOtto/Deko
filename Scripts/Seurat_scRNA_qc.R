@@ -1,19 +1,17 @@
 library("stringr")
-library("Seurath")
+library("Seurat")
 library("dplyr")
 library("Matrix")
 
-meta_info = read.table("~/Dek")
-scrna_raw = load
-
-# Load the PBMC dataset
-pbmc.data <- Read10X(data.dir = "~/Downloads/filtered_gene_bc_matrices/hg19/")
+meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep ="\t", header = T)
+rownames(meta_info) = meta_info$Cell
+scrna_raw = readRDS("~/Downloads/Tosti.scRNA.S112563.RDS")
 
 # Examine the memory savings between regular and sparse matrices
-dense.size <- object.size(x = as.matrix(x = pbmc.data))
+dense.size = object.size(x = as.matrix(x = scrna_raw))
 dense.size 
 
-sparse.size <- object.size(x = pbmc.data) 
+sparse.size <- object.size(x = scrna_raw) 
 sparse.size
 
 dense.size/sparse.size
@@ -36,5 +34,27 @@ par(mfrow = c(1, 2))
 GenePlot(object = pbmc, gene1 = "nUMI", gene2 = "percent.mito")
 GenePlot(object = pbmc, gene1 = "nUMI", gene2 = "nGene")
 
-pbmc <- FilterCells(object = pbmc, subset.names = c("nGene", "percent.mito"), 
-                    low.thresholds = c(200, -Inf), high.thresholds = c(2500, 0.05))
+pbmc = FilterCells(
+    object = pbmc,
+    subset.names = c("nGene", "percent.mito"),
+    low.thresholds = c(200, -Inf), high.thresholds = c(2500, 0.05)
+)
+
+pbmc = NormalizeData(
+    object = pbmc,
+    normalization.method = "LogNormalize",
+    scale.factor = 10000
+)
+
+pbmc = FindVariableGenes(
+    object = pbmc,
+    mean.function = ExpMean,
+    dispersion.function = LogVMR,
+    x.low.cutoff = 0.0125,
+    x.high.cutoff = 3,
+    y.cutoff = 0.5
+)
+
+length(x = pbmc@var.genes)
+
+pbmc = ScaleData(object = pbmc, vars.to.regress = c("nUMI", "percent.mito"))
