@@ -5,7 +5,11 @@ library("Matrix")
 
 meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep ="\t", header = T)
 rownames(meta_info) = meta_info$Cell
+<<<<<<< HEAD
 scrna_raw = readRDS("~/Downloads/Tosti.scRNA.S112563.RDS")
+=======
+scrna_raw = readRDS("~/Dropbox/Tosti.scRNA.S112563.RDS")
+>>>>>>> ac4cbc8ca52e4bc728519ac2343bbaf7b9f197ee
 
 # Examine the memory savings between regular and sparse matrices
 dense.size = object.size(x = as.matrix(x = scrna_raw))

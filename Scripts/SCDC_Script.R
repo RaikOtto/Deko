@@ -18,7 +18,11 @@ rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
+<<<<<<< HEAD
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+=======
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+>>>>>>> ac4cbc8ca52e4bc728519ac2343bbaf7b9f197ee
 expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
