@@ -1,6 +1,11 @@
 library("stringr")
 library("ggplot2")
 library("dplyr")
+library("ggpubr")
+library("png")
+library("ggplot2")
+library("magick")
+
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Califano.S165.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -47,20 +52,45 @@ p_values = p_values + theme(legend.position="top",axis.text=element_text(size=14
 p_values
 
 ####
-library("png")
 
-img1_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
-img1 <- readPNG(img1_path, native = TRUE, info = TRUE)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-library(ggplot2)
-library(cowplot)
-library(magick)
+table(meta_info$Study)
 
-theme_set(theme_cowplot())
+study_selection = c("Alvarez","Charite","Diedisheim","Master","Sadanandam","Sato","Scarpa")
+meta_data = meta_info[meta_info$Study %in% study_selection,]
+meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
+meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
+meta_data = meta_data[ grep(meta_data$Sample, pattern = "SCLC",invert = TRUE),]
+meta_data = meta_data[ grep(meta_data$Sample, pattern = "MiNEN",invert = TRUE),]
+dim(meta_data)
 
-my_plot <- 
-    ggplot(data    = iris, 
-           mapping = aes(x    = Sepal.Length, 
-                         fill = Species)) + 
-    geom_density(alpha = 0.7) # +
-# theme_cowplot()
+table(meta_data$Primary_Metastasis)
+which(meta_data$Primary_Metastasis == "Unknown")
+
+table(meta_data$Histology_Primary)
+
+dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary_Metastasis == "Primary"),])
+
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+
+
+####
+
+plot_a_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
+plot_a <- readPNG(plot_a_path, native = TRUE, info = TRUE)
+
+
+
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
+    background_image(plot_a)+
+    geom_point(aes(color = Species), alpha = 0.6, size = 5)+
+    color_palette("jco")+
+    theme(legend.position = "top")
+
+
+p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
+              labels = c("A", "B", "C","D","E","F"),
+              ncol = 3, nrow = 2,  common.legend = TRUE)
