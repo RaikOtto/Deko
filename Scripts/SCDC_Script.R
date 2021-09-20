@@ -246,3 +246,12 @@ add_deconvolution_training_model_bseqsc(
 selected_matrix = selected_matrix[rownames(selected_matrix) %in% rownames(expr_raw),]
 selected_matrix[1:5,1:5]
 dim(selected_matrix)
+
+
+### marker gene totsi 50
+
+marker_genes = c()
+marker_list = data[[3]]
+for (name in names(marker_list)){
+    marker_genes = c(marker_genes,as.character(unlist(marker_list[name])))
+}

@@ -46,3 +46,21 @@ p_values = p_values + annotate("text", x = 2, y = .055, label = "P-value == 0.05
 p_values = p_values + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 p_values
 
+####
+library("png")
+
+img1_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
+img1 <- readPNG(img1_path, native = TRUE, info = TRUE)
+
+library(ggplot2)
+library(cowplot)
+library(magick)
+
+theme_set(theme_cowplot())
+
+my_plot <- 
+    ggplot(data    = iris, 
+           mapping = aes(x    = Sepal.Length, 
+                         fill = Species)) + 
+    geom_density(alpha = 0.7) # +
+# theme_cowplot()
