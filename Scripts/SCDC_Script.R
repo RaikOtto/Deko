@@ -210,6 +210,10 @@ table(cell_type_vec)
 
 #saveRDS(t,"~/Downloads/Tosti.scRNA.RDS")
  
+hgnc_list = expr_raw[,1]
+#expr_raw = expr_raw[,-1]
+selector = str_detect(pattern = "_",hgnc_list)
+
 ### subsampling
 
 selected_samples = c()
