@@ -19,7 +19,7 @@ rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -103,17 +103,17 @@ rownames(props) = str_replace(rownames(props), pattern = "^X","")
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 
-deconvolution_results = Deconvolve_transcriptome(
+props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    models = "Tosti_50",
+    models = "Tosti_200_Endocrine_all_Exocrine",
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = TRUE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(deconvolution_results,"~/Deko_Projekt/Results/Cell_fraction_predictions/Sato_S35.Ninon.Tosti_400.Absolute.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_Endocrine_all_Exocrine",sep = "\t")
 
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
@@ -165,7 +165,7 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","NET_NEC_PCA")],
+    annotation_col = meta_data[,c("Grading","NET_NEC_PCA","Functionality","Study")],
     #annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
@@ -209,6 +209,7 @@ cell_type_vec = str_to_lower(meta_data$Cluster)
 table(cell_type_vec)
 
 #saveRDS(t,"~/Downloads/Tosti.scRNA.RDS")
+expr_raw = readRDS("~/Downloads/Tosti.scRNA.RDS")
  
 hgnc_list = expr_raw[,1]
 #expr_raw = expr_raw[,-1]

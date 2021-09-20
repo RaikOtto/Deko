@@ -6,7 +6,7 @@ library("Matrix")
 meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep ="\t", header = T)
 rownames(meta_info) = meta_info$Cell
 
-scrna_raw = readRDS("~/Downloads/Tosti.scRNA.S112563.RDS")
+scrna_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
 meta_data = meta_info[colnames(scrna_raw),]
 age_exclusion_vec = which(meta_data$age<5)
 scrna_raw = scrna_raw[,-age_exclusion_vec]
@@ -79,7 +79,6 @@ pbmc = FindNeighbors(pbmc, dims = 1:10)
 pbmc = FindClusters(pbmc, resolution = 0.5)
 
 pbmc = RunUMAP(pbmc, dims = 1:14)
-table(meta_data$Cluster)
 DimPlot(pbmc, reduction = "umap")
 
 beta_markers = FindMarkers(pbmc, ident.1 = "Beta", logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
@@ -88,3 +87,77 @@ pbmc.markers = FindAllMarkers(pbmc, only.pos = TRUE, min.pct = 0.25, logfc.thres
 pbmc.markers %>%
     group_by(cluster) %>%
     slice_max(n = 2, order_by = avg_log2FC)
+
+normalized_data = pbmc
+normalized_data[1:5,1:5]
+
+write.table(
+    as.matrix(GetAssayData(object = pbmc, slot = "data")), 
+    '~/Downloads/Tosti.Seurat.normalized.S78048.tsv', 
+    sep = ',', row.names = T, col.names = T, quote = F)
+
+write.table(pbmc.markers,"~/Downloads/Marker_genes.tsv",sep ="\t",quote =F )
+
+
+####
+
+expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
+rownames = as.character(sapply(rownames(expr_raw), FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "\\|")))[1])}))
+rownames = as.character(sapply(rownames, FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "-")))[1])}))
+hgnc_list = rownames
+
+#### downsampling
+
+meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep ="\t", header = T)
+rownames(meta_info) = meta_info$Cell
+
+expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
+meta_data = meta_info[colnames(expr_raw),]
+cell_type_vec_overall = str_to_lower(meta_data$Cluster)
+table(cell_type_vec_overall)
+
+#
+
+cell_type_vec_overall[cell_type_vec_overall %in% c("acinar-i","acinar-s","acinar-reg+")] = "acinar"
+cell_type_vec_overall[cell_type_vec_overall %in% c("muc5b+ ductal","ductal")] = "ductal"
+
+#
+
+#cell_type_vec = cell_type_vec_overall[!(cell_type_vec_overall %in% c("schwann","endothelial","activated stellate","quiescent stellate","macrophage"))]
+cell_type_vec = cell_type_vec_overall[!(cell_type_vec_overall %in% c("alpha","beta","gamma","delta","schwann","endothelial","activated stellate","quiescent stellate","macrophage"))]
+table(cell_type_vec)
+selected_samples = c()
+
+for ( cell_type in unique(cell_type_vec)){
+    coords = which(cell_type_vec_overall == cell_type )
+    
+    if (length(coords) >= 200)
+        coords = sample(coords, size = 200)
+    
+    selected_samples = c(selected_samples, coords)
+}
+length(selected_samples)
+
+expr = expr_raw[,selected_samples]
+model_name = "Tosti_200_aggregated_Exocrine_only"
+
+library("devtools")
+load_all("~/artdeco")
+source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
+library("bseqsc")
+
+subtypes = cell_type_vec_overall[selected_samples]
+table(subtypes)
+
+dim(expr)
+length(subtypes)
+
+add_deconvolution_training_model_bseqsc(
+    transcriptome_data = expr,
+    model_name = model_name,
+    subtype_vector =  str_to_lower(subtypes),
+    training_p_value_threshold = 0.05,
+    training_nr_permutations = 0,
+    training_nr_marker_genes = 200
+)
+
