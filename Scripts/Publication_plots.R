@@ -38,7 +38,7 @@ genes_of_interest_hgnc_t = read.table("~/Deko_Projekt///Misc/Stem_signatures.tsv
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 63
+i = 13
 genes_of_interest_hgnc_t[i,1]
 
 #genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
@@ -73,7 +73,7 @@ pcr = prcomp((correlation_matrix))
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("NEC_NET_Color","Location","Grading","Study")],
+  annotation_col = meta_data[,c("NEC_NET","Primary_Metastasis","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -81,7 +81,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "single"
+  clustering_method = "ward.D"
 )
 
 p = ggbiplot::ggbiplot(

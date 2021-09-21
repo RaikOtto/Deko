@@ -6,6 +6,9 @@ library("png")
 library("ggplot2")
 library("magick")
 
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Califano.S165.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -19,14 +22,14 @@ dim(props)
 meta_data = meta_info[props$Sample,]
 
 #props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
-props  = props[ meta_data$Histology == "pancreas" ,]
+props  = props[ meta_data$Histology_Primary == "Pancreatic" ,]
 dim(props)
 meta_data = meta_info[props$Sample,]
 
-meta_data$Location = meta_data$NEC_NET_Color
+meta_data$Location = meta_data$NEC_NET
 props = props[ meta_data$Location != "Outlier" ,]
 meta_data = meta_info[props$Sample,]
-props$Location = meta_data$NEC_NET_Color
+props$Location = meta_data$NEC_NET
 
 vis_mat = reshape2::melt(props[,c("Location","P_value","model")])
 colnames(vis_mat) = c("Location","Model","Variable","P_value")
@@ -74,15 +77,64 @@ table(meta_data$Histology_Primary)
 
 dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary_Metastasis == "Primary"),])
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 
-####
+#### Plot A Workflow
 
 plot_a_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
 plot_a <- readPNG(plot_a_path, native = TRUE, info = TRUE)
 
+#### Plot B Primary Metastasis
 
+study_mat = meta_data[,c("Study","Primary_Metastasis")]
+grp = group_by(study_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","Primary_Metastasis","Amount")
+
+primary_metastasis_plot = ggplot( 
+    data = vis_mat,
+    aes( 
+        x = Study,
+        y = Amount,
+        fill = Primary_Metastasis
+    )
+)
+primary_metastasis_plot = primary_metastasis_plot + geom_bar(stat="identity", position=position_dodge())
+primary_metastasis_plot = primary_metastasis_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+primary_metastasis_plot = primary_metastasis_plot + xlab("Study") + ylab("Amount primaries and metastases")
+primary_metastasis_plot = primary_metastasis_plot + scale_fill_manual(values = c("darkred","darkgreen","black","gray"))
+primary_metastasis_plot = primary_metastasis_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+primary_metastasis_plot
+
+### Plto C NEC NET
+
+nec_net_mat = meta_data[,c("Study","NEC_NET")]
+grp = group_by(nec_net_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","NEC_NET","Amount")
+vis_mat$NEC_NET = factor(vis_mat$NEC_NET, levels = c("NET","NEC","Ambiguous","Unknown","Control"))
+
+NEC_NET_plot = ggplot( 
+    data = vis_mat,
+    aes( 
+        x = Study,
+        y = Amount,
+        fill = NEC_NET
+    )
+)
+NEC_NET_plot = NEC_NET_plot + geom_bar(stat="identity", position=position_dodge())
+NEC_NET_plot = NEC_NET_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+NEC_NET_plot = NEC_NET_plot + xlab("Study") + ylab("Amount NETs and NECs")
+NEC_NET_plot = NEC_NET_plot + scale_fill_manual(values = c("blue","darkred","purple","gray"))
+NEC_NET_plot = NEC_NET_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+NEC_NET_plot = NEC_NET_plot + ggbreak::scale_y_break(c(60, 200))
+NEC_NET_plot = NEC_NET_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,60,204))
+
+
+### merge all
 
 ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
     background_image(plot_a)+
