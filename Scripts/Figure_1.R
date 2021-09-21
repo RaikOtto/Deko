@@ -62,10 +62,12 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 table(meta_info$Study)
 
-study_selection = c("Alvarez","Charite","Diedisheim","Master","Sadanandam","Sato","Scarpa")
+study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
 meta_data = meta_info[meta_info$Study %in% study_selection,]
 meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
 meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
+meta_data = meta_data[meta_data$NEC_NET != "Control",]
+meta_data = meta_data[meta_data$Grading != "Control",]
 meta_data = meta_data[ grep(meta_data$Sample, pattern = "SCLC",invert = TRUE),]
 meta_data = meta_data[ grep(meta_data$Sample, pattern = "MiNEN",invert = TRUE),]
 dim(meta_data)
@@ -78,12 +80,6 @@ table(meta_data$Histology_Primary)
 dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary_Metastasis == "Primary"),])
 
 #expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-
-
-#### Plot A Workflow
-
-plot_a_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
-plot_a <- readPNG(plot_a_path, native = TRUE, info = TRUE)
 
 #### Plot B Primary Metastasis
 
@@ -103,12 +99,12 @@ primary_metastasis_plot = ggplot(
 )
 primary_metastasis_plot = primary_metastasis_plot + geom_bar(stat="identity", position=position_dodge())
 primary_metastasis_plot = primary_metastasis_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
-primary_metastasis_plot = primary_metastasis_plot + xlab("Study") + ylab("Amount primaries and metastases")
-primary_metastasis_plot = primary_metastasis_plot + scale_fill_manual(values = c("darkred","darkgreen","black","gray"))
+primary_metastasis_plot = primary_metastasis_plot + xlab("Study") + ylab("#")
+primary_metastasis_plot = primary_metastasis_plot + scale_fill_manual(values = c("red","darkgreen","black","gray"))
 primary_metastasis_plot = primary_metastasis_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 primary_metastasis_plot
 
-### Plto C NEC NET
+### Plot C NEC NET
 
 nec_net_mat = meta_data[,c("Study","NEC_NET")]
 grp = group_by(nec_net_mat, Study)
@@ -127,22 +123,139 @@ NEC_NET_plot = ggplot(
 )
 NEC_NET_plot = NEC_NET_plot + geom_bar(stat="identity", position=position_dodge())
 NEC_NET_plot = NEC_NET_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
-NEC_NET_plot = NEC_NET_plot + xlab("Study") + ylab("Amount NETs and NECs")
-NEC_NET_plot = NEC_NET_plot + scale_fill_manual(values = c("blue","darkred","purple","gray"))
+NEC_NET_plot = NEC_NET_plot + xlab("Study") + ylab("#")
+NEC_NET_plot = NEC_NET_plot + scale_fill_manual(values = c("blue","darkred","purple","gray","yellow"))
 NEC_NET_plot = NEC_NET_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 NEC_NET_plot = NEC_NET_plot + ggbreak::scale_y_break(c(60, 200))
 NEC_NET_plot = NEC_NET_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,60,204))
+NEC_NET_plot
 
+### Plot D Tissue type
+
+tissue_mat = meta_data[,c("Study","Histology_Primary")]
+grp = group_by(tissue_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","Tissue","Amount")
+#vis_mat$NEC_NET = factor(vis_mat$NEC_NET, levels = c("NET","NEC","Ambiguous","Unknown","Control"))
+
+tissue_plot = ggplot( 
+    data = vis_mat,
+    aes(
+        x = Study,
+        y = Amount,
+        fill = Tissue
+    )
+)
+tissue_plot = tissue_plot + geom_bar(stat="identity", position=position_dodge())
+tissue_plot = tissue_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+tissue_plot = tissue_plot + xlab("Study") + ylab("#")
+tissue_plot = tissue_plot + scale_fill_manual(values = c("brown","yellow","cyan","darkgreen","blue","black","darkgreen"))
+tissue_plot = tissue_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+tissue_plot = tissue_plot + ggbreak::scale_y_break(c(25,60))
+tissue_plot = tissue_plot + scale_y_continuous(breaks=c(0,10,20,70,80,90,100))
+tissue_plot
+
+### Plot E Tissue type Metastass
+
+metastasis_mat = meta_data[,c("Study","Histology_Metastasis")]
+table(metastasis_mat$Histology_Metastasis)
+metastasis_mat$Histology_Metastasis[metastasis_mat$Histology_Metastasis %in% c("Colorectal","Gastric","Mesenteric","Peritoneal","Pulmonary","Spleeneal")] = "Others"
+metastasis_mat = metastasis_mat[metastasis_mat$Histology_Metastasis != "Primary",]
+
+grp = group_by(metastasis_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","Tissue","Amount")
+
+metastasis_mat_plot = ggplot( 
+    data = vis_mat,
+    aes(
+        x = Study,
+        y = Amount,
+        fill = Tissue
+    )
+)
+metastasis_mat_plot = metastasis_mat_plot + geom_bar(stat="identity", position=position_dodge())
+metastasis_mat_plot = metastasis_mat_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+metastasis_mat_plot = metastasis_mat_plot + xlab("Study") + ylab("#")
+metastasis_mat_plot = metastasis_mat_plot + scale_fill_manual(values = c("purple","cyan","darkgreen","orange","black","gray"))
+metastasis_mat_plot = metastasis_mat_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+metastasis_mat_plot = metastasis_mat_plot + ggbreak::scale_y_break(c(30,65))
+metastasis_mat_plot = metastasis_mat_plot + scale_y_continuous(breaks=c(0,10,20,30,69))
+metastasis_mat_plot
+
+### Plot F Grading
+
+grading_mat = meta_data[,c("Study","Grading")]
+grp = group_by(grading_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","Grading","Amount")
+#vis_mat$NEC_NET = factor(vis_mat$NEC_NET, levels = c("NET","NEC","Ambiguous","Unknown","Control"))
+
+grading_plot = ggplot( 
+    data = vis_mat,
+    aes( 
+        x = Study,
+        y = Amount,
+        fill = Grading
+    )
+)
+grading_plot = grading_plot + geom_bar(stat="identity", position=position_dodge())
+grading_plot = grading_plot + theme(axis.text.x = element_text(angle = 45, vjust = .5))
+grading_plot = grading_plot + xlab("Study") + ylab("#")
+grading_plot = grading_plot + scale_fill_manual(values = c("green","yellow","red","darkgreen","gray"))
+grading_plot = grading_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+grading_plot = grading_plot + ggbreak::scale_y_break(c(50, 200))
+grading_plot = grading_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,204))
+grading_plot
 
 ### merge all
 
-ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
-    background_image(plot_a)+
-    geom_point(aes(color = Species), alpha = 0.6, size = 5)+
-    color_palette("jco")+
-    theme(legend.position = "top")
+#### Plot A Workflow
 
+plot_a_path <- "~/Deko_Projekt/Results/Images/Figure_1_ArtDeco_Concept.png"
+plot_a <- readPNG(plot_a_path, native = TRUE, info = TRUE)
 
-p = ggarrange(p_sadanandam, p_wiedenmann, p_scarpa, p_missiaglia,p_califano,p_average,
-              labels = c("A", "B", "C","D","E","F"),
-              ncol = 3, nrow = 2,  common.legend = TRUE)
+workflow_plot= ggplot() +  background_image(plot_a)
+
+p = ggarrange(
+    workflow_plot,
+    primary_metastasis_plot,
+    NEC_NET_plot,
+    grading_plot,
+    tissue_plot,
+    metastasis_mat_plot,
+    labels = c("A", "B", "C","D","E","F","G"),
+    ncol = 2, nrow = 3)
+p
+
+library(grid)
+library(gridExtra)
+
+gl <- lapply(1:9,
+             function(ii) grobTree(rectGrob(),
+                                   textGrob(ii)))
+
+grid.arrange(grobs = gl, layout_matrix = rbind(c(1,1,1,2,3),
+                                               c(1,1,1,4,5),
+                                               c(6,7,8,9,9)))
+gl = c(workflow_plot,
+primary_metastasis_plot,
+NEC_NET_plot,
+grading_plot,
+tissue_plot,
+metastasis_mat_plot)
+
+library("cowplot")
+
+grid.arrange(
+    workflow_plot,
+    primary_metastasis_plot,
+    NEC_NET_plot,
+    grading_plot,
+    tissue_plot,
+    metastasis_mat_plot,
+    ncol = 2, 
+    layout_matrix = cbind(c(1,1,1,2,4,6), c(1,1,1,3,5,7)))
