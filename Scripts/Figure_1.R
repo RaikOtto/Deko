@@ -81,7 +81,7 @@ dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary
 
 #expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
-#### Plot B Primary Metastasis
+#### Subplot A Primary Metastasis
 
 study_mat = meta_data[,c("Study","Primary_Metastasis")]
 grp = group_by(study_mat, Study)
@@ -102,9 +102,11 @@ primary_metastasis_plot = primary_metastasis_plot + theme(axis.text.x = element_
 primary_metastasis_plot = primary_metastasis_plot + xlab("Study") + ylab("#")
 primary_metastasis_plot = primary_metastasis_plot + scale_fill_manual(values = c("red","darkgreen","black","gray"))
 primary_metastasis_plot = primary_metastasis_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-primary_metastasis_plot
 
-### Plot C NEC NET
+svg(filename = "~/Dropbox/Figures/F1_P1.svg", width = 10, height = 10)
+primary_metastasis_plot
+dev.off()
+### Plot B NEC NET
 
 nec_net_mat = meta_data[,c("Study","NEC_NET")]
 grp = group_by(nec_net_mat, Study)
@@ -128,9 +130,12 @@ NEC_NET_plot = NEC_NET_plot + scale_fill_manual(values = c("blue","darkred","pur
 NEC_NET_plot = NEC_NET_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 NEC_NET_plot = NEC_NET_plot + ggbreak::scale_y_break(c(60, 200))
 NEC_NET_plot = NEC_NET_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,60,204))
-NEC_NET_plot
 
-### Plot D Tissue type
+svg(filename = "~/Dropbox/Figures/F1_P2.svg", width = 10, height = 10)
+NEC_NET_plot
+dev.off()
+
+### Plot C Tissue type
 
 tissue_mat = meta_data[,c("Study","Histology_Primary")]
 grp = group_by(tissue_mat, Study)
@@ -154,9 +159,12 @@ tissue_plot = tissue_plot + scale_fill_manual(values = c("brown","yellow","cyan"
 tissue_plot = tissue_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 tissue_plot = tissue_plot + ggbreak::scale_y_break(c(25,60))
 tissue_plot = tissue_plot + scale_y_continuous(breaks=c(0,10,20,70,80,90,100))
-tissue_plot
 
-### Plot E Tissue type Metastass
+svg(filename = "~/Dropbox/Figures/F1_P3.svg", width = 10, height = 10)
+tissue_plot
+dev.off()
+
+### Plot D Tissue type Metastass
 
 metastasis_mat = meta_data[,c("Study","Histology_Metastasis")]
 table(metastasis_mat$Histology_Metastasis)
@@ -183,9 +191,12 @@ metastasis_mat_plot = metastasis_mat_plot + scale_fill_manual(values = c("purple
 metastasis_mat_plot = metastasis_mat_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 metastasis_mat_plot = metastasis_mat_plot + ggbreak::scale_y_break(c(30,65))
 metastasis_mat_plot = metastasis_mat_plot + scale_y_continuous(breaks=c(0,10,20,30,69))
-metastasis_mat_plot
 
-### Plot F Grading
+svg(filename = "~/Dropbox/Figures/F1_P4.svg", width = 10, height = 10)
+metastasis_mat_plot
+dev.off()
+
+### Plot E Grading
 
 grading_mat = meta_data[,c("Study","Grading")]
 grp = group_by(grading_mat, Study)
@@ -209,8 +220,10 @@ grading_plot = grading_plot + scale_fill_manual(values = c("green","yellow","red
 grading_plot = grading_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 grading_plot = grading_plot + ggbreak::scale_y_break(c(50, 200))
 grading_plot = grading_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,204))
-grading_plot
 
+svg(filename = "~/Dropbox/Figures/F1_P5.svg", width = 10, height = 10)
+grading_plot
+dev.off()
 ### merge all
 
 #### Plot A Workflow
@@ -251,11 +264,15 @@ metastasis_mat_plot)
 library("cowplot")
 
 grid.arrange(
-    workflow_plot,
+    #workflow_plot,
     primary_metastasis_plot,
     NEC_NET_plot,
     grading_plot,
     tissue_plot,
     metastasis_mat_plot,
     ncol = 2, 
-    layout_matrix = cbind(c(1,1,1,2,4,6), c(1,1,1,3,5,7)))
+    layout_matrix = cbind(
+        c(1,3,5),c(2,4,6)
+        #c(1,1,1,2,4,6),c(1,1,1,2,4,6)
+        #,c(1,1,1,3,5,7),c(1,1,1,3,5,7)
+    ))
