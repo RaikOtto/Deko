@@ -3,6 +3,7 @@ library("ggplot2")
 library("dplyr")
 library("ggpubr")
 library("png")
+library("grid")
 library("ggplot2")
 library("magick")
 
@@ -103,9 +104,9 @@ primary_metastasis_plot = primary_metastasis_plot + xlab("Study") + ylab("#")
 primary_metastasis_plot = primary_metastasis_plot + scale_fill_manual(values = c("red","darkgreen","black","gray"))
 primary_metastasis_plot = primary_metastasis_plot + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 
-svg(filename = "~/Dropbox/Figures/F1_P1.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P1.svg", width = 10, height = 10)
 primary_metastasis_plot
-dev.off()
+#dev.off()
 ### Plot B NEC NET
 
 nec_net_mat = meta_data[,c("Study","NEC_NET")]
@@ -131,9 +132,9 @@ NEC_NET_plot = NEC_NET_plot + theme(legend.position="top",axis.text=element_text
 NEC_NET_plot = NEC_NET_plot + ggbreak::scale_y_break(c(60, 200))
 NEC_NET_plot = NEC_NET_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,60,204))
 
-svg(filename = "~/Dropbox/Figures/F1_P2.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P2.svg", width = 10, height = 10)
 NEC_NET_plot
-dev.off()
+#dev.off()
 
 ### Plot C Tissue type
 
@@ -160,9 +161,9 @@ tissue_plot = tissue_plot + theme(legend.position="top",axis.text=element_text(s
 tissue_plot = tissue_plot + ggbreak::scale_y_break(c(25,60))
 tissue_plot = tissue_plot + scale_y_continuous(breaks=c(0,10,20,70,80,90,100))
 
-svg(filename = "~/Dropbox/Figures/F1_P3.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P3.svg", width = 10, height = 10)
 tissue_plot
-dev.off()
+#dev.off()
 
 ### Plot D Tissue type Metastass
 
@@ -192,9 +193,9 @@ metastasis_mat_plot = metastasis_mat_plot + theme(legend.position="top",axis.tex
 metastasis_mat_plot = metastasis_mat_plot + ggbreak::scale_y_break(c(30,65))
 metastasis_mat_plot = metastasis_mat_plot + scale_y_continuous(breaks=c(0,10,20,30,69))
 
-svg(filename = "~/Dropbox/Figures/F1_P4.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P4.svg", width = 10, height = 10)
 metastasis_mat_plot
-dev.off()
+#dev.off()
 
 ### Plot E Grading
 
@@ -221,9 +222,9 @@ grading_plot = grading_plot + theme(legend.position="top",axis.text=element_text
 grading_plot = grading_plot + ggbreak::scale_y_break(c(50, 200))
 grading_plot = grading_plot + scale_y_continuous(breaks=c(0,10,20,30,40,50,204))
 
-svg(filename = "~/Dropbox/Figures/F1_P5.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P5.svg", width = 10, height = 10)
 grading_plot
-dev.off()
+#dev.off()
 ### merge all
 
 #### Plot A Workflow
@@ -276,3 +277,26 @@ grid.arrange(
         #c(1,1,1,2,4,6),c(1,1,1,2,4,6)
         #,c(1,1,1,3,5,7),c(1,1,1,3,5,7)
     ))
+####
+
+x = c(1, 2)
+y = c(1,9)
+df <- as.data.frame(cbind(x, y))
+myplot = ggplot(df, aes(x = x, y = y)) + geom_point() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+blankPlot +
+    annotation_custom(
+        grob = ggplotGrob(workflow_plot),
+        xmin = 1,
+        xmax = 8,
+        ymin = 4,
+        ymax = 8
+    ) 
++
+    annotation_custom(
+        grob = rectGrob(gp = gpar(fill = "white")),
+        xmin = 7.5,
+        xmax = Inf,
+        ymin = -Inf,
+        ymax = 5
+    )
