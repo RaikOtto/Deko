@@ -25,9 +25,11 @@ meta_data = meta_info[rownames(props),]
 
 ###
 
-#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
-meta_data = meta_info[rownames(props),]
-meta_data = meta_info[rownames(props),]
+meta_data = meta_info[rownames(vis_mat),]
+vis_mat = vis_mat[(meta_data$Histology_Primary == "Pancreatic") ,]
+
+expr = expr_raw[,rownames(props)]
+write.table(expr,"~/Downloads/RepSet.S51.pancreatic_only.tsv",quote = F, sep ="\t")
 
 selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
 exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
@@ -50,12 +52,12 @@ upper_plot = pheatmap::pheatmap(
     annotation_col = meta_data[,c("Grading","NEC_NET","Functionality","Study")],
     annotation_colors = aka3,
     show_rownames = T,
-    show_colnames = F,
+    show_colnames = T,
     treeheight_row = 0,
     cellheight = 12,
     cluster_rows = F,
     cluster_cols = F,
-    legend = FALSE,
+    legend = 0,
     fontsize_row = 14,
     clustering_method = "ward.D2"
 )
@@ -66,6 +68,7 @@ upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis
 
 expr_raw = expr_raw[,rownames(vis_mat)]
 vis_mat$MKi67 = as.double(expr_raw["MKI67",rownames(vis_mat)])
+vis_mat$MKi67 = log(vis_mat$MKi67)
 vis_mat$MKi67 = vis_mat$MKi67 / max(vis_mat$MKi67)
 vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
 vis_mat = vis_mat[,!(colnames(vis_mat)  %in% c("Alpha","Beta","Gamma","Delta"))]
@@ -79,20 +82,19 @@ lower_plot = ggplot(vis_mat_melt, aes(x = as.numeric(Sample), y=Value, color= Me
 lower_plot = lower_plot + geom_smooth(method = "lm", se= FALSE)
 lower_plot = lower_plot + scale_color_manual(values=c('#5D6D7E','red', '#52BE80'))
 lower_plot = lower_plot +  theme_classic()
-lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="bottom")
+lower_plot = lower_plot + scale_y_continuous( 
+    name = "Relative cell-type proportions",
+    sec.axis = sec_axis(~.*8.5, name="log2 MKi67 mRNA expression")
+)
 lower_plot
 
-### combine the plots
+summary(log(as.double(expr_raw["MKI67",rownames(vis_mat)])))
 
-ggarrange(
-    upper_plot$gtable,
-    lower_plot,
-    #labels = c("", "", ""),
-    ncol = 1,
-    nrow = 2,
-    common.legend = FALSE#,
-    #legend.grob = get_legend(p_Riemer)
-)
+### export cohort
+
+vis_mat$Sample = rownames(vis_mat)
+#write.table(vis_mat[,c("Sample","Metaplastic")],"~/Downloads/cohorts.tsv",sep ="\t", quote = F,row.names = F)
 
 ### UMAP PLOT
 
@@ -207,3 +209,4 @@ grid.arrange(
     widths=c(4, 1.4), heights=c(1.4, 4)
 )
 #dev.off()
+
