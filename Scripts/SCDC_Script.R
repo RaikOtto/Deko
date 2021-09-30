@@ -106,14 +106,14 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    models = "Tosti_200_Endocrine_all_Exocrine",
+    models = "Tosti_100_endocrine_exocrine",
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    Cibersort_absolute_mode = TRUE,
+    Cibersort_absolute_mode = FALSE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_Endocrine_all_Exocrine",sep = "\t")
+write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t")
 
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
@@ -134,11 +134,10 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
-#selection = c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")
-selection = c("acinar-s","acinar-i","acinar-reg+","endothelial","Ductal","activated stellate","quiescent stellate","Beta","schwann","Delta","muc5b+ ductal","macrophage","Alpha","Gamma")
-#exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
-exocrines = as.double(rowSums(props[,c("Ductal","acinar-s","acinar-i","acinar-reg+","muc5b+ ductal")]))
+selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
 endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
+exocrines = as.double(rowSums(props[,c("Ductal","acinar-s")]))
+metaplastic = as.double(rowSums(props[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
 Ratio = log((exocrines+.1) / (endocrines+.1))
 Ratio = ((exocrines+.1) / (endocrines+.1))
