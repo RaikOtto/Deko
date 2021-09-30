@@ -135,28 +135,14 @@ meta_data = meta_info[rownames(props),]
 meta_data = meta_info[rownames(props),]
 
 selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
-endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
-exocrines = as.double(rowSums(props[,c("Ductal","acinar-s")]))
-metaplastic = as.double(rowSums(props[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
-Ratio = log((exocrines+.1) / (endocrines+.1))
-Ratio = ((exocrines+.1) / (endocrines+.1))
-#meta_data[,selection] = props[,selection]
-
-#matcher = match(rownames(meta_data),rownames(meta_info))
-#meta_info[ matcher,"Ratio"] = meta_data$Ratio
-
-#meta_info[rownames(meta_data), selection] = meta_data[,selection]
-#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F,row.names = F)
 ###
 
 props = as.data.frame(props)
 vis_mat = props[,selection]
-#vis_mat$Exocrine = vis_mat$Acinar + vis_mat$Ductal
-#vis_mat = vis_mat[,!(colnames(vis_mat) %in% c("Acinar","Ductal"))]
-#vis_mat = props[ !(rownames(props) %in% outlier),selector]
-vis_mat$Ratio = as.double(Ratio)
-vis_mat[,"Ratio"] = vis_mat[,"Ratio"] / max(vis_mat[,"Ratio"])
+vis_mat$endocrine = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
+vis_mat$exocrines = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
+vis_mat$metaplastic = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 
@@ -165,7 +151,7 @@ p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
     annotation_col = meta_data[,c("Grading","NET_NEC_PCA","Functionality","Study")],
-    #annotation_colors = aka3,
+    annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
     treeheight_row = 0,

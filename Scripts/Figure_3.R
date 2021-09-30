@@ -1,5 +1,102 @@
 ###
 library("umap")
+library("ggpubr")
+library("stringr")
+library("reshape2")
+library("ggplot2")
+library("dplyr")
+library("grid")
+
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+
+### RepSet Plot
+
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.SCDC.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+
+no_match = rownames(props) %in% meta_info$Sample == F
+rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
+no_match = rownames(props) %in% meta_info$Sample == F
+sum(no_match)
+
+dim(props)
+meta_data = meta_info[rownames(props),]
+
+###
+
+meta_data = meta_info[rownames(vis_mat),]
+vis_mat = vis_mat[(meta_data$Histology_Primary == "Pancreatic") ,]
+
+expr = expr_raw[,rownames(props)]
+write.table(expr,"~/Downloads/RepSet.S51.pancreatic_only.tsv",quote = F, sep ="\t")
+
+selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
+exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
+endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
+
+props$Metaplastic = rowSums(props[,c("Ductal","Acinar")])
+
+props = as.data.frame(props)
+vis_mat = props[,selection]
+
+correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
+vis_mat = vis_mat[order(vis_mat$Metaplastic),]
+
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+
+### top plot
+
+upper_plot = pheatmap::pheatmap(
+    t(vis_mat),
+    annotation_col = meta_data[,c("Grading","NEC_NET","Functionality","Study")],
+    annotation_colors = aka3,
+    show_rownames = T,
+    show_colnames = T,
+    treeheight_row = 0,
+    cellheight = 12,
+    cluster_rows = F,
+    cluster_cols = F,
+    legend = 0,
+    fontsize_row = 14,
+    clustering_method = "ward.D2"
+)
+upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+### lower plot
+
+#vis_mat$Sample = factor(rownames(vis_mat), levels = rownames(vis_mat)[order(vis_mat$Metaplastic)])
+
+expr_raw = expr_raw[,rownames(vis_mat)]
+vis_mat$MKi67 = as.double(expr_raw["MKI67",rownames(vis_mat)])
+vis_mat$MKi67 = log(vis_mat$MKi67)
+vis_mat$MKi67 = vis_mat$MKi67 / max(vis_mat$MKi67)
+vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
+vis_mat = vis_mat[,!(colnames(vis_mat)  %in% c("Alpha","Beta","Gamma","Delta"))]
+vis_mat$Sample = rownames(vis_mat)
+vis_mat = vis_mat[order(vis_mat$Metaplastic),]
+vis_mat$Sample = factor(1:nrow(vis_mat))
+vis_mat_melt = reshape2::melt(vis_mat)
+colnames(vis_mat_melt) = c("Sample","Measurement","Value")
+
+lower_plot = ggplot(vis_mat_melt, aes(x = as.numeric(Sample), y=Value, color= Measurement, shape = Measurement), ) + geom_point()
+lower_plot = lower_plot + geom_smooth(method = "lm", se= FALSE)
+lower_plot = lower_plot + scale_color_manual(values=c('#5D6D7E','red', '#52BE80'))
+lower_plot = lower_plot +  theme_classic()
+lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="bottom")
+lower_plot = lower_plot + scale_y_continuous( 
+    name = "Relative cell-type proportions",
+    sec.axis = sec_axis(~.*8.5, name="log2 MKi67 mRNA expression")
+)
+lower_plot
+
+summary(log(as.double(expr_raw["MKI67",rownames(vis_mat)])))
+
+### export cohort
+
+vis_mat$Sample = rownames(vis_mat)
+#write.table(vis_mat[,c("Sample","Metaplastic")],"~/Downloads/cohorts.tsv",sep ="\t", quote = F,row.names = F)
+
+### UMAP PLOT
 
 props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep ="\t", header = T, as.is=TRUE)
 dim(props)
@@ -112,3 +209,4 @@ grid.arrange(
     widths=c(4, 1.4), heights=c(1.4, 4)
 )
 #dev.off()
+
