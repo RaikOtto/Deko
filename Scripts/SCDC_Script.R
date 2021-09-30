@@ -100,25 +100,22 @@ rownames(props)  = rownames(scdc_props$prop.est.mvw)
 rownames(props) = str_replace(rownames(props), pattern = "^X","")
 
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    #models = "Tosti_200_Endocrine_all_Exocrine",
-    models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
-    Cibersort_absolute_mode = TRUE,
+    models = "Tosti_100_endocrine_exocrine",
+    #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
+    Cibersort_absolute_mode = FALSE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_Endocrine_all_Exocrine",sep = "\t")
+write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t")
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.SCDC.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-#props = props %>% filter(model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")
-#rownames(props)=props$Sample
-
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
@@ -137,52 +134,34 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
-meta_data$OS_Tissue = as.double(meta_data$OS_Tissue)
-survival_time = meta_data$OS_Tissue[!is.na(meta_data$OS_Tissue)]
-lower_third = as.double(quantile(survival_time,probs = seq(0,1,by=.01))[34])
-middle_third = as.double(quantile(survival_time,probs = seq(0,1,by=.01))[67])
+selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
 
-selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
-#selection = c("acinar-s","acinar-i","acinar-reg+","endothelial","Ductal","activated stellate","quiescent stellate","Beta","schwann","Delta","muc5b+ ductal","macrophage","Alpha","Gamma")
-exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
-#exocrines = as.double(rowSums(props[,c("Ductal","acinar-s","acinar-i","acinar-reg+","muc5b+ ductal")]))
-endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
-
-Ratio = log((exocrines+.1) / (endocrines+.1))
-Ratio = ((exocrines+.1) / (endocrines+.1))
-
-props$Metaplastic = rowSums(props[,c("Ductal","Acinar")])
+###
 
 props = as.data.frame(props)
 vis_mat = props[,selection]
-
-
-
-vis_mat$Ratio = as.double(Ratio)
-vis_mat[,"Ratio"] = vis_mat[,"Ratio"] / max(vis_mat[,"Ratio"])
-#vis_mat$Ratio = round(vis_mat$Ratio*100,0)
-vis_mat = vis_mat[,colnames(vis_mat) != "Ratio"]
+vis_mat$endocrine = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
+vis_mat$exocrines = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
+vis_mat$metaplastic = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
-
-vis_mat = vis_mat[order(vis_mat$Metaplastic),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","NEC_NET","OS_Survival","Functionality","Study")],
+    annotation_col = meta_data[,c("Grading","NET_NEC_PCA","Functionality","Study")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
     treeheight_row = 0,
-    cellheight = 12,
     cluster_rows = F,
-    cluster_cols = F,
     legend = F,
     fontsize_row = 14,
-    clustering_method = "ward.D2"
+    clustering_method = "average"
 )
+p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
+
 ### PCA
 
 p = ggbiplot::ggbiplot(
@@ -220,3 +199,45 @@ expr_raw = readRDS("~/Downloads/Tosti.scRNA.RDS")
 hgnc_list = expr_raw[,1]
 #expr_raw = expr_raw[,-1]
 selector = str_detect(pattern = "_",hgnc_list)
+
+### subsampling
+
+selected_samples = c()
+
+for ( cell_type in unique(subtype_vector)){
+    coords = which(subtype_vector == cell_type )
+    
+    if (length(coords) >= 300)
+        coords = sample(coords, size = 300)
+    
+    selected_samples = c(selected_samples, coords)
+}
+length(selected_samples)
+
+meta_data = meta_info[colnames(expr_raw),]
+subtype_vec = meta_data$Cluster
+model_name = "Tosti_50"
+
+add_deconvolution_training_model_bseqsc(
+    transcriptome_data = expr_raw,
+    model_name = model_name,
+    subtype_vector =  str_to_lower(subtype_vec),
+    training_p_value_threshold = 0.05,
+    training_nr_permutations = 0,
+    training_nr_marker_genes = 50
+)
+
+###
+
+selected_matrix = selected_matrix[rownames(selected_matrix) %in% rownames(expr_raw),]
+selected_matrix[1:5,1:5]
+dim(selected_matrix)
+
+
+### marker gene totsi 50
+
+marker_genes = c()
+marker_list = data[[3]]
+for (name in names(marker_list)){
+    marker_genes = c(marker_genes,as.character(unlist(marker_list[name])))
+}
