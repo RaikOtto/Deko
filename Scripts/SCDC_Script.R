@@ -140,11 +140,12 @@ selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b
 
 props = as.data.frame(props)
 vis_mat = props[,selection]
-vis_mat$endocrine = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
-vis_mat$exocrines = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
-vis_mat$metaplastic = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
+vis_mat$endocrine_fully_differentited = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
+vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
+vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
+vis_mat = vis_mat[order(vis_mat$metaplastic),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
@@ -156,6 +157,7 @@ p = pheatmap::pheatmap(
     show_colnames = F,
     treeheight_row = 0,
     cluster_rows = F,
+    cluster_cols = F,
     legend = F,
     fontsize_row = 14,
     clustering_method = "average"
