@@ -25,7 +25,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S69.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = as.data.frame(read.csv2("~/Downloads/results_gene.csv",header = T, sep =" "))
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
@@ -79,8 +79,8 @@ pcr = prcomp((correlation_matrix))
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  #correlation_matrix,
-  expr,
+  correlation_matrix,
+  #expr,
   annotation_col = meta_data[,c("NEC_NET","Primary_Metastasis","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
@@ -89,7 +89,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "ward.D"
 )
 
 p = ggbiplot::ggbiplot(
