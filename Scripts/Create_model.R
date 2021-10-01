@@ -14,16 +14,16 @@ meta_data = meta_info[colnames(expr_raw),]
 subtype_vector = str_to_lower(meta_data$Cluster)
 table(subtype_vector)
 
-#candidates = which(subtype_vector %in% c("alpha","beta","gamma","delta","acinar-s","acinar-reg+","acinar-i","ductal","muc5b+ ductal"))
-candidates = which(subtype_vector %in% c("alpha","beta","gamma","delta","acinar-s","ductal"))
+candidates = which(subtype_vector %in% c("alpha","beta","gamma","delta","acinar-s","acinar-reg+","acinar-i","ductal","muc5b+ ductal"))
+#candidates = which(subtype_vector %in% c("alpha","beta","gamma","delta","acinar-s","ductal"))
 expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
 subtype_vector_reduced = meta_data$Cluster
 table(subtype_vector_reduced)
 
-amount_genes = 100
-amount_samples = 200
-model_name = "Tosti_100_endocrine_exocrine"
+amount_genes = 300
+amount_samples = 300
+model_name = "Tosti_300_300_endocrine_exocrine_metaplastic"
 
 selected_samples = c()
 
