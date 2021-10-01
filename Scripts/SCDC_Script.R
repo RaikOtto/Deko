@@ -100,7 +100,7 @@ rownames(props)  = rownames(scdc_props$prop.est.mvw)
 rownames(props) = str_replace(rownames(props), pattern = "^X","")
 
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 
 props = Deconvolve_transcriptome(
@@ -115,7 +115,11 @@ props = Deconvolve_transcriptome(
 
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t")
 
+<<<<<<< HEAD
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+=======
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+>>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 colnames(props) = str_replace(colnames(props),pattern = "\\.","-")
@@ -138,15 +142,24 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
+<<<<<<< HEAD
 selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+-ductal","Alpha","Gamma")
+=======
+selection = c("Acinar","acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
+>>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 
 ###
 
 props = as.data.frame(props)
-vis_mat = props[,selection]
+vis_mat = props[,colnames(props) %in% selection]
 vis_mat$endocrine_fully_differentited = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
+<<<<<<< HEAD
 vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
 vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+-ductal")]))
+=======
+vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in%c("Ductal","acinar-s","Acinar")]))
+vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in% c("acinar-i","acinar-reg+","muc5b+ ductal")]))
+>>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$endocrine_fully_differentited,decreasing = T),]
@@ -155,13 +168,13 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","NET_NEC_PCA","Functionality","Study")],
+    annotation_col = meta_data[,c("Acinar_reg","Grading","NET_NEC_PCA","Study")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
     treeheight_row = 0,
     cluster_rows = F,
-    cluster_cols = F,
+    cluster_cols = T,
     legend = F,
     fontsize_row = 14,
     clustering_method = "average"
@@ -183,67 +196,3 @@ p = p + scale_color_manual( values = c("darkgreen","yellow","red") ) #Fig 4 Mast
 p = p + guides(fill=FALSE) + scale_fill_discrete(guide=FALSE)+ theme(legend.position="none")
 p
 
-
-### tosti parsing
-
-meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Cell
-
-scRNA_file_path = "~/Downloads/exprMatrix.tsv"
-
-expr_raw = read.table(scRNA_file_path, sep ="\t", header = T)
-expr_raw[1:5,1:5]
-dim(expr_raw)
-
-meta_data = meta_info[colnames(expr_raw),]
-cell_type_vec = str_to_lower(meta_data$Cluster)
-table(cell_type_vec)
-
-#saveRDS(t,"~/Downloads/Tosti.scRNA.RDS")
-expr_raw = readRDS("~/Downloads/Tosti.scRNA.RDS")
- 
-hgnc_list = expr_raw[,1]
-#expr_raw = expr_raw[,-1]
-selector = str_detect(pattern = "_",hgnc_list)
-
-### subsampling
-
-selected_samples = c()
-
-for ( cell_type in unique(subtype_vector)){
-    coords = which(subtype_vector == cell_type )
-    
-    if (length(coords) >= 300)
-        coords = sample(coords, size = 300)
-    
-    selected_samples = c(selected_samples, coords)
-}
-length(selected_samples)
-
-meta_data = meta_info[colnames(expr_raw),]
-subtype_vec = meta_data$Cluster
-model_name = "Tosti_50"
-
-add_deconvolution_training_model_bseqsc(
-    transcriptome_data = expr_raw,
-    model_name = model_name,
-    subtype_vector =  str_to_lower(subtype_vec),
-    training_p_value_threshold = 0.05,
-    training_nr_permutations = 0,
-    training_nr_marker_genes = 50
-)
-
-###
-
-selected_matrix = selected_matrix[rownames(selected_matrix) %in% rownames(expr_raw),]
-selected_matrix[1:5,1:5]
-dim(selected_matrix)
-
-
-### marker gene totsi 50
-
-marker_genes = c()
-marker_list = data[[3]]
-for (name in names(marker_list)){
-    marker_genes = c(marker_genes,as.character(unlist(marker_list[name])))
-}

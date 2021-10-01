@@ -25,7 +25,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S69.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = as.data.frame(read.csv2("~/Downloads/results_gene.csv",header = T, sep =" "))
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
@@ -39,14 +39,15 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
-#expr_raw = expr_raw[(meta_data$Histology == "pancreas") || (meta_data$NEC_NET_Color != "Primary") ,]
+expr_raw = expr_raw[meta_data$Histology_Primary == "Pancreatic",]
+meta_data = meta_info[colnames(expr_raw),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt///Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
+i = 63
 genes_of_interest_hgnc_t[i,1]
 
 #genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
@@ -81,15 +82,15 @@ pcr = prcomp((correlation_matrix))
 p  =pheatmap::pheatmap(
   #correlation_matrix,
   expr,
-  annotation_col = meta_data[,c("NEC_NET","Primary_Metastasis","Grading","Study")],
+  annotation_col = meta_data[,c("NEC_NET","Acinar_reg","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "ward.D2"
 )
 
 p = ggbiplot::ggbiplot(
