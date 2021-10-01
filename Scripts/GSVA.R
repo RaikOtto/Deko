@@ -4,36 +4,30 @@ library(GSEABase)
 library(GSVAdata)
 library(Biobase)
 library("stringr")
-library(genefilter)
-library(limma)
-source("~/SeneSys/Scripts/Visualization_colors.R")
 
-#meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = read.table("~/SeneSys/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = meta_info[meta_info$Sample!="",]
-meta_info = meta_info[!is.na(meta_info$Sample),]
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs/TPMs.57_Samples.Groetzinger_Scarpa.Non_normalized.HGNC.tsv",sep ="\t", as.is = T,header = T, row.names = 1, fill = T)
-expr_raw = read.table("~/SeneSys/Data/GSE136971.HGNC.tsv",sep ="\t", as.is = T,header = T, row.names = 1, fill = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep ="\t", as.is = T,header = T, row.names = 1, fill = T)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep ="\t", as.is = T,header = T, row.names = 1, fill = T)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
-#meta_GSE11318 = meta_info[meta_info$Study == "GSE11318",]
-#rownames(meta_GSE11318) = meta_GSE11318$Sample
-#meta_data = meta_GSE11318[colnames(expr_raw),]
-
-meta_info = meta_info[meta_info$Study != "GSE11318",]
-rownames(meta_info) = meta_info$Sample
 meta_data = meta_info[colnames(expr_raw),]
 
-gmt_file = read.gmt("~/SeneSys/Misc/SeneSys_gene_sets.gmt")
+#gmt_file = read.gmt("~/Deko_Projekt/Misc/Stem_signatures.gmt")
+gmt_file = read.gmt("~/Deko_Projekt/GSEA/Stem_signatures.gmt")
 
 row_var = apply(expr_raw, FUN = var, MARGIN = 1)
 summary(row_var)
-expr = expr_raw[row_var > median(row_var),]
+expr_gsva = expr_raw[row_var > median(row_var),]
 
-fe_es = gsva(as.matrix(expr), gmt_file, min.sz=10, max.sz=500, verbose=TRUE)
+fe_es = gsva(as.matrix(expr_gsva), gmt_file, min.sz=10, max.sz=500, verbose=TRUE)
+fe_es = as.data.frame(t(fe_es))
+
+meta_data$Acinar_reg = rep(0,nrow(meta_data))
+meta_data[rownames(fe_es),"Acinar_reg"] = as.double(fe_es$`Acinar-reg+`)
+
 #write.table(fe_es,"~/SeneSys/Results/GSE136971.GSVA.tsv",sep ="\t",quote = F,row.names = T)
 #write.table(fe_es,"~/MAPTor_NET/Results/GSVAR_senesys_S57_not_normalized_hgnc.tsv",sep ="\t",quote = F,row.names = T)
 #####

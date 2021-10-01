@@ -115,7 +115,7 @@ props = Deconvolve_transcriptome(
 
 write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t")
 
-#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Archive/RepSet_Cibersort_Baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
@@ -139,10 +139,10 @@ selection = c("Acinar","acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delt
 ###
 
 props = as.data.frame(props)
-vis_mat = props[,selection]
+vis_mat = props[,colnames(props) %in% selection]
 vis_mat$endocrine_fully_differentited = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
-vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
-vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+ ductal")]))
+vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in%c("Ductal","acinar-s","Acinar")]))
+vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in% c("acinar-i","acinar-reg+","muc5b+ ductal")]))
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$metaplastic),]
@@ -151,13 +151,13 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
     #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","NET_NEC_PCA","Functionality","Study")],
+    annotation_col = meta_data[,c("Acinar_reg","Grading","NET_NEC_PCA","Study")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
     treeheight_row = 0,
     cluster_rows = F,
-    cluster_cols = F,
+    cluster_cols = T,
     legend = F,
     fontsize_row = 14,
     clustering_method = "average"

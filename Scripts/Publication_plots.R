@@ -39,14 +39,15 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
-#expr_raw = expr_raw[(meta_data$Histology == "pancreas") || (meta_data$NEC_NET_Color != "Primary") ,]
+expr_raw = expr_raw[meta_data$Histology_Primary == "Pancreatic",]
+meta_data = meta_info[colnames(expr_raw),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt///Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 13
+i = 63
 genes_of_interest_hgnc_t[i,1]
 
 #genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
@@ -79,17 +80,17 @@ pcr = prcomp((correlation_matrix))
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  correlation_matrix,
-  #expr,
-  annotation_col = meta_data[,c("NEC_NET","Primary_Metastasis","Grading","Study")],
+  #correlation_matrix,
+  expr,
+  annotation_col = meta_data[,c("NEC_NET","Acinar_reg","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = T,
+  show_colnames = F,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D"
+  clustering_method = "ward.D2"
 )
 
 p = ggbiplot::ggbiplot(
