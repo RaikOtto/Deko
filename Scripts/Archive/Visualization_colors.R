@@ -21,12 +21,8 @@ aka3 = list(
         Ppoma = "purple",
         VIPoma = "cyan"
     ),
-    OS_Survival = c("Long" = "darkgreen","Medium" = "yellow", "Short" = "red", "Unknown" = "gray"),
-    Cluster = c("1" = "green", "2"= "yellow", "3" = "darkred"),
-    Primary_Metastasis = c(Primary = "#F2D7D5", Metastasis = "#DFFF00","Unknown" = "gray"),
-    #Location = c(Pancreatic = "black", Intestinal = "yellow","Colorectal" = "brown",Gastric = "purple"),
-    MEN1 = c("0" = "white", "1" = "black"),
-    NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple"),
+
+    NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
     NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
     Study = c(Charite = "#FF99CC", Scarpa = "#FA8128","Master" = "#03444d"),

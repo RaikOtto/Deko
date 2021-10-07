@@ -13,7 +13,7 @@ sum(no_match)
 dim(props)
 meta_data = meta_info[rownames(props),]
 
-props = props[meta_data$Functionality %in% c("Non-functional","Insulinoma","Glucagonoma", "Somatostatinoma", "PPoma", "Non-functional"),]
+props = props[meta_data$Functionality %in% c("Non-functional","Insulinoma","Glucagonoma", "Somatostatinoma", "PPoma", "Non-Functional","Unknown","VIPoma","ACTH","Gastrinoma"),]
 meta_data = meta_info[rownames(props),]
 table(meta_data$NEC_NET_Color)
 
@@ -31,9 +31,10 @@ correlation_matrix = cor(t(vis_mat))
 
 pcr = prcomp(t(correlation_matrix))
 
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 p = pheatmap::pheatmap(
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET_Ori")],
+    annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
@@ -42,7 +43,7 @@ p = pheatmap::pheatmap(
     cluster_rows = F,
     legend = T,
     fontsize_row = 14,
-    clustering_method = "average"
+    clustering_method = "single"
 )
 p = p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
 p
