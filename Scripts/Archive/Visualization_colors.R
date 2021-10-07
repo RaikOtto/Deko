@@ -11,6 +11,7 @@ aka3 = list(
     #    Somatostatinoma = "purple",
     #    VIPoma = "cyan"
     #),
+    Evo_up_vec = c("High" = "red", "Medium" = "yellow","Low" = "green"),
     Functionality   = c(
         Functional = "green",
         Gastrinoma = "brown",
@@ -27,6 +28,7 @@ aka3 = list(
     MEN1 = c("0" = "white", "1" = "black"),
     NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
+    NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
     Study = c(Charite = "#FF99CC", Scarpa = "#FA8128","Master" = "#03444d"),
     MKI67 = c(high = "white", medium = "yellow", low = "red"),
     Histology_Primary   = c(
@@ -46,6 +48,11 @@ aka3 = list(
     Grading = c( G1 = "#CBDB34",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray"),
     Senescence_UP =c( "high" = "black", "low" = "white"),
     "TIS down" = c("high" = "darkred", "low" = "white"),
-    "NF-kB activation"= c("high" = "darkgreen", "low" = "white"),
-    P_value = c("not_sig" = "black","sig" = "white")
+    P_value = c("not_sig" = "black","sig" = "white"),
+    pannet_cluster = c(Left = "black", Right = "white"),
+    Evo_up = c("High" = "red", "Medium" = "yellow", "Low" = "green"),
+    CDH5 = c("High" = "red", "Medium" = "yellow", "Low" = "green"),
+    Cohort = c("Left" = "black", Right = "white"),
+    "PAKT_response" = c("Non-Responder_pAKT" = "red","Responder_pAKT" = "green"),
+    "HER2" = c("HER2-" = "black", "HER2+" = "white", Unknown = "gray" )
 )
