@@ -1,31 +1,26 @@
 
 aka3 = list(
+    #Functionality   = c(
+    #    ACTH = "white",
+    #    PPoma = "BLACK",
+    #    Unknown = "gray",
+    #    Gastrinoma = "brown",
+    #    Glucagonoma = "blue",
+    #    Insulinoma = "darkgreen",
+    #    "Non-functional" = "white",
+    #    Somatostatinoma = "purple",
+    #    VIPoma = "cyan"
+    #),
     Functionality   = c(
-        ACTH = "white",
-        PPoma = "BLACK",
-        Unknown = "gray",
+        Functional = "green",
         Gastrinoma = "brown",
         Glucagonoma = "blue",
         Insulinoma = "darkgreen",
         "Non-Functional" = "white",
-        Somatostatinoma = "purple",
+        Ppoma = "purple",
         VIPoma = "cyan"
     ),
-    Evo_up_vec = c("High" = "red", "Medium" = "yellow","Low" = "green"),
-    #Functionality   = c(
-    #    Functional = "green",
-    #    Gastrinoma = "brown",
-    #    Glucagonoma = "blue",
-    #    Insulinoma = "darkgreen",
-    #    "Non-Functional" = "white",
-    #    Ppoma = "purple",
-    #    VIPoma = "cyan"
-    #),
-    OS_Survival = c("Long" = "darkgreen","Medium" = "yellow", "Short" = "red", "Unknown" = "gray"),
-    Cluster = c("1" = "green", "2"= "yellow", "3" = "darkred"),
-    Primary_Metastasis = c(Primary = "#F2D7D5", Metastasis = "#DFFF00","Unknown" = "gray"),
-    #Location = c(Pancreatic = "black", Intestinal = "yellow","Colorectal" = "brown",Gastric = "purple"),
-    MEN1 = c("0" = "white", "1" = "black"),
+
     NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
     NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
