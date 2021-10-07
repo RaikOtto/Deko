@@ -1,5 +1,12 @@
-###
+library("stringr")
+library("reshape2")
+library("dplyr")
 library("umap")
+library("ggplot2")
+
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 props = read.table("~/Deko_Projekt/Results/All.S200.CIBERSORT.tsv",sep ="\t", header = T, as.is=TRUE)
 dim(props)
