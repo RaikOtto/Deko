@@ -3,24 +3,20 @@ library("reshape2")
 library("dplyr")
 library("umap")
 library("ggplot2")
+library("ggpubr")
+library("grid")
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-
-library("ggpubr")
-library("stringr")
-library("reshape2")
-library("ggplot2")
-library("dplyr")
-library("grid")
 
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 ### RepSet Plot
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.SCDC.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -33,20 +29,23 @@ meta_data = meta_info[rownames(props),]
 
 ###
 
+meta_data = meta_data[meta_data$Histology_Primary == "Pancreatic",]
+
+vis_mat = props[rownames(meta_data),]
 meta_data = meta_info[rownames(vis_mat),]
-vis_mat = vis_mat[(meta_data$Histology_Primary == "Pancreatic") ,]
+dim(vis_mat)
 
-expr = expr_raw[,rownames(props)]
-write.table(expr,"~/Downloads/RepSet.S51.pancreatic_only.tsv",quote = F, sep ="\t")
+colnames(vis_mat)
 
-selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
-exocrines = as.double(rowSums(props[,c("Ductal","Acinar")]))
-endocrines = as.double(rowSums(props[,c("Alpha","Beta","Gamma","Delta")]))
+selection = c("Endocrine","Metaplastic")
+exocrines = as.double(rowSums(vis_mat[,c("Ductal","Acinar")]))
+endocrines = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
 
-props$Metaplastic = rowSums(props[,c("Ductal","Acinar")])
+vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
+vis_mat$Metaplastic = rowSums(vis_mat[,c("Ductal","Acinar")])
 
-props = as.data.frame(props)
-vis_mat = props[,selection]
+vis_mat = as.data.frame(vis_mat)
+vis_mat = vis_mat[,selection]
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$Metaplastic),]
@@ -60,39 +59,49 @@ upper_plot = pheatmap::pheatmap(
     annotation_col = meta_data[,c("Grading","NEC_NET","Functionality","Study")],
     annotation_colors = aka3,
     show_rownames = T,
-    show_colnames = T,
+    show_colnames = F,
     treeheight_row = 0,
     cellheight = 12,
     cluster_rows = F,
     cluster_cols = F,
     legend = 0,
+    annotation_legend = FALSE,
     fontsize_row = 14,
     clustering_method = "ward.D2"
 )
 upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+
+
+pannet_cluster[1:which(pannet_cluster == "YY7PXK")] = "Left"
+
 ### lower plot
 
 #vis_mat$Sample = factor(rownames(vis_mat), levels = rownames(vis_mat)[order(vis_mat$Metaplastic)])
 
-expr_raw = expr_raw[,rownames(vis_mat)]
-vis_mat$MKi67 = as.double(expr_raw["MKI67",rownames(vis_mat)])
-vis_mat$MKi67 = log(vis_mat$MKi67)
-vis_mat$MKi67 = vis_mat$MKi67 / max(vis_mat$MKi67)
-vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
-vis_mat = vis_mat[,!(colnames(vis_mat)  %in% c("Alpha","Beta","Gamma","Delta"))]
-vis_mat$Sample = rownames(vis_mat)
-vis_mat = vis_mat[order(vis_mat$Metaplastic),]
-vis_mat$Sample = factor(1:nrow(vis_mat))
-vis_mat_melt = reshape2::melt(vis_mat)
-colnames(vis_mat_melt) = c("Sample","Measurement","Value")
+expr = expr_raw[,rownames(vis_mat)]
+dim(expr)
 
-lower_plot = ggplot(vis_mat_melt, aes(x = as.numeric(Sample), y=Value, color= Measurement, shape = Measurement), ) + geom_point()
+vis_mat_lower = vis_mat
+vis_mat_lower$MKi67 = as.double(expr["MKI67",rownames(vis_mat_lower)])
+vis_mat_lower$MKi67 = log(vis_mat_lower$MKi67)
+vis_mat_lower$MKi67 = vis_mat_lower$MKi67 / max(vis_mat_lower$MKi67)
+#vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
+#vis_mat = vis_mat[,!(colnames(vis_mat)  %in% c("Alpha","Beta","Gamma","Delta"))]
+vis_mat_lower$Sample = rownames(vis_mat_lower)
+vis_mat_lower = vis_mat_lower[order(vis_mat_lower$Metaplastic),]
+vis_mat_lower$Sample = factor(1:nrow(vis_mat_lower))
+vis_mat_lower$P_value = props[rownames(vis_mat_lower),"P_value"]
+vis_mat_lower = vis_mat_lower[,!( colnames(vis_mat_lower) %in% c("Endocrine"))]
+vis_mat_lower_melt = reshape2::melt(vis_mat_lower)
+colnames(vis_mat_lower_melt) = c("Sample","Measurement","Value")
+
+lower_plot = ggplot(vis_mat_lower_melt, aes(x = as.numeric(Sample), y=Value, color= Measurement, shape = Measurement), ) + geom_point()
 lower_plot = lower_plot + geom_smooth(method = "lm", se= FALSE)
-lower_plot = lower_plot + scale_color_manual(values=c('#5D6D7E','red', '#52BE80'))
+lower_plot = lower_plot + scale_color_manual(values=c('#5D6D7E','red', '#453CFA'))
 lower_plot = lower_plot +  theme_classic()
 lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="bottom")
 lower_plot = lower_plot + scale_y_continuous( 
-    name = "Relative cell-type proportions",
+    name = "Relative cell-type proportions & p-value",
     sec.axis = sec_axis(~.*8.5, name="log2 MKi67 mRNA expression")
 )
 lower_plot
