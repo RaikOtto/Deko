@@ -17,6 +17,7 @@ aka3 = list(
         Gastrinoma = "brown",
         Glucagonoma = "blue",
         Insulinoma = "darkgreen",
+        Unknown = "gray",
         "Non-Functional" = "white",
         Ppoma = "purple",
         VIPoma = "cyan"
@@ -32,8 +33,8 @@ aka3 = list(
         Colorectal = "brown",
         #Small_intestinal = "Yellow",
         Intestinal = "orange",
-        Gastric = "purple"),
-        #Gastric_not_specified = "gray"),
+        Gastric = "purple",
+        Gastric_not_specified = "gray"),
     Ratio = c("low"="white","high"="darkred"),
     Alpha = c(low = "white", high = "blue"),
     Beta = c(low = "white", high = "darkgreen"),
