@@ -1,4 +1,3 @@
-
 aka3 = list(
     #Functionality   = c(
     #    ACTH = "white",
@@ -18,9 +17,9 @@ aka3 = list(
         Insulinoma = "darkgreen",
         "Non-Functional" = "white",
         Ppoma = "purple",
-        VIPoma = "cyan"
+        VIPoma = "cyan",
+        Unknown = "gray"
     ),
-
     NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
     NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
