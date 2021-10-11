@@ -15,7 +15,7 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 ### RepSet Plot
 
-#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69.Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.bseqsc..dec_res.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
