@@ -22,7 +22,6 @@ aka3 = list(
         Ppoma = "purple",
         VIPoma = "cyan"
     ),
-
     NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
     NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
@@ -42,7 +41,7 @@ aka3 = list(
     Delta = c(low = "white", high = "Purple"),
     Ductal = c(low = "white", high = "Brown"),
     Acinar = c(low = "white", high = "Cyan"),
-    Grading = c( G1 = "#CBDB34",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray"),
+    Grading = c( G1 = "#CBDB34",G2 = "#FFC000", G3 = "#EE5124"),
     Senescence_UP =c( "high" = "black", "low" = "white"),
     "TIS down" = c("high" = "darkred", "low" = "white"),
     P_value = c("not_sig" = "black","sig" = "white"),
