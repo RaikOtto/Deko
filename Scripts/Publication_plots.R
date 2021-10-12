@@ -696,3 +696,27 @@ p  =pheatmap::pheatmap(
   clustering_method = "complete"
 )
 dev.off()
+
+###
+
+meta_t = read.table("~/Deko_Projekt/GSEA/metaplastic_and cancer signatures from Schlesinger_Zhibo_Hendley.transpose.gmt.tsv",sep ="\t", header = F)
+dim(meta_t)
+
+genes_9 = c( genes_9, rep("",ncol(meta_t)-length(genes_9)))
+genes_10 = c( genes_10, rep("",ncol(meta_t)-length(genes_10)))
+genes_11 = c( genes_11, rep("",ncol(meta_t)-length(genes_11)))
+genes_14 = c( genes_14, rep("",ncol(meta_t)-length(genes_14)))
+genes_15 = c( genes_15, rep("",ncol(meta_t)-length(genes_15)))
+genes_17 = c( genes_17, rep("",ncol(meta_t)-length(genes_17)))
+
+stem_t = rbind(stem_t,genes_10)
+stem_t = rbind(stem_t,genes_11)
+stem_t = rbind(stem_t,genes_14)
+stem_t = rbind(stem_t,genes_15)
+stem_t = rbind(stem_t,genes_17)
+
+
+meta_t[,1:10]
+meta_t = rbind(meta_t, genes_1, genes_9, genes_10, genes_11, genes_14,genes_15,genes_17)
+
+write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quote = F, row.names = FALSE,col.names = FALSE)

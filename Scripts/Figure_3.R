@@ -15,8 +15,8 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 ### RepSet Plot
 
-#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Riemer_Scarpa.S69",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_genes_200_samples_endocrine_exocrine_metaplastic_excrine_only.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_400.Absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -25,6 +25,7 @@ no_match = rownames(props) %in% meta_info$Sample == F
 sum(no_match)
 
 dim(props)
+#rownames(props) = props$name
 meta_data = meta_info[rownames(props),]
 
 ###
@@ -37,18 +38,23 @@ dim(vis_mat)
 
 colnames(vis_mat)
 
-selection = c("Endocrine","Metaplastic")
+#selection = c("Endocrine","Metaplastic")
+selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
 exocrines = as.double(rowSums(vis_mat[,c("Ductal","Acinar")]))
 endocrines = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
 
 vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
 vis_mat$Metaplastic = rowSums(vis_mat[,c("Ductal","Acinar")])
+vis_mat$Metaplastic = rowSums(vis_mat[,c("acinar.i","acinar.reg.","muc5b..ductal")])
 
 vis_mat = as.data.frame(vis_mat)
 vis_mat = vis_mat[,selection]
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$Metaplastic),]
+meta_data$P_value = props[meta_data$Sample,"P_value"]
+meta_data$P_value[props[meta_data$Sample,"P_value"] < 0.05] = "Sig"
+meta_data$P_value[props[meta_data$Sample,"P_value"] >= 0.05] = "Not_sig"
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 
@@ -56,7 +62,7 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 
 upper_plot = pheatmap::pheatmap(
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","NEC_NET","Functionality","Study")],
+    annotation_col = meta_data[,c("Grading","P_value","NEC_NET","Functionality","Study")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
@@ -65,7 +71,7 @@ upper_plot = pheatmap::pheatmap(
     cluster_rows = F,
     cluster_cols = F,
     legend = 0,
-    annotation_legend = FALSE,
+    annotation_legend = TRUE,
     fontsize_row = 14,
     clustering_method = "ward.D2"
 )
