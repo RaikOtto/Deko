@@ -142,24 +142,15 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
-<<<<<<< HEAD
-selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+-ductal","Alpha","Gamma")
-=======
 selection = c("Acinar","acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
->>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 
 ###
 
 props = as.data.frame(props)
 vis_mat = props[,colnames(props) %in% selection]
 vis_mat$endocrine_fully_differentited = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
-<<<<<<< HEAD
-vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
-vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+-ductal")]))
-=======
 vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in%c("Ductal","acinar-s","Acinar")]))
 vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in% c("acinar-i","acinar-reg+","muc5b+ ductal")]))
->>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$endocrine_fully_differentited,decreasing = T),]
