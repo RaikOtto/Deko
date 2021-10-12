@@ -103,23 +103,22 @@ rownames(props) = str_replace(rownames(props), pattern = "^X","")
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 
+model_name = "Tosti_200_genes_200_samples_endocrine_exocrine_metaplastic_acinar-i_muc5+_only"
+
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
-    models = "Tosti_100_endocrine_exocrine",
+    models = model_name,
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = FALSE,
     nr_permutations = 1000,
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t")
+write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_genes_200_samples_endocrine_exocrine_metaplastic_acinar-i_muc5+_only.tsv",sep = "\t")
 
-<<<<<<< HEAD
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_endocrine_exocrine.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-=======
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
->>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
+
 #props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 colnames(props) = str_replace(colnames(props),pattern = "\\.","-")
@@ -142,24 +141,16 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
-<<<<<<< HEAD
-selection = c("acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+-ductal","Alpha","Gamma")
-=======
 selection = c("Acinar","acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
->>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
 
 ###
 
 props = as.data.frame(props)
 vis_mat = props[,colnames(props) %in% selection]
 vis_mat$endocrine_fully_differentited = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
-<<<<<<< HEAD
-vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,c("Ductal","acinar-s")]))
-vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,c("acinar-i","acinar-reg+","muc5b+-ductal")]))
-=======
 vis_mat$exocrine_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in%c("Ductal","acinar-s","Acinar")]))
 vis_mat$metaplastic_not_fully_differentiated = as.double(rowSums(vis_mat[,colnames(vis_mat) %in% c("acinar-i","acinar-reg+","muc5b+ ductal")]))
->>>>>>> 2516b30a226ed5a865a25d1922b97c3781d4937f
+
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$endocrine_fully_differentited,decreasing = T),]
