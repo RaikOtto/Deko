@@ -41,20 +41,7 @@ aka3 = list(
     Delta = c(low = "white", high = "Purple"),
     Ductal = c(low = "white", high = "Brown"),
     Acinar = c(low = "white", high = "Cyan"),
-<<<<<<< HEAD
-    Grading = c( G1 = "#CBDB34",G2 = "#FFC000", G3 = "#EE5124"),
-    Senescence_UP =c( "high" = "black", "low" = "white"),
-    "TIS down" = c("high" = "darkred", "low" = "white"),
-    P_value = c("not_sig" = "black","sig" = "white"),
-    pannet_cluster = c(Left = "black", Right = "white"),
-    Evo_up = c("High" = "red", "Medium" = "yellow", "Low" = "green"),
-    CDH5 = c("High" = "red", "Medium" = "yellow", "Low" = "green"),
-    Cohort = c("Left" = "black", Right = "white"),
-    "PAKT_response" = c("Non-Responder_pAKT" = "red","Responder_pAKT" = "green"),
-    "HER2" = c("HER2-" = "black", "HER2+" = "white", Unknown = "gray" )
-=======
     Grading = c( G1 = "white",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray"),
     Primary_Metastasis = c("Primary" = "white", Metastasis = "gray", "Local_recurrence" = "pink"),
     MEN1 = c("0" = "white", "1"  = "#4073FF")
->>>>>>> 65dc5a559049fd0108f40cac2499cad5d57503a7
 )
