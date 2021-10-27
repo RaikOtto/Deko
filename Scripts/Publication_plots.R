@@ -26,7 +26,8 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 #dim(expr_raw)
@@ -57,7 +58,7 @@ genes_of_interest_hgnc_t[i,1]
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 #sad_genes = c( str_to_upper( as.character( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)]) ),str_to_upper( as.character( genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)]) ) )
 sad_genes = sad_genes[ sad_genes != ""]
-sad_genes = sad_genes[1:50]
+#sad_genes = sad_genes[1:50]
 #sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
@@ -87,7 +88,7 @@ p  =pheatmap::pheatmap(
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = F,
+  show_colnames = TRUE,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,

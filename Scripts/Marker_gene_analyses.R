@@ -1,1 +1,28 @@
 library("stringr")
+
+schlesinger_t = read.table("~/Downloads/Schlesinger.tsv", header = T, row.names = 1, sep ="\t")
+schlesinger_genes = rownames(schlesinger_t)
+
+baron = readRDS("~/Downloads/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
+marker_genes_baron = baron[[3]]
+marker_genes_baron_ductal = marker_genes_baron$ductal
+
+(sum(marker_genes_baron_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_baron_ductal)) * 100
+
+segerstolpe = readRDS("~/Downloads/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe.RDS")
+marker_genes_segerstolpe = segerstolpe[[3]]
+marker_genes_segerstolpe_ductal = marker_genes_segerstolpe$ductal
+
+(sum(marker_genes_segerstolpe_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_segerstolpe_ductal)) * 100
+
+lawlor = readRDS("~/Downloads/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor.RDS")
+marker_genes_lawlor = lawlor[[3]]
+marker_genes_lawlor_ductal = marker_genes_lawlor$ductal
+
+(sum(marker_genes_lawlor_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_lawlor_ductal)) * 100
+
+tosti = readRDS("~/Downloads/Tosti_200_Endocrine_all_Exocrine.RDS")
+marker_genes_tosti = tosti[[3]]
+marker_genes_tosti_ductal = marker_genes_tosti$ductal
+
+(sum(marker_genes_tosti_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_tosti_ductal)) * 100
