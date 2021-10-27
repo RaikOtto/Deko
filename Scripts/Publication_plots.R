@@ -1,3 +1,4 @@
+library("umap")
 library("ggpubr")
 library("stringr")
 library("reshape2")
@@ -25,9 +26,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = as.data.frame(read.csv2("~/Downloads/results_gene.csv",header = T, sep =" "))
-
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 #dim(expr_raw)
@@ -39,15 +38,15 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
-expr_raw = expr_raw[meta_data$Histology_Primary == "Pancreatic",]
+expr_raw = expr_raw[,meta_data$Histology_Primary == "Pancreatic"]
 meta_data = meta_info[colnames(expr_raw),]
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-genes_of_interest_hgnc_t = read.table("~/Deko_Projekt///Misc/Stem_signatures.tsv",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
 genes_of_interest_hgnc_t$V1
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 63
+i = 103
 genes_of_interest_hgnc_t[i,1]
 
 #genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
@@ -56,8 +55,10 @@ genes_of_interest_hgnc_t[i,1]
 #sad_genes = genes[genes$p_val == 0,"gene"]
 
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
+#sad_genes = c( str_to_upper( as.character( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)]) ),str_to_upper( as.character( genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)]) ) )
 sad_genes = sad_genes[ sad_genes != ""]
-sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
+sad_genes = sad_genes[1:50]
+#sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
 
 hox_genes = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
@@ -82,7 +83,7 @@ pcr = prcomp((correlation_matrix))
 p  =pheatmap::pheatmap(
   #correlation_matrix,
   expr,
-  annotation_col = meta_data[,c("NEC_NET","Acinar_reg","Grading","Study")],
+  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -90,7 +91,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D2"
+  clustering_method = "average"
 )
 
 p = ggbiplot::ggbiplot(
@@ -99,13 +100,13 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$Location),
+  groups = as.character(meta_data$NEC_NET),
   #label = meta_data$Sample,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$Location) ))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
 p
 p = p + scale_color_manual( values = c("green","yellow","darkred","blue","red"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
@@ -720,3 +721,45 @@ meta_t[,1:10]
 meta_t = rbind(meta_t, genes_1, genes_9, genes_10, genes_11, genes_14,genes_15,genes_17)
 
 write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quote = F, row.names = FALSE,col.names = FALSE)
+
+#### umap
+
+# umap
+
+custom.config = umap.defaults
+custom.config$random_state = sample(1:1000,size = 1)
+#custom.config$random_state = 995
+custom.config$n_components=2
+
+genes_of_interest_hgnc_t$V1
+i = 13
+sad_genes = genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]
+#sad_genes = c( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)], genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)] ) 
+sad_genes = sad_genes[sad_genes != ""]
+#sad_genes = sad_genes[1:50]
+expr = expr_raw[match(sad_genes,  rownames(expr_raw), nomatch = 0),]
+#expr = expr[,meta_data$ABC_GCB != "Unclassified"]
+meta_data_plot = meta_info[colnames(expr),]
+#expr[1:5,1:5]
+correlation_matrix = cor(expr);pcr = prcomp(t(correlation_matrix))
+
+umap_result = umap::umap(
+  correlation_matrix,
+  colvec = meta_data_plot$NEC_NET,
+  preserve.seed = TRUE,
+  config=custom.config
+)
+
+umap_result$layout = as.data.frame(umap_result$layout)
+colnames(umap_result$layout) = c("x","y")
+
+umap_p = ggplot(
+  umap_result$layout,
+  aes(x, y))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data_plot$NEC_NET) ))
+#umap_p = umap_p+geom_text(size= 4,aes(label=rownames(meta_data),color = as.character(meta_data$Cluster)),hjust=0, vjust=0)
+umap_p = umap_p +  xlab("") + ylab("")  
+umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data_plot$NEC_NET), level=.5, type ="t", size=1.5)
+#umap_p = umap_p + scale_color_manual( values = c("darkgreen","orange"),name="Drug_treatment") ##33ACFF ##FF4C33
+umap_p
+genes_of_interest_hgnc_t$V1[i]
