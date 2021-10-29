@@ -21,8 +21,7 @@ marker_genes_lawlor_ductal = marker_genes_lawlor$ductal
 
 (sum(marker_genes_lawlor_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_lawlor_ductal)) * 100
 
-tosti = readRDS("~/Downloads/Tosti_200_Endocrine_all_Exocrine.RDS")
-tosti = readRDS("~/Downloads/Tosti_400.RDS")
+tosti = readRDS("~/artdeco/inst/Models/bseqsc/Baron_Tosti_800_genes_100_samples_all_endocrine_all_exocrine_no_metaplastic.RDS")
 marker_genes_tosti = tosti[[3]]
 names(marker_genes_tosti)
 marker_genes_tosti_ductal = marker_genes_tosti$ductal

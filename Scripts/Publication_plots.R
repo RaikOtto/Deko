@@ -39,21 +39,24 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 meta_data = meta_info[colnames(expr_raw),]
 
-expr_raw = expr_raw[,meta_data$Histology_Primary == "Pancreatic"]
+candidates = meta_data$Sample[ 
+  meta_data$Histology_Primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
+]
+expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
+dim(meta_data)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
-genes_of_interest_hgnc_t$V1
+#liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
 
-liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-i = 103
+genes_of_interest_hgnc_t$V1
+i = 74
 genes_of_interest_hgnc_t[i,1]
 
-#genes = read.table("~/Deko_Projekt/Misc/Signatures_metaplastic_cells_pancreas.tsv", sep ="\t",header = T)
-#genes$gene = str_to_upper(genes$gene)
-#genes = genes[order(genes$p_val, decreasing = F),]
-#sad_genes = genes[genes$p_val == 0,"gene"]
+#baron = readRDS("~/Deko_Projekt/Misc/Ma_YFP_eight_cell_types.RDS")
+#marker_genes_baron = baron[[3]]
+#sad_genes = str_to_upper(marker_genes_baron$`Tuft/EEC.Progenitor`)
 
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 #sad_genes = c( str_to_upper( as.character( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)]) ),str_to_upper( as.character( genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)]) ) )
@@ -84,7 +87,7 @@ pcr = prcomp((correlation_matrix))
 p  =pheatmap::pheatmap(
   #correlation_matrix,
   expr,
-  annotation_col = meta_data[,c("NEC_NET","Grading","Study")],
+  annotation_col = meta_data[,c("NEC_NET","Grading","Primary_Metastasis","Histology_Primary","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
@@ -92,7 +95,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "average"
+  clustering_method = "complete"
 )
 
 p = ggbiplot::ggbiplot(
@@ -733,7 +736,7 @@ custom.config$random_state = sample(1:1000,size = 1)
 custom.config$n_components=2
 
 genes_of_interest_hgnc_t$V1
-i = 13
+i = 103
 sad_genes = genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]
 #sad_genes = c( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)], genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)] ) 
 sad_genes = sad_genes[sad_genes != ""]
@@ -764,3 +767,16 @@ umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data_plot$NEC_NE
 #umap_p = umap_p + scale_color_manual( values = c("darkgreen","orange"),name="Drug_treatment") ##33ACFF ##FF4C33
 umap_p
 genes_of_interest_hgnc_t$V1[i]
+
+marker_gene_frame = matrix(as.character(),ncol = 200)
+
+for( name in names(marker_genes_baron) ){
+  
+  genes = str_to_upper(as.character(unlist(marker_genes_baron[name])))
+  marker_gene_frame = rbind(marker_gene_frame,genes)
+}
+
+marker_gene_frame = as.data.frame(marker_gene_frame)
+rownames(marker_gene_frame) = names(marker_genes_baron)
+
+#write.table(marker_gene_frame, "~/Deko_Projekt/Misc/Metaplastic_marker_genes.tsv",quote = F, sep ="\t")
