@@ -12,14 +12,14 @@ library("bseqsc")
 library("dplyr")
 library("Biobase")
 
-meta_info = read.table("~/Deko_Projekt//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 
 rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -107,15 +107,15 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 ###
 
 show_models_bseqsc()
-model_name = "Ma_YFP_eight_cell_types"
+model_name = "Baron_6_EEC_Neurog_3"
 
 props = Deconvolve_transcriptome(
-    transcriptome_data = expr_raw[,meta_data$NET_NEC_PCA == "NEC"],
+    transcriptome_data = expr_raw,
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = FALSE,
-    nr_permutations = 1,
+    nr_permutations = 1000,
     output_file = ""
 )
 

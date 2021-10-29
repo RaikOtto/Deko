@@ -6,64 +6,18 @@ library("png")
 library("grid")
 library("ggplot2")
 library("magick")
+library("treemapify")
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Califano.S165.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
-colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
-
-no_match = props$Sample %in% meta_info$Sample == F
-rownames(props)[no_match] = paste("X",props$Sample[no_match],sep ="")
-no_match = props$Sample %in% meta_info$Sample == F
-sum(no_match)
-
-dim(props)
-meta_data = meta_info[props$Sample,]
-
-#props = props[(meta_data$Histology == "pancreas") | (meta_data$NEC_NET_Color != "Primary") ,]
-props  = props[ meta_data$Histology_Primary == "Pancreatic" ,]
-dim(props)
-meta_data = meta_info[props$Sample,]
-
-meta_data$Location = meta_data$NEC_NET
-props = props[ meta_data$Location != "Outlier" ,]
-meta_data = meta_info[props$Sample,]
-props$Location = meta_data$NEC_NET
-
-vis_mat = reshape2::melt(props[,c("Location","P_value","model")])
-colnames(vis_mat) = c("Location","Model","Variable","P_value")
-vis_mat$Location[vis_mat$Location == "liver_met"] = "Metastasis"
-vis_mat$Location = factor(vis_mat$Location, levels = c("Primary","Metastasis"))
-vis_mat$P_value = as.double(vis_mat$P_value)
-
-vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Baron"] = "Endocrine"
-vis_mat$Model[ vis_mat$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"] = "Endocrine & Exocrine"
-
-p_values = ggplot(
-    data = vis_mat,
-    aes(
-        x = Model,
-        y = P_value,
-        fill = Location
-    )
-) + geom_boxplot()
-p_values = p_values + scale_fill_manual(values = c("blue", "red","blue", "red")) + ylab("P-value") + xlab("Model")+ theme(legend.position = "top",axis.text=element_text(size=12))
-p_values = p_values + geom_hline(yintercept = 0.05, linetype= "dashed", color = "black")
-p_values = p_values + annotate("text", x = 2, y = .055, label = "P-value == 0.05",col = "black",size =6)
-p_values = p_values + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-p_values
-
-####
-
-meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Sample
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
+meta_data = meta_info[meta_info$Study %in% study_selection,]
 
 table(meta_info$Study)
 
-study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
+###
+
 meta_data = meta_info[meta_info$Study %in% study_selection,]
 meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
 meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
@@ -79,8 +33,6 @@ which(meta_data$Primary_Metastasis == "Unknown")
 table(meta_data$Histology_Primary)
 
 dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary_Metastasis == "Primary"),])
-
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 #### Subplot A Primary Metastasis
 
@@ -300,3 +252,34 @@ blankPlot +
         ymin = -Inf,
         ymax = 5
     )
+
+### Treemap alternative to plot A, amount of samples per study
+
+vis_mat_plot_a = reshape2::melt(table(meta_data$Study))
+colnames(vis_mat_plot_a) = c("Study","Samples")
+#vis_mat_plot_a$Study = paste0(vis_mat_plot_a$Study, ": " , vis_mat_plot_a$Samples)
+
+plot_a = ggplot(
+    vis_mat_plot_a,
+    aes(
+        area = Samples,
+        fill = Study,
+        label = Study,
+        subgroup = Samples
+    )
+) + geom_treemap()
+plot_a = plot_a + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
+plot_a = plot_a + geom_treemap_text(
+    fontface = "italic",
+    colour = "white",
+    place = "topleft",
+    grow = FALSE,size = 30)
+plot_a = plot_a + geom_treemap_subgroup_border() + geom_treemap_subgroup_text(
+    place = "center",
+    grow = FALSE,
+    colour = "white",
+    fontface = "italic")
+plot_a = plot_a + theme(legend.position="None")
+svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
+plot_a
+dev.off()
