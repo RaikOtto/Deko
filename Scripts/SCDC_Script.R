@@ -18,7 +18,7 @@ rownames(meta_info) = meta_info$Sample
 
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S57.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 #expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -28,8 +28,11 @@ colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 no_match
 
+#expr_raw = expr_raw[,meta_data$Histology_Primary %in% c("Pancreatic")]
 meta_data = meta_info[colnames(expr_raw),]
+
 table(meta_data$Study)
+table(meta_data$NET_NEC_PCA)
 
 fdata = rownames(expr_raw)
 pdata = cbind(bulk_sample = colnames(expr_raw))
@@ -103,19 +106,20 @@ rownames(props) = str_replace(rownames(props), pattern = "^X","")
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
 
-model_name = "Tosti_200_genes_200_samples_endocrine_exocrine_metaplastic_acinar-i_muc5+_only"
+show_models_bseqsc()
+model_name = "Ma_YFP_eight_cell_types"
 
 props = Deconvolve_transcriptome(
-    transcriptome_data = expr_raw[,],
+    transcriptome_data = expr_raw[,meta_data$NET_NEC_PCA == "NEC"],
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = FALSE,
-    nr_permutations = 1000,
+    nr_permutations = 1,
     output_file = ""
 )
 
-write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_genes_200_samples_endocrine_exocrine_metaplastic_acinar-i_muc5+_only.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103_Cibersort_Ma_YFP_eight_cell_types.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 
