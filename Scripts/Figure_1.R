@@ -23,8 +23,8 @@ meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
 meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
 meta_data = meta_data[meta_data$NEC_NET != "Control",]
 meta_data = meta_data[meta_data$Grading != "Control",]
-meta_data = meta_data[ grep(meta_data$Sample, pattern = "SCLC",invert = TRUE),]
-meta_data = meta_data[ grep(meta_data$Sample, pattern = "MiNEN",invert = TRUE),]
+#meta_data = meta_data[ grep(meta_data$Sample, pattern = "SCLC",invert = TRUE),]
+#meta_data = meta_data[ grep(meta_data$Sample, pattern = "MiNEN",invert = TRUE),]
 dim(meta_data)
 
 table(meta_data$Primary_Metastasis)
@@ -255,31 +255,33 @@ blankPlot +
 
 ### Treemap alternative to plot A, amount of samples per study
 
-vis_mat_plot_a = reshape2::melt(table(meta_data$Study))
-colnames(vis_mat_plot_a) = c("Study","Samples")
-#vis_mat_plot_a$Study = paste0(vis_mat_plot_a$Study, ": " , vis_mat_plot_a$Samples)
+meta_data[as.character(meta_data$NEC_NET) %in% c("Unknown","MiNEN","SCLC"),"NEC_NET"] = "Unknown or other"
+vis_mat_plot_a = reshape2::melt(table(meta_data[,c("Study","NEC_NET")]))
+colnames(vis_mat_plot_a) = c("Study","NEC_NET","Count")
+vis_mat_plot_a$NEC_NET = as.character(vis_mat_plot_a$NEC_NET)
+vis_mat_plot_a$NEN = vis_mat_plot_a$Count
+vis_mat_plot_a = vis_mat_plot_a[vis_mat_plot_a$Count != 0,]
 
 plot_a = ggplot(
     vis_mat_plot_a,
     aes(
-        area = Samples,
-        fill = Study,
-        label = Study,
-        subgroup = Samples
+        area = Count,
+        fill = NEC_NET,
+        label = NEN,
+        subgroup = Study
     )
-) + geom_treemap()
-plot_a = plot_a + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
+) + geom_treemap(alpha= .7)+ geom_treemap_subgroup_border()
 plot_a = plot_a + geom_treemap_text(
-    fontface = "italic",
     colour = "white",
-    place = "topleft",
-    grow = FALSE,size = 30)
-plot_a = plot_a + geom_treemap_subgroup_border() + geom_treemap_subgroup_text(
-    place = "center",
+    place = "bottomright",
     grow = FALSE,
+    min.size= 15)
+plot_a = plot_a + geom_treemap_subgroup_text(
+    place = "top",
+    grow = FALSE, 
     colour = "white",
-    fontface = "italic")
-plot_a = plot_a + theme(legend.position="None")
-svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
+    min.size = 15)
+plot_a = plot_a + scale_fill_manual(values = c("purple","red","blue","black"))
+plot_a = plot_a + theme(legend.position="top")
 plot_a
-dev.off()
+

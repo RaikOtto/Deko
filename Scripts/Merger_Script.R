@@ -2,11 +2,11 @@
 
 library("stringr")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S50.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -22,17 +22,16 @@ colnames(bam_data_1) = col_names
 summary(bam_data_1["INS",])
 
 meta_data = meta_info[colnames(bam_data_1),]
-#meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
-bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
-#bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
+bam_data_1 = bam_data_1[, meta_data$Histology_Primary %in% c("Pancreatic")]
+meta_data = meta_info[colnames(bam_data_1),]
+dim(bam_data_1)
 
 meta_data = meta_info[colnames(bam_data_1),]
 dim(bam_data_1)
-table(meta_data$Subtype)
 
-# HISC
+# Scarpa RepSet
 
-bam_data_2 = read.table("~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/MAPTor_NET/BAMs_new/Master/Master_new.S34.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -46,7 +45,7 @@ table("PTP" %in% rownames(bam_data_2)) # acinar
 table("TMSB4X" %in% rownames(bam_data_2)) # ductal
 
 meta_data = meta_info[colnames(bam_data_2),]
-#bam_data_2 = bam_data_2[, meta_data$Subtype %in% c("HISC")]
+bam_data_2 = bam_data_2[, meta_data$Histology_Primary %in% c("Pancreatic")]
 dim(bam_data_2)
 
 ### integrate
@@ -73,14 +72,14 @@ row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN
 new_mat = new_mat[which( row_var >= 1),]
 new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
-table(meta_data$Subtype)
+table(meta_data$Study)
 dim(new_mat)
 
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
 dim(new_mat)
 new_mat[1:5,1:5]
 
-#write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S70.HGNC.tsv", sep ="\t", quote =F , row.names = T)
 
 ### splitter
 
