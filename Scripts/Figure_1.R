@@ -1,3 +1,4 @@
+library(tidyverse)
 library("stringr")
 library("ggplot2")
 library("dplyr")
@@ -281,24 +282,18 @@ plot_a = plot_a + geom_treemap_subgroup_text(
     place = "top",
     grow = FALSE, 
     colour = "white",
-<<<<<<< HEAD
-    fontface = "italic")
-plot_a = plot_a + theme(legend.position="None")
+    min.size = 15)
+plot_a = plot_a + scale_fill_manual(values = c("purple","red","blue","black"))
+plot_a = plot_a + theme(legend.position="top")
+plot_a
+
 #svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
 plot_a
 dev.off()
 
 ### plot B alternative
 
-nec_net_mat = meta_data[,c("Study","NEC_NET")]
-grp = group_by(nec_net_mat, Study)
-vis_mat = table(grp)
-vis_mat = reshape2::melt(vis_mat)
-colnames(vis_mat) = c("Study","NEN_type", "Count")
-vis_mat$NEN_type = factor(vis_mat$NEN_type, levels = c("NET","NEC","Ambiguous","Unknown"))
 
-
-library(tidyverse)
 
 # Create dataset
 data <- data.frame(
@@ -355,21 +350,15 @@ plot_b = plot_b + geom_bar(aes(x=as.factor(id), y=value, fill=group), stat="iden
 #plot_b= plot_b + ylim(-100,120) +
 plot_b = plot_b + theme_minimal()
 plot_b = plot_b + theme(
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        panel.grid = element_blank()
-    )
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank()
+)
 plot_b = plot_b + coord_polar()
 plot_b = plot_b + geom_text(data=label_data, aes(x=id, y=value+10, label=individual, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_data$angle, inherit.aes = FALSE )
 plot_b = plot_b + geom_segment(data=base_data, aes(x = start, y = -5, xend = end, yend = -5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )
 plot_b = plot_b + geom_text(data=base_data, aes(x = title, y = -18, label=group), hjust=c(1,1,1,1,0,0,0,0), colour = "black", alpha=0.8, size=4, fontface="bold", inherit.aes = FALSE)
 plot_b = plot_b + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
 plot_b
-=======
-    min.size = 15)
-plot_a = plot_a + scale_fill_manual(values = c("purple","red","blue","black"))
-plot_a = plot_a + theme(legend.position="top")
-plot_a
->>>>>>> 91ed8200fb9b7f27a5c0bf2631812431176f1cfc
 
