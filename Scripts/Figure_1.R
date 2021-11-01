@@ -293,12 +293,10 @@ dev.off()
 
 ### plot B alternative
 
-
-
 # Create dataset
-data <- data.frame(
+data = data.frame(
     #individual=vis_mat$Study,
-    individual=vis_mat$NEN_type,
+    individual=vis_mat_plot_a$NEN,
     #group= vis_mat$NEN_type,
     group= vis_mat$Study,
     value=vis_mat$Count
@@ -362,3 +360,59 @@ plot_b = plot_b + geom_text(data=base_data, aes(x = title, y = -18, label=group)
 plot_b = plot_b + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
 plot_b
 
+###
+
+# Racetrack Plot
+# original source: http://stackoverflow.com/questions/15751442/making-a-circular-barplot-with-a-hollow-center-aka-race-track-plot
+
+# create some simulated data
+Category <- c(
+    "Electronics",
+    "Appliances",
+    "Books",
+    "Music",
+    "Clothing", 
+    "Cars",
+    "Food/Beverages",
+    "Personal Hygiene", 
+    "Personal Health/OTC",
+    "Hair Care")
+Percent <- c(81, 77, 70, 69, 69, 68, 62, 62, 61, 60)
+internetImportance <- data.frame(Category,Percent)
+len <- 4
+df2 <- data.frame(
+    Category = letters[1:len],
+    Percent = rep(0, len), 
+    Category2 = rep("", len))
+
+# create a new Category2 variable in the internetImportance df that contains the category name, a dash, the importance percent, and a percent sign
+internetImportance$Category2 <- 
+    paste0(internetImportance$Category," - ",internetImportance$Percent,"%")
+
+# append number to category name
+internetImportance <- rbind(internetImportance, df2)
+
+# set factor so it will plot in descending order 
+internetImportance$Category <-
+    factor(internetImportance$Category, 
+    levels=rev(internetImportance$Category))
+
+ggplot(
+    internetImportance,
+    aes(x = Category, y = Percent,fill = Category2)) + 
+    geom_bar(width = 0.9, stat="identity") + 
+    scale_fill_brewer(palette="Set3") +
+    coord_polar(theta = "y") +
+    xlab("") + ylab("") +
+    ylim(c(0,100)) +
+    geom_text(data = internetImportance, hjust = 1, size = 3,
+              aes(x = Category, y = 0, label = Category2)) +
+    geom_text(label="GLOBAL", x=.5, y=.5, size=4) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.line = element_blank(),
+          axis.text.y = element_blank(),
+          axis.text.x = element_blank(),
+          axis.ticks = element_blank())
