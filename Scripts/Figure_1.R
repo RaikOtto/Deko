@@ -13,6 +13,7 @@ rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
 meta_data = meta_info[meta_info$Study %in% study_selection,]
+meta_data = meta_data[meta_data$NEC_NET %in% c("Ambiguous", "Unknown", "NEC", "NET"),]
 
 table(meta_info$Study)
 
@@ -280,6 +281,86 @@ plot_a = plot_a + geom_treemap_subgroup_border() + geom_treemap_subgroup_text(
     colour = "white",
     fontface = "italic")
 plot_a = plot_a + theme(legend.position="None")
-svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
 plot_a
 dev.off()
+
+### plot B alternative
+
+nec_net_mat = meta_data[,c("Study","NEC_NET")]
+grp = group_by(nec_net_mat, Study)
+vis_mat = table(grp)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Study","NEN_type", "Count")
+vis_mat$NEN_type = factor(vis_mat$NEN_type, levels = c("NET","NEC","Ambiguous","Unknown"))
+
+
+library(tidyverse)
+
+# Create dataset
+data <- data.frame(
+    #individual=vis_mat$Study,
+    individual=vis_mat$NEN_type,
+    #group= vis_mat$NEN_type,
+    group= vis_mat$Study,
+    value=vis_mat$Count
+)
+data = data %>% arrange(group, value)
+# Set a number of 'empty bar' to add at the end of each group
+# Set a number of 'empty bar' to add at the end of each group
+empty_bar <- 3
+to_add <- data.frame( matrix(NA, empty_bar*nlevels(data$group), ncol(data)) )
+colnames(to_add) <- colnames(data)
+to_add$group <- rep(levels(data$group), each=empty_bar)
+data <- rbind(data, to_add)
+data <- data %>% arrange(group)
+data$id <- seq(1, nrow(data))
+
+# Get the name and the y position of each label
+label_data <- data
+number_of_bar <- nrow(label_data)
+angle <- 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+label_data$hjust <- ifelse( angle < -90, 1, 0)
+label_data$angle <- ifelse( angle < -90, angle+180, angle)
+
+# prepare a data frame for base lines
+base_data <- data %>% 
+    group_by(group) %>% 
+    summarize(start=min(id), end=max(id) - empty_bar) %>% 
+    rowwise() %>% 
+    mutate(title=mean(c(start, end)))
+
+# prepare a data frame for grid (scales)
+grid_data <- base_data
+grid_data$end <- grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+grid_data$start <- grid_data$start - 1
+grid_data <- grid_data[-1,]
+
+# Make the plot
+plot_b = ggplot(
+    data,
+    aes(x=as.factor(id),
+        y=value,
+        fill=group))
+plot_b = plot_b + geom_bar(aes(x=as.factor(id), y=value, fill=group), stat="identity", alpha=0.5)
+#plot_b = plot_b + geom_segment(data=grid_data, aes(x = end, y = 80, xend = start, yend = 80), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE )
+#plot_b = plot_b + geom_segment(data=grid_data, aes(x = end, y = 60, xend = start, yend = 60), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE )
+#plot_b = plot_b + geom_segment(data=grid_data, aes(x = end, y = 40, xend = start, yend = 40), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE )
+#plot_b = plot_b + geom_segment(data=grid_data, aes(x = end, y = 20, xend = start, yend = 20), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE )
+#plot_b = plot_b + annotate("text", x = rep(max(data$id),4), y = c(20, 40, 60, 80), label = c("20", "40", "60", "80") , color="grey", size=3 , angle=0, fontface="bold", hjust=1)
+plot_b = plot_b + geom_bar(aes(x=as.factor(id), y=value, fill=group), stat="identity", alpha=0.5)
+#plot_b= plot_b + ylim(-100,120) +
+plot_b = plot_b + theme_minimal()
+plot_b = plot_b + theme(
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank()
+    )
+plot_b = plot_b + coord_polar()
+plot_b = plot_b + geom_text(data=label_data, aes(x=id, y=value+10, label=individual, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_data$angle, inherit.aes = FALSE )
+plot_b = plot_b + geom_segment(data=base_data, aes(x = start, y = -5, xend = end, yend = -5), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE )
+plot_b = plot_b + geom_text(data=base_data, aes(x = title, y = -18, label=group), hjust=c(1,1,1,1,0,0,0,0), colour = "black", alpha=0.8, size=4, fontface="bold", inherit.aes = FALSE)
+plot_b = plot_b + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
+plot_b
+
