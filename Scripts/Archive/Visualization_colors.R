@@ -22,10 +22,11 @@ aka3 = list(
         VIPoma = "cyan",
         Unknown = "gray"
     ),
-    NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray"),
+    NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray",MiNEN="cyan","SCLC" = "white"),
     NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
     NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
-    Study = c(Charite = "#35A047", Scarpa = "#F28500","Master" = "#008080"),
+    #Study = c(Charite = "#35A047", Scarpa = "#F28500","Master" = "#008080",),
+    Study = c(Charite = "#C75E40", Scarpa = "#500307","Master" = "#17070C",Sato = "#52D383", Alvarez = "#2F3F49", Missiaglia = "#FC4C1D", Sadanandam = "#64E0FD",Diedisheim = "#1601AE" ),
     Histology_Primary   = c(
         Pancreatic = "black",
         Colorectal = "brown",
@@ -41,7 +42,7 @@ aka3 = list(
     Delta = c(low = "white", high = "Purple"),
     Ductal = c(low = "white", high = "Brown"),
     Acinar = c(low = "white", high = "Cyan"),
-    Grading = c( G1 = "white",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray"),
+    Grading = c( G1 = "white",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray",Organoid = "cyan"),
     Primary_Metastasis = c("Primary" = "white", Metastasis = "gray", "Local_recurrence" = "pink"),
     MEN1 = c("0" = "white", "1"  = "#4073FF")
 )
