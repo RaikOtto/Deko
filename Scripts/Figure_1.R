@@ -385,34 +385,46 @@ df2 <- data.frame(
     Percent = rep(0, len), 
     Category2 = rep("", len))
 
-# create a new Category2 variable in the internetImportance df that contains the category name, a dash, the importance percent, and a percent sign
-internetImportance$Category2 <- 
-    paste0(internetImportance$Category," - ",internetImportance$Percent,"%")
+###
 
-# append number to category name
-internetImportance <- rbind(internetImportance, df2)
+vis_mat = meta_data[,c("Study","Histology_Primary")]
+vis_mat = as.data.frame(table(reshape2::melt(vis_mat)))
+colnames(vis_mat) = c("Study","Histology_Primary","Count")
+spacer = matrix(c("A","B","C","","","",0,0,0), nrow = 3, ncol = 3)
+colnames(spacer) = colnames(vis_mat)
+vis_mat = rbind(vis_mat,spacer)
+vis_mat$Count = as.integer(vis_mat$Count)
+vis_mat$Histology_Primary = as.factor(vis_mat$Histology_Primary)
+Study_labels = c("Alvarez","Missiaglia", "Diedisheim","Charite","Master","Sadanandam","Scarpa","Sato")
+vis_mat$Study = factor(vis_mat$Study,levels = c(
+    "A","B","C",rev(Study_labels)
+))
+Study_labels = c("","","",c("Master","Diedisheim","Sadanandam","Sato","Scarpa","Alvarez","Charite","Missiaglia"),rep("",24))
 
-# set factor so it will plot in descending order 
-internetImportance$Category <-
-    factor(internetImportance$Category, 
-    levels=rev(internetImportance$Category))
-
-ggplot(
-    internetImportance,
-    aes(x = Category, y = Percent,fill = Category2)) + 
-    geom_bar(width = 0.9, stat="identity") + 
-    scale_fill_brewer(palette="Set3") +
-    coord_polar(theta = "y") +
-    xlab("") + ylab("") +
-    ylim(c(0,100)) +
-    geom_text(data = internetImportance, hjust = 1, size = 3,
-              aes(x = Category, y = 0, label = Category2)) +
-    geom_text(label="GLOBAL", x=.5, y=.5, size=4) +
-    theme_minimal() +
-    theme(legend.position = "none",
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
+race_plot = ggplot(
+    vis_mat,
+    aes(
+        x = Study,
+        y = Count,
+        fill = Histology_Primary
+    )
+)
+race_plot = race_plot + geom_bar(width = 0.9, stat="identity")
+race_plot = race_plot + coord_polar(theta = "y") + xlab("") + ylab("")
+race_plot = race_plot + ylim(c(0,120))
+race_plot = race_plot + scale_fill_manual(values = c("brown","yellow","black","darkgreen","white"))
+race_plot = race_plot + geom_text(
+    data = vis_mat,
+    hjust = 1.1,
+    size = 4,
+    aes(x = Study, y = 0, label = Study_labels))
+race_plot = race_plot + theme_minimal() +
+    theme(
+        legend.position = "right",
           axis.line = element_blank(),
-          axis.text.y = element_blank(),
-          axis.text.x = element_blank(),
-          axis.ticks = element_blank())
+          axis.text.y = element_blank())
+
+
+#svg(filename = "~/Dropbox/Figures/F1_P2_alternative.svg", width = 10, height = 10)
+race_plot
+dev.off()
