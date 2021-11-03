@@ -105,11 +105,8 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 ###
 
 show_models_bseqsc()
-<<<<<<< HEAD
 model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_metaplastic"
-=======
-model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
->>>>>>> af9046c6320fec200f4663cab495881433ddcd9c
+
 
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw,
@@ -120,11 +117,7 @@ props = Deconvolve_transcriptome(
     output_file = ""
 )
 
-<<<<<<< HEAD
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_metaplastic.tsv",sep = "\t")
-=======
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron.tsv",sep = "\t")
->>>>>>> af9046c6320fec200f4663cab495881433ddcd9c
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 
