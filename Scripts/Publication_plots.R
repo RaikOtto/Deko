@@ -26,8 +26,8 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S50.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S70.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 #dim(expr_raw)
@@ -36,11 +36,12 @@ colnames(expr_raw)[no_match] = str_replace(colnames(expr_raw)[no_match], pattern
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
-no_match
+colnames(expr_raw)[which(no_match)]
 meta_data = meta_info[colnames(expr_raw),]
 
 candidates = meta_data$Sample[ 
-  meta_data$Histology_Primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
+  meta_data$Study %in% c("Master","Charite")
+#  meta_data$Histology_Primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
 ]
 expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
@@ -51,38 +52,27 @@ genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.t
 #liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
 
 genes_of_interest_hgnc_t$V1
-i = 74
+i = 72
 genes_of_interest_hgnc_t[i,1]
 
-#baron = readRDS("~/Deko_Projekt/Misc/Ma_YFP_eight_cell_types.RDS")
-#marker_genes_baron = baron[[3]]
-#sad_genes = str_to_upper(marker_genes_baron$`Tuft/EEC.Progenitor`)
-
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
-#sad_genes = c( str_to_upper( as.character( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)]) ),str_to_upper( as.character( genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)]) ) )
 sad_genes = sad_genes[ sad_genes != ""]
-#sad_genes = sad_genes[1:50]
-#sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
 length(sad_genes)
-
-hox_genes = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
-#sad_genes = hox_genes
-#expr_raw = expr_raw[,meta_data$Grading %in% c("G1","G2","G3")]
 meta_data = meta_info[colnames(expr_raw),]
 
 expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
 expr[1:5,1:5]
 dim(expr)
+row_var = as.double(apply(expr, MARGIN = 1, FUN= var))
+summary(row_var)
+#expr = expr[row_var > 3,]
+dim(expr)
 
-###
-
-#expr = props[,c("Alpha","Beta","Gamma","Delta","Ductal","Ratio","Correlation","RMSE","P_value")]
-#expr = expr[expr$P_value <= 0.05,]
 correlation_matrix = cor((expr))
 pcr = prcomp((correlation_matrix))
 
-#meta_data$Grading[meta_data$Grading == ""] ="CCL"
-
+meta_exp = as.double(apply(expr, MARGIN = 1, FUN = mean))
+expr = expr[,order(meta_exp)]
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   #correlation_matrix,
@@ -91,11 +81,12 @@ p  =pheatmap::pheatmap(
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  show_colnames = TRUE,
+  cluster_cols = F,
+  show_colnames = FALSE,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "complete"
+  clustering_method = "ward.D2"
 )
 
 p = ggbiplot::ggbiplot(
@@ -689,7 +680,7 @@ rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))] = 
 rownames(meta_data)[!(rownames(meta_data) %in% colnames(correlation_matrix))] 
 
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10.5, height = 10)
-p  =pheatmap::pheatmap(
+p  = pheatmap::pheatmap(
   correlation_matrix,
   annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
   annotation_colors = aka3,
@@ -760,23 +751,10 @@ colnames(umap_result$layout) = c("x","y")
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data_plot$NEC_NET) ))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data_plot$Study) ))
 #umap_p = umap_p+geom_text(size= 4,aes(label=rownames(meta_data),color = as.character(meta_data$Cluster)),hjust=0, vjust=0)
 umap_p = umap_p +  xlab("") + ylab("")  
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data_plot$NEC_NET), level=.5, type ="t", size=1.5)
 #umap_p = umap_p + scale_color_manual( values = c("darkgreen","orange"),name="Drug_treatment") ##33ACFF ##FF4C33
 umap_p
 genes_of_interest_hgnc_t$V1[i]
-
-marker_gene_frame = matrix(as.character(),ncol = 200)
-
-for( name in names(marker_genes_baron) ){
-  
-  genes = str_to_upper(as.character(unlist(marker_genes_baron[name])))
-  marker_gene_frame = rbind(marker_gene_frame,genes)
-}
-
-marker_gene_frame = as.data.frame(marker_gene_frame)
-rownames(marker_gene_frame) = names(marker_genes_baron)
-
-#write.table(marker_gene_frame, "~/Deko_Projekt/Misc/Metaplastic_marker_genes.tsv",quote = F, sep ="\t")

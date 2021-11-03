@@ -31,3 +31,12 @@ length(marker_genes_tosti_ductal)
 
 marker_genes_tosti_new = marker_genes_tosti$alpha
 (sum(marker_genes_tosti_new %in% schlesinger_genes == TRUE) / length(marker_genes_tosti_new)) * 100
+
+#### NEUROG 3
+
+neurog = readRDS("~/Downloads/EEC_Neurog_3.RDS")
+marker_genes_neurog = neurog[[3]]
+names(marker_genes_neurog)
+marker_genes_neurog = marker_genes_tosti$`EEC-Progenitor (Neurog3+)`
+
+#write.table(marker_genes_tosti,"~/Downloads/Neurog3.tsv", sep ="\t", quote = F)

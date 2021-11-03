@@ -10,51 +10,50 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
-### RepSet Plot
+### Proportion plot
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_100_genes_200_samples_endocrine_exocrine_metaplastic_excrine_only.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_400.Absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Visulization_mat.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+props = props[grep(rownames(props) ,pattern = "PNET04",invert = T),]
 
+no_match = rownames(props) %in% meta_info$Sample == F
+rownames(props)[no_match] = str_remove_all(rownames(props)[no_match], pattern = "^X")
 no_match = rownames(props) %in% meta_info$Sample == F
 rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
 no_match = rownames(props) %in% meta_info$Sample == F
-sum(no_match)
+rownames(props)[which(no_match)]
 
 dim(props)
 #rownames(props) = props$name
 meta_data = meta_info[rownames(props),]
-
-###
-
-meta_data = meta_data[meta_data$Histology_Primary == "Pancreatic",]
+props = props[(meta_data$Histology_Primary == "Pancreatic"),]
+props = props[props$P_value <= 0.5,]
+meta_data = meta_info[rownames(props),]
+meta_data = meta_data %>% filter(!(Study %in% c("Sato","Missiaglia")))
+props = props[meta_data$Sample,]
+props = props[(meta_data$NET_NEC_PCA != "Unknown"),]
+meta_data = meta_info[rownames(props),]
 
 vis_mat = props[rownames(meta_data),]
-meta_data = meta_info[rownames(vis_mat),]
-dim(vis_mat)
-
-colnames(vis_mat)
-
-#selection = c("Endocrine","Metaplastic")
-selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
 exocrines = as.double(rowSums(vis_mat[,c("Ductal","Acinar")]))
 endocrines = as.double(rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")]))
 
-vis_mat$Endocrine = rowSums(vis_mat[,c("Alpha","Beta","Gamma","Delta")])
-vis_mat$Metaplastic = rowSums(vis_mat[,c("Ductal","Acinar")])
-vis_mat$Metaplastic = rowSums(vis_mat[,c("acinar.i","acinar.reg.","muc5b..ductal")])
+selection = c("Alpha","Beta","Gamma","Delta","Metaplastic")
+selection = c("Endocrine","Metaplastic")
 
+vis_mat$Endocrine = endocrines
+vis_mat$Metaplastic = exocrines
 vis_mat = as.data.frame(vis_mat)
 vis_mat = vis_mat[,selection]
 
 correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
 vis_mat = vis_mat[order(vis_mat$Metaplastic),]
-meta_data$P_value = props[meta_data$Sample,"P_value"]
-meta_data$P_value[props[meta_data$Sample,"P_value"] < 0.05] = "Sig"
-meta_data$P_value[props[meta_data$Sample,"P_value"] >= 0.05] = "Not_sig"
+#meta_data$P_value = props[meta_data$Sample,"P_value"]
+#meta_data$P_value[props[meta_data$Sample,"P_value"] < 0.05] = "Sig"
+#meta_data$P_value[props[meta_data$Sample,"P_value"] >= 0.05] = "Not_sig"
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 
@@ -62,7 +61,7 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 
 upper_plot = pheatmap::pheatmap(
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","P_value","NEC_NET","Functionality","Study")],
+    annotation_col = meta_data[,c("Grading","NEC_NET","Study")],
     annotation_colors = aka3,
     show_rownames = T,
     show_colnames = F,
@@ -75,10 +74,10 @@ upper_plot = pheatmap::pheatmap(
     fontsize_row = 14,
     clustering_method = "ward.D2"
 )
-upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+upper_plot = upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+upper_plot
 
-
-pannet_cluster[1:which(pannet_cluster == "YY7PXK")] = "Left"
+#pannet_cluster[1:which(pannet_cluster == "YY7PXK")] = "Left"
 
 ### lower plot
 
