@@ -1,3 +1,5 @@
+library("hrbrthemes")
+library("waffle")
 library(tidyverse)
 library("stringr")
 library("ggplot2")
@@ -258,33 +260,32 @@ blankPlot +
 ### Treemap alternative to plot A, amount of samples per study
 
 meta_data[as.character(meta_data$NEC_NET) %in% c("Unknown","MiNEN","SCLC"),"NEC_NET"] = "Unknown or other"
-vis_mat_plot_a = reshape2::melt(table(meta_data[,c("Study","NEC_NET")]))
-colnames(vis_mat_plot_a) = c("Study","NEC_NET","Count")
-vis_mat_plot_a$NEC_NET = as.character(vis_mat_plot_a$NEC_NET)
-vis_mat_plot_a$NEN = vis_mat_plot_a$Count
-vis_mat_plot_a = vis_mat_plot_a[vis_mat_plot_a$Count != 0,]
+vis_mat_plot_a = reshape2::melt(table(meta_data$Study))
+colnames(vis_mat_plot_a) = c("Study","Count")
 
 plot_a = ggplot(
     vis_mat_plot_a,
     aes(
         area = Count,
-        fill = NEC_NET,
-        label = NEN,
-        subgroup = Study
+        fill = Study,
+        label = Study,
+        subgroup = Count
     )
-) + geom_treemap(alpha= .7)+ geom_treemap_subgroup_border()
+) + geom_treemap(alpha= 1.0)#+ geom_treemap_subgroup_border()
 plot_a = plot_a + geom_treemap_text(
     colour = "white",
-    place = "bottomright",
+    place = "center",
     grow = FALSE,
+    size = 30,
     min.size= 15)
 plot_a = plot_a + geom_treemap_subgroup_text(
-    place = "top",
+    place = "bottom",
     grow = FALSE, 
     colour = "white",
+    size = 22,
     min.size = 15)
-plot_a = plot_a + scale_fill_manual(values = c("purple","red","blue","black"))
-plot_a = plot_a + theme(legend.position="top")
+plot_a = plot_a + scale_fill_manual(values = c("black","darkgreen","#340273","#CD8200","brown","#026A73","#0E0273","#730243"))
+plot_a = plot_a + theme(legend.position="none")
 plot_a
 
 #svg(filename = "~/Dropbox/Figures/F1_P1_alternative.svg", width = 10, height = 10)
@@ -363,29 +364,6 @@ plot_b
 ###
 
 # Racetrack Plot
-# original source: http://stackoverflow.com/questions/15751442/making-a-circular-barplot-with-a-hollow-center-aka-race-track-plot
-
-# create some simulated data
-Category <- c(
-    "Electronics",
-    "Appliances",
-    "Books",
-    "Music",
-    "Clothing", 
-    "Cars",
-    "Food/Beverages",
-    "Personal Hygiene", 
-    "Personal Health/OTC",
-    "Hair Care")
-Percent <- c(81, 77, 70, 69, 69, 68, 62, 62, 61, 60)
-internetImportance <- data.frame(Category,Percent)
-len <- 4
-df2 <- data.frame(
-    Category = letters[1:len],
-    Percent = rep(0, len), 
-    Category2 = rep("", len))
-
-###
 
 vis_mat = meta_data[,c("Study","Histology_Primary")]
 vis_mat = as.data.frame(table(reshape2::melt(vis_mat)))
@@ -428,3 +406,4 @@ race_plot = race_plot + theme_minimal() +
 #svg(filename = "~/Dropbox/Figures/F1_P2_alternative.svg", width = 10, height = 10)
 race_plot
 dev.off()
+
