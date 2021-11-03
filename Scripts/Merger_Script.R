@@ -1,11 +1,8 @@
 # prep
 
 library("stringr")
-<<<<<<< HEAD
-meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv",sep = "\t",header = T,stringsAsFactors = F)
-=======
+
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
 rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
@@ -26,7 +23,7 @@ colnames(bam_data_1) = col_names
 summary(bam_data_1["INS",])
 
 meta_data = meta_info[colnames(bam_data_1),]
-<<<<<<< HEAD
+
 #meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
 bam_data_1 = bam_data_1[, meta_data$Cluster %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
 #bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
@@ -45,18 +42,6 @@ rownames(meta_info_2) = make.names(meta_info_2$Sample)
 meta_info_2$Clusters = meta_info_2$celltypeLabel
 
 bam_data_2 = read.table("~/Downloads/Neurog3_expression_data.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-=======
-bam_data_1 = bam_data_1[, meta_data$Histology_Primary %in% c("Pancreatic")]
-meta_data = meta_info[colnames(bam_data_1),]
-dim(bam_data_1)
-
-meta_data = meta_info[colnames(bam_data_1),]
-dim(bam_data_1)
-
-# Scarpa RepSet
-
-bam_data_2 = read.table("~/MAPTor_NET/BAMs_new/Master/Master_new.S34.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -69,12 +54,7 @@ table("CELA3A" %in% rownames(bam_data_2)) # acinar
 table("PTP" %in% rownames(bam_data_2)) # acinar
 table("TMSB4X" %in% rownames(bam_data_2)) # ductal
 
-<<<<<<< HEAD
 meta_data_2 = meta_info_2[colnames(bam_data_2),]
-=======
-meta_data = meta_info[colnames(bam_data_2),]
-bam_data_2 = bam_data_2[, meta_data$Histology_Primary %in% c("Pancreatic")]
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
 dim(bam_data_2)
 dim(meta_data_2)
 
@@ -107,22 +87,15 @@ summary(row_var)
 new_mat = new_mat[which( row_var >= 1),]
 #new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
-<<<<<<< HEAD
+
 table(meta_data$Cluster)
-=======
-table(meta_data$Study)
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
 dim(new_mat)
 
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
 dim(new_mat)
 new_mat[1:5,1:5]
 
-<<<<<<< HEAD
-#write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_MucinDuctal_EEC_Neurog3_Ma.tsv", sep ="\t", quote =F , row.names = T)
-=======
 #write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S70.HGNC.tsv", sep ="\t", quote =F , row.names = T)
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
 
 ### splitter
 

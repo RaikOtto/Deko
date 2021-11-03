@@ -107,19 +107,10 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 ###
 
 show_models_bseqsc()
-<<<<<<< HEAD
-model_name = "Ma_YFP_eight_cell_types"
-model_name = "EEC_Neurog_3"
-model_name = "Baron_6_EEC_Neurog_3"
-
-props = Deconvolve_transcriptome(
-    transcriptome_data = expr_raw[,],
-=======
 model_name = "Baron_6_EEC_Neurog_3"
 
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw,
->>>>>>> 9c38563f2cea1003a2dfd0ae06c091d25cc2ab21
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = FALSE,
