@@ -1,8 +1,8 @@
 # prep
 
 library("stringr")
-meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
@@ -23,16 +23,23 @@ summary(bam_data_1["INS",])
 
 meta_data = meta_info[colnames(bam_data_1),]
 #meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
-bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
+bam_data_1 = bam_data_1[, meta_data$Cluster %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
 #bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
 
 meta_data = meta_info[colnames(bam_data_1),]
 dim(bam_data_1)
-table(meta_data$Subtype)
+table(meta_data$Cluster)
 
-# HISC
+# Neurog 3
 
-bam_data_2 = read.table("~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+meta_info_2 = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_Tuft+EEC_all-samples_QCed.csv", sep =",", header = T)
+
+table(meta_info_2$celltypeLabel)
+meta_info_2$Sample = meta_info_2$X
+rownames(meta_info_2) = make.names(meta_info_2$Sample)
+meta_info_2$Clusters = meta_info_2$celltypeLabel
+
+bam_data_2 = read.table("~/Downloads/Neurog3_expression_data.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -45,9 +52,13 @@ table("CELA3A" %in% rownames(bam_data_2)) # acinar
 table("PTP" %in% rownames(bam_data_2)) # acinar
 table("TMSB4X" %in% rownames(bam_data_2)) # ductal
 
-meta_data = meta_info[colnames(bam_data_2),]
-#bam_data_2 = bam_data_2[, meta_data$Subtype %in% c("HISC")]
+meta_data_2 = meta_info_2[colnames(bam_data_2),]
 dim(bam_data_2)
+dim(meta_data_2)
+
+bam_data_2 = bam_data_2[,which(meta_data_2$Clusters %in% c("EEC-Progenitor (Neurog3+)","MucinDuctalProgenitor"))]
+meta_data_2 = meta_info_2[colnames(bam_data_2),]
+table(meta_data_2$Clusters)
 
 ### integrate
 
@@ -70,17 +81,18 @@ meta_data = meta_info[colnames(new_mat[,]),]
 dim(new_mat)
 
 row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN = 1))
+summary(row_var)
 new_mat = new_mat[which( row_var >= 1),]
-new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
+#new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
-table(meta_data$Subtype)
+table(meta_data$Cluster)
 dim(new_mat)
 
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
 dim(new_mat)
 new_mat[1:5,1:5]
 
-#write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_Segerstolpe.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/Deko_Projekt/Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_MucinDuctal_EEC_Neurog3_Ma.tsv", sep ="\t", quote =F , row.names = T)
 
 ### splitter
 

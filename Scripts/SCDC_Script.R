@@ -108,18 +108,19 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 
 show_models_bseqsc()
 model_name = "Ma_YFP_eight_cell_types"
+model_name = "EEC_Neurog_3"
+model_name = "Baron_6_EEC_Neurog_3"
 
 props = Deconvolve_transcriptome(
-    transcriptome_data = expr_raw[,meta_data$NET_NEC_PCA == "NEC"],
+    transcriptome_data = expr_raw[,],
     deconvolution_algorithm = "bseqsc",
     models = model_name,
-    #models = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",
     Cibersort_absolute_mode = FALSE,
     nr_permutations = 1,
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103_Cibersort_Ma_YFP_eight_cell_types.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103_Cibersort_Baron_6_EEC_Neurog_3.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 
@@ -145,6 +146,7 @@ meta_data = meta_info[rownames(props),]
 #props = props[(meta_data$Study == "Alvarez") ,]
 meta_data = meta_info[rownames(props),]
 
+selection = colnames(props)[!(colnames(props) %in% c("model","Sig_score","P_value","Correlation","RMSE"))]
 selection = c("Acinar","acinar-s","acinar-i","acinar-reg+","Ductal","Beta","Delta","muc5b+ ductal","Alpha","Gamma")
 
 ###
