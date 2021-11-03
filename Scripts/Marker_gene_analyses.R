@@ -3,12 +3,42 @@ library("stringr")
 schlesinger_t = read.table("~/Downloads/Schlesinger.tsv", header = T, row.names = 1, sep ="\t")
 schlesinger_genes = rownames(schlesinger_t)
 
-baron = readRDS("~/Downloads/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
+baron = readRDS("~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
 marker_genes_baron = baron[[3]]
 marker_genes_baron_ductal = marker_genes_baron$ductal
 
-(sum(marker_genes_baron_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_baron_ductal)) * 100
+round((sum(marker_genes_baron_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_baron_ductal)) * 100,0)
+meta_plastic_genes = marker_genes_baron_ductal[marker_genes_baron_ductal %in% schlesinger_genes == TRUE]
+non_meta_plastic_genes = marker_genes_baron_ductal[marker_genes_baron_ductal %in% schlesinger_genes == FALSE]
 
+### manipulation
+
+baron = readRDS("~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
+marker_genes_baron = baron[[3]]
+
+marker_genes_baron$ductal = meta_plastic_genes
+baron[[3]] = marker_genes_baron
+signature_matrix = baron[[1]]
+dim(signature_matrix)
+signature_matrix = signature_matrix[rownames(signature_matrix) %in% meta_plastic_genes,]
+dim(signature_matrix)
+baron[[1]] = signature_matrix
+saveRDS( baron, "~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_metaplastic.RDS")
+
+
+baron = readRDS("~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
+marker_genes_baron = baron[[3]]
+marker_genes_baron$ductal = non_meta_plastic_genes
+baron[[3]] = marker_genes_baron
+signature_matrix = baron[[1]]
+dim(signature_matrix)
+signature_matrix = signature_matrix[!(rownames(signature_matrix) %in% meta_plastic_genes),]
+dim(signature_matrix)
+baron[[1]] = signature_matrix
+saveRDS( baron, "~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_non_metaplatic.RDS")
+
+### Segerstolpe
+    
 segerstolpe = readRDS("~/Downloads/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe.RDS")
 marker_genes_segerstolpe = segerstolpe[[3]]
 marker_genes_segerstolpe_ductal = marker_genes_segerstolpe$ductal

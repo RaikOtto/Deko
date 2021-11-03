@@ -13,12 +13,10 @@ library("dplyr")
 library("Biobase")
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-
 rownames(meta_info) = meta_info$Sample
-
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -107,7 +105,7 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 ###
 
 show_models_bseqsc()
-model_name = "Baron_6_EEC_Neurog_3"
+model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_metaplastic"
 
 props = Deconvolve_transcriptome(
     transcriptome_data = expr_raw,
@@ -118,7 +116,7 @@ props = Deconvolve_transcriptome(
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103_Cibersort_Baron_6_EEC_Neurog_3.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_metaplastic.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 
