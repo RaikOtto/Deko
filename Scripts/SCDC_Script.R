@@ -16,8 +16,8 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.Ninon.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
@@ -117,7 +117,11 @@ props = Deconvolve_transcriptome(
     output_file = ""
 )
 
+<<<<<<< HEAD
 #write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Tosti_200.tsv",sep = "\t")
+=======
+write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/Fadista_S89_Cibersort_Baron_metaplastic_only.tsv",sep = "\t")
+>>>>>>> a332e6223b49bec6e2269640a68efb6e65f0841c
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 

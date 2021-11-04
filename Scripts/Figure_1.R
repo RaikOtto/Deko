@@ -389,7 +389,7 @@ race_plot = ggplot(
 )
 race_plot = race_plot + geom_bar(width = 0.9, stat="identity")
 race_plot = race_plot + coord_polar(theta = "y") + xlab("") + ylab("")
-race_plot = race_plot + ylim(c(0,120))
+race_plot = race_plot + ylim(c(0,210))
 race_plot = race_plot + scale_fill_manual(values = c("brown","yellow","black","darkgreen","white"))
 race_plot = race_plot + geom_text(
     data = vis_mat,
