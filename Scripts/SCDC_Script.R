@@ -117,7 +117,7 @@ props = Deconvolve_transcriptome(
     output_file = ""
 )
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron.tsv",sep = "\t")
+#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Tosti_200.tsv",sep = "\t")
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 
