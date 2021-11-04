@@ -1,8 +1,11 @@
 library("stringr")
 
 t_normal = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron.tsv",sep ="\t", header = T, row.names = 1)
+dim(t_normal)
 t_meta_only = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_metaplastic.tsv",sep ="\t", header = T, row.names = 1)
+dim(t_meta_only)
 t_no_meta = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_non_metaplastic.tsv",sep ="\t", header = T, row.names = 1)
+dim(t_no_meta)
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
