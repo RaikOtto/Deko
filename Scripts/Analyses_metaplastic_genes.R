@@ -1,10 +1,10 @@
 library("stringr")
 
-t_normal = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron.tsv",sep ="\t", header = T, row.names = 1)
+t_normal = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Fadista_S89_Cibersort_Baron.tsv",sep ="\t", header = T, row.names = 1)
 dim(t_normal)
-t_meta_only = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_metaplastic.tsv",sep ="\t", header = T, row.names = 1)
+t_meta_only = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Fadista_S89_Cibersort_Baron_metaplastic_only.tsv",sep ="\t", header = T, row.names = 1)
 dim(t_meta_only)
-t_no_meta = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S56_Cibersort_Baron_non_metaplastic.tsv",sep ="\t", header = T, row.names = 1)
+t_no_meta = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Fadista_S89_Cibersort_Baron_non_metaplastic_only.tsv",sep ="\t", header = T, row.names = 1)
 dim(t_no_meta)
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
@@ -19,9 +19,9 @@ identical(rownames(t_no_meta),rownames(t_meta_only))
 
 meta_data = meta_info[rownames(t_no_meta),]
 
-t_normal=t_normal[meta_data$NET_NEC_PCA == "NET",]
-t_no_meta=t_no_meta[meta_data$NET_NEC_PCA == "NET",]
-t_meta_only=t_meta_only[meta_data$NET_NEC_PCA == "NET",]
+#t_normal=t_normal[meta_data$NET_NEC_PCA == "NET",]
+#t_no_meta=t_no_meta[meta_data$NET_NEC_PCA == "NET",]
+#t_meta_only=t_meta_only[meta_data$NET_NEC_PCA == "NET",]
 
 mean(t_normal$Correlation)
 mean(t_meta_only$Correlation)
@@ -36,7 +36,6 @@ mean(t_normal$P_value)
 
 cor.test(t_no_meta$P_value,t_meta_only$P_value)
 t_no_meta
-t_no_meta$X
 t_meta_only
 t_normal
 meta_data = meta_info[t_normal$X,]

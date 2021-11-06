@@ -80,3 +80,31 @@ nec_net_plot = ggplot(
 #svg(filename = "~/Dropbox/Figures/F1_waffle_nec_net.svg", width = 10, height = 10)
 nec_net_plot
 dev.off()
+
+####
+
+
+meta_info_maptor = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info_maptor) = meta_info_maptor$Sample
+colnames(meta_info_maptor) = str_replace(colnames(meta_info_maptor),pattern = "\\.","_")
+
+meta_info_maptor$OS_Tissue = as.double(str_replace(meta_info_maptor$OS_Tissue,pattern = ",","."))
+
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
+meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
+
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/Groetzinger/",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+expr_raw[1:5,1:5]
+#dim(expr_raw)
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[no_match] = str_replace(colnames(expr_raw)[no_match], pattern = "^X","")
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[which(no_match)]
+meta_data = meta_info[colnames(expr_raw),]

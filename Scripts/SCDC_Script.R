@@ -105,7 +105,7 @@ props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103
 ###
 
 show_models_bseqsc()
-model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_metaplastic"
+model_name = "Alpha_Beta_Gamma_Delta_Baron"
 
 
 props = Deconvolve_transcriptome(

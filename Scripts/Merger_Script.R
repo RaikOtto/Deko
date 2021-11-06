@@ -7,7 +7,7 @@ rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
-bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S50.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S69.NEN.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -24,24 +24,9 @@ summary(bam_data_1["INS",])
 
 meta_data = meta_info[colnames(bam_data_1),]
 
-#meta_info[colnames(bam_data_1),"Subtype"] = "HISC"
-bam_data_1 = bam_data_1[, meta_data$Cluster %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal")]
-#bam_data_1 = bam_data_1[, meta_data$Subtype %in% c("Alpha","Beta","Gamma","Delta")]
+# bam data 2
 
-meta_data = meta_info[colnames(bam_data_1),]
-dim(bam_data_1)
-table(meta_data$Cluster)
-
-# Neurog 3
-
-meta_info_2 = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_Tuft+EEC_all-samples_QCed.csv", sep =",", header = T)
-
-table(meta_info_2$celltypeLabel)
-meta_info_2$Sample = meta_info_2$X
-rownames(meta_info_2) = make.names(meta_info_2$Sample)
-meta_info_2$Clusters = meta_info_2$celltypeLabel
-
-bam_data_2 = read.table("~/Downloads/Neurog3_expression_data.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/MAPTor_NET/BAMs_new/Master/Master_new.S34.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -54,13 +39,13 @@ table("CELA3A" %in% rownames(bam_data_2)) # acinar
 table("PTP" %in% rownames(bam_data_2)) # acinar
 table("TMSB4X" %in% rownames(bam_data_2)) # ductal
 
-meta_data_2 = meta_info_2[colnames(bam_data_2),]
+meta_data_2 = meta_info[colnames(bam_data_2),]
 dim(bam_data_2)
 dim(meta_data_2)
 
-bam_data_2 = bam_data_2[,which(meta_data_2$Clusters %in% c("EEC-Progenitor (Neurog3+)","MucinDuctalProgenitor"))]
-meta_data_2 = meta_info_2[colnames(bam_data_2),]
-table(meta_data_2$Clusters)
+#bam_data_2 = bam_data_2[,which(meta_data_2$Clusters %in% c("EEC-Progenitor (Neurog3+)","MucinDuctalProgenitor"))]
+#meta_data_2 = meta_info_2[colnames(bam_data_2),]
+#table(meta_data_2$Clusters)
 
 ### integrate
 
@@ -87,15 +72,12 @@ summary(row_var)
 new_mat = new_mat[which( row_var >= 1),]
 #new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
-
-table(meta_data$Cluster)
-dim(new_mat)
-
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
+new_mat = new_mat[ ,which(meta_data$Histology_Primary == "Pancreatic") ]
 dim(new_mat)
 new_mat[1:5,1:5]
 
-#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S70.HGNC.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S72.NEN.HGNC.tsv", sep ="\t", quote =F , row.names = T)
 
 ### splitter
 

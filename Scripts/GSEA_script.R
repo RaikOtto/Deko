@@ -21,7 +21,8 @@ dim(meta_data)
 
 ### cls file
 
-cohort_vec = meta_data$NET_NEC_PCA
+#cohort_vec = meta_data$NET_NEC_PCA
+cohort_vec = meta_data$Cohort
 cohort_vec = str_replace(cohort_vec," ","_")
 table(cohort_vec)
 
@@ -35,8 +36,8 @@ second_line[4:(length(cohort_vec))] = ""
 
 cls_file = rbind(first_line,second_line,cohort_vec)
 
-write.table(cls_file, "~/Deko_Projekt/GSEA/RepSet.S39.primrary_pancreas_only_NEC_vs_NET.DESeq2.cls",row.names = F, quote = F, sep ="\t",col.names = FALSE)
-write.table(cls_file, "~/Deko_Projekt/GSEA/RepSet.S39.primrary_pancreas_only_NEC_vs_NET.DESeq2.cls.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(cls_file, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.cls",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(cls_file, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.cls.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
 
 ### gct file
 
@@ -50,5 +51,5 @@ gct_matrix = cbind(rownames(expr),rownames(expr),expr)
 output_gct = rbind(first_line,second_line, third_line, gct_matrix)
 output_gct[1:5,1:5]
 
-write.table(output_gct, "~/Deko_Projekt/GSEA/RepSet.S39.primrary_pancreas_only_NEC_vs_NET.DESeq2.gct",row.names = F, quote = F, sep ="\t",col.names = FALSE)
-write.table(output_gct, "~/Deko_Projekt/GSEA/RepSet.S39.primrary_pancreas_only_NEC_vs_NET.DESeq2.gct.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(output_gct, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.gct",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(output_gct, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.gct.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
