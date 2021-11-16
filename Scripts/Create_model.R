@@ -5,17 +5,20 @@ source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
 library("stringr")
 library("bseqsc")
 
+expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_scRNA/Baron_4.tsv",sep ="\t", header = T, row.names = 1)
 #expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
-expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Filtered-YFP+_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
-expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Tuft+EEC_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
+#expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Filtered-YFP+_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
+#expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Tuft+EEC_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw),"^X","")
 expr_raw[1:5,1:5]
 
 #meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv", sep ="\t", header = T)
 rownames(meta_info) = meta_info$Sample
 
-meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_YFP+_all-samples_QCed.csv", sep =",", header = T)
-meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_Tuft+EEC_all-samples_QCed.csv", sep =",", header = T)
+#meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_YFP+_all-samples_QCed.csv", sep =",", header = T)
+#meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_Tuft+EEC_all-samples_QCed.csv", sep =",", header = T)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv", sep ="\t", header = T)
+rownames(meta_info) = meta_info$Sample
 
 table(meta_info$Cluster)
 #meta_info$Sample = meta_info$X
@@ -37,7 +40,7 @@ table(subtype_vector_reduced)
 
 amount_genes = 800
 amount_samples = 200
-model_name = "Baron_6_EEC_Neurog_3"
+model_name = "Alpha_Beta_Gamma_Delta_Baron"
 
 selected_samples = c()
 

@@ -14,36 +14,29 @@ library("treemapify")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
-meta_data = meta_info[meta_info$Study %in% study_selection,]
-meta_data = meta_data[meta_data$NEC_NET %in% c("Ambiguous", "Unknown", "NEC", "NET"),]
-
-table(meta_info$Study)
+#meta_data = meta_info[meta_info$Study %in% study_selection,]
+#meta_data = meta_data[meta_data$NEC_NET %in% c("Ambiguous", "Unknown", "NEC", "NET"),]
 
 ###
 
-meta_data = meta_info[meta_info$Study %in% study_selection,]
-meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
-meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
-meta_data = meta_data[meta_data$NEC_NET != "Control",]
-meta_data = meta_data[meta_data$Grading != "Control",]
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/All.S361.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
+
+meta_data = meta_info[ rownames(data),]
 #meta_data = meta_data[ grep(meta_data$Sample, pattern = "SCLC",invert = TRUE),]
 #meta_data = meta_data[ grep(meta_data$Sample, pattern = "MiNEN",invert = TRUE),]
 dim(meta_data)
 
 table(meta_data$Primary_Metastasis)
 which(meta_data$Primary_Metastasis == "Unknown")
-
 table(meta_data$Histology_Primary)
 
-dim(meta_data[(meta_data$Histology_Primary == "Pancreatic") & (meta_data$Primary_Metastasis == "Primary"),])
-
-#### Subplot A Primary Metastasis
+### Subplot A Primary Metastasis
 
 study_mat = meta_data[,c("Study","Primary_Metastasis")]
-grp = group_by(study_mat, Study)
+grp = dplyr::group_by( study_mat$Primary_Metastasis, as.factor(study_mat$Study))
 vis_mat = table(grp)
-vis_mat = reshape2::melt(vis_mat)
+
+vis_mat = reshape2::melt(table(study_mat))
 colnames(vis_mat) = c("Study","Primary_Metastasis","Amount")
 
 primary_metastasis_plot = ggplot( 
@@ -259,7 +252,6 @@ blankPlot +
 
 ### Treemap alternative to plot A, amount of samples per study
 
-meta_data[as.character(meta_data$NEC_NET) %in% c("Unknown","MiNEN","SCLC"),"NEC_NET"] = "Unknown or other"
 vis_mat_plot_a = reshape2::melt(table(meta_data$Study))
 colnames(vis_mat_plot_a) = c("Study","Count")
 
@@ -365,6 +357,13 @@ plot_b
 
 # Racetrack Plot
 
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+
+expr_raw = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/NEN/All.S.tsv",sep ="\t", stringsAsFactors =FALSE, row.names = 1 )
+meta_data = meta_info[rownames(expr_raw),]
+
 vis_mat = meta_data[,c("Study","Histology_Primary")]
 vis_mat = as.data.frame(table(reshape2::melt(vis_mat)))
 colnames(vis_mat) = c("Study","Histology_Primary","Count")
@@ -373,11 +372,13 @@ colnames(spacer) = colnames(vis_mat)
 vis_mat = rbind(vis_mat,spacer)
 vis_mat$Count = as.integer(vis_mat$Count)
 vis_mat$Histology_Primary = as.factor(vis_mat$Histology_Primary)
-Study_labels = c("Alvarez","Missiaglia", "Diedisheim","Charite","Master","Sadanandam","Scarpa","Sato")
+
+Study_labels = c("Alvarez","Missiaglia", "Diedisheim","Charite","Master","Sato","Sadanandam","Scarpa")
+
 vis_mat$Study = factor(vis_mat$Study,levels = c(
     "A","B","C",rev(Study_labels)
 ))
-Study_labels = c("","","",c("Master","Diedisheim","Sadanandam","Sato","Scarpa","Alvarez","Charite","Missiaglia"),rep("",24))
+Study_labels = c("","","",c("Master","Missiaglia","Sadanandam","Sato","Scarpa","Alvarez","Charite","Diedisheim"),rep("",24))
 
 race_plot = ggplot(
     vis_mat,
@@ -389,7 +390,7 @@ race_plot = ggplot(
 )
 race_plot = race_plot + geom_bar(width = 0.9, stat="identity")
 race_plot = race_plot + coord_polar(theta = "y") + xlab("") + ylab("")
-race_plot = race_plot + ylim(c(0,210))
+race_plot = race_plot + ylim(c(0,220))
 race_plot = race_plot + scale_fill_manual(values = c("brown","yellow","black","darkgreen","white"))
 race_plot = race_plot + geom_text(
     data = vis_mat,
