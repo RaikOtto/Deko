@@ -7,7 +7,7 @@ rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
-bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S69.NEN.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -26,7 +26,7 @@ meta_data = meta_info[colnames(bam_data_1),]
 
 # bam data 2
 
-bam_data_2 = read.table("~/MAPTor_NET/BAMs_new/Master/Master_new.S34.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -73,11 +73,11 @@ new_mat = new_mat[which( row_var >= 1),]
 #new_mat = new_mat[which( rowMeans(new_mat) >= 1),]
 
 new_mat = new_mat[ rownames(new_mat)!="NA", ]
-new_mat = new_mat[ ,which(meta_data$Histology_Primary == "Pancreatic") ]
+#new_mat = new_mat[ ,which(meta_data$Histology_Primary == "Pancreatic") ]
 dim(new_mat)
 new_mat[1:5,1:5]
 
-#write.table(new_mat[,], "~/MAPTor_NET/BAMs_new/RepSet_S72.NEN.HGNC.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/Deko_Projekt/Data/Publication_datasets/Combinations/Charite_Scarpa_Master_Diedisheim.tsv", sep ="\t", quote =F , row.names = T)
 
 ### splitter
 

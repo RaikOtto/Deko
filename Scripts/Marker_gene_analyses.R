@@ -1,14 +1,14 @@
 library("stringr")
 
-schlesinger_t = read.table("~/Downloads/Schlesinger.tsv", header = T, row.names = 1, sep ="\t")
+schlesinger_t = read.table("~/Deko_Projekt/Misc//Schlesinger.tsv", header = T, row.names = 1, sep ="\t")
 schlesinger_genes = rownames(schlesinger_t)
 
 baron = readRDS("~/artdeco/inst/Models/bseqsc//Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.RDS")
 marker_genes_baron = baron[[3]]
-marker_genes_baron_ductal = marker_genes_baron$ductal
+sad_genes = marker_genes_baron_ductal = marker_genes_baron$ductal
 
 round((sum(marker_genes_baron_ductal %in% schlesinger_genes == TRUE) / length(marker_genes_baron_ductal)) * 100,0)
-meta_plastic_genes = marker_genes_baron_ductal[marker_genes_baron_ductal %in% schlesinger_genes == TRUE]
+sad_genes = meta_plastic_genes = marker_genes_baron_ductal[marker_genes_baron_ductal %in% schlesinger_genes == TRUE]
 non_meta_plastic_genes = marker_genes_baron_ductal[marker_genes_baron_ductal %in% schlesinger_genes == FALSE]
 
 ### manipulation

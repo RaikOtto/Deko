@@ -26,7 +26,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
@@ -70,7 +70,7 @@ sad_genes = sad_genes[ sad_genes != ""]
 length(sad_genes)
 meta_data = meta_info[colnames(expr_raw),]
 
-expr = expr_raw[rownames(expr_raw) %in% sad_genes,]
+expr = expr_raw[rownames(expr_raw) %in% sad_genes[1:20],]
 expr[1:5,1:5]
 dim(expr)
 row_var = as.double(apply(expr, MARGIN = 1, FUN= var))
@@ -81,22 +81,22 @@ dim(expr)
 correlation_matrix = cor((expr))
 pcr = prcomp((correlation_matrix))
 
-meta_exp = as.double(apply(expr, MARGIN = 1, FUN = mean))
-expr = expr[,order(meta_exp)]
+#meta_exp = as.double(apply(expr, MARGIN = 1, FUN = mean))
+#expr = expr[,order(meta_exp)]
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  #correlation_matrix,
-  expr,
-  annotation_col = meta_data[,c("NEC_NET","Grading","Primary_Metastasis","Histology_Primary","Study")],
+  correlation_matrix,
+  #expr,
+  annotation_col = meta_data[,c("NET_NEC_PCA","Grading","Primary_Metastasis","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = F,
-  cluster_cols = F,
+  cluster_cols = TRUE,
   show_colnames = FALSE,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D2"
+  clustering_method = "complete"
 )
 
 p = ggbiplot::ggbiplot(
@@ -105,13 +105,13 @@ p = ggbiplot::ggbiplot(
   var.scale = 2, 
   labels.size = 4,
   alpha = 1,
-  groups = as.character(meta_data$NEC_NET),
+  groups = as.character(meta_data$NET_NEC_PCA),
   #label = meta_data$Sample,
   ellipse = TRUE,
   circle = TRUE,
   var.axes = F
 )
-p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NET_NEC_PCA) ))
 p
 p = p + scale_color_manual( values = c("green","yellow","darkred","blue","red"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
@@ -731,11 +731,6 @@ write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quot
 
 # umap
 
-custom.config = umap.defaults
-custom.config$random_state = sample(1:1000,size = 1)
-#custom.config$random_state = 995
-custom.config$n_components=2
-
 genes_of_interest_hgnc_t$V1
 i = 103
 sad_genes = genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]
@@ -748,9 +743,14 @@ meta_data_plot = meta_info[colnames(expr),]
 #expr[1:5,1:5]
 correlation_matrix = cor(expr);pcr = prcomp(t(correlation_matrix))
 
+custom.config = umap.defaults
+custom.config$random_state = sample(1:1000,size = 1)
+#custom.config$random_state = 995
+custom.config$n_components=2
+
 umap_result = umap::umap(
   correlation_matrix,
-  colvec = meta_data_plot$NEC_NET,
+  colvec = meta_data$NET_NEC_PCA,
   preserve.seed = TRUE,
   config=custom.config
 )
@@ -761,10 +761,10 @@ colnames(umap_result$layout) = c("x","y")
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data_plot$Study) ))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$NET_NEC_PCA) ))
 #umap_p = umap_p+geom_text(size= 4,aes(label=rownames(meta_data),color = as.character(meta_data$Cluster)),hjust=0, vjust=0)
 umap_p = umap_p +  xlab("") + ylab("")  
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data_plot$NEC_NET), level=.5, type ="t", size=1.5)
+umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NET_NEC_PCA), level=.5, type ="t", size=1.5)
 #umap_p = umap_p + scale_color_manual( values = c("darkgreen","orange"),name="Drug_treatment") ##33ACFF ##FF4C33
 umap_p
 genes_of_interest_hgnc_t$V1[i]
