@@ -19,7 +19,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### p-values
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.S361.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/Absolute/All_absolute_exocrine_baron.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
@@ -172,7 +172,7 @@ dev.off()
 
 ### Figure 2 - Plot D cell type proportion plots 
 
-cell_m = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.S361.tsv",sep ="\t", header = T, stringsAsFactors = F)
+cell_m = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/Absolute/All_absolute_exocrine_baron.tsv",sep ="\t", header = T, stringsAsFactors = F)
 cell_m = as.data.frame(cell_m)
 cell_m$Ductal = as.double(cell_m$Ductal)
 cell_m$Acinar = as.double(cell_m$Acinar)
@@ -189,7 +189,8 @@ cell_m$Grading = factor(cell_m$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
 
 meta_data = meta_info[cell_m$Sample,]
 cell_m$Study = meta_data$Study
-cell_m = cell_m %>% filter( Study %in% c("Charite") )
+cell_m = cell_m %>% filter( Study != "Sato" )
+#cell_m = cell_m %>% filter( Study %in% c("Charite") )
 meta_data = meta_info[cell_m$Sample,]
 
 ### endo
