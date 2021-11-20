@@ -9,9 +9,9 @@ library("bseqsc")
 library("dplyr")
 
 remove(props)
-datasets = c("Alvarez.S105.tsv","Charite.S23.tsv","Diedisheim.S62.tsv","Master.S20.tsv","Missiaglia.S75.tsv","Sadanandam.S29.tsv","Sato.S18.NEC_NET.tsv","Scarpa.S29.tsv")
+datasets = c("Alvarez.S105.tsv","Charite.S23.tsv","Diedisheim.S62.tsv","Master.S20.tsv","Missiaglia.S75.tsv","Sadanandam.S29.tsv","Sato.S13.tsv","Scarpa.S29.tsv")
 
-dataset_name = datasets[2]
+dataset_name = datasets[7]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
@@ -48,7 +48,9 @@ if ("Ductal" %in% colnames(props)){
     props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","P_value","Correlation","RMSE")]
 }
 
-#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_endocrine/"
-o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
-o_filename = paste(o_filename, dataset_name, sep ="/")
-write.table(props_export,o_filename,sep = "\t")
+if (exists("props")){
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_endocrine/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
+    o_filename = paste(o_filename, dataset_name, sep ="/")
+    write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
+}

@@ -15,43 +15,43 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/All.S361.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine/NEN/All.S.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
 meta_data = meta_info[ rownames(data),]
 
 ### Figure 1 plot A - Racetrack Plot
 
-data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_exocrine/NEN/All.S.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
-meta_data = meta_info[ rownames(data),]
+#data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine/NEN/All.S.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
+#meta_data = meta_info[ rownames(data),]
 
-vis_mat = meta_data[,c("Study","Histology_Primary")]
+vis_mat = meta_data[,c("Study","Site_of_primary")]
 vis_mat = as.data.frame(table(reshape2::melt(vis_mat)))
-colnames(vis_mat) = c("Study","Histology_Primary","Count")
+colnames(vis_mat) = c("Study","Site_of_primary","Count")
 spacer = matrix(c("A","B","C","","","",0,0,0), nrow = 3, ncol = 3)
 colnames(spacer) = colnames(vis_mat)
 vis_mat = rbind(vis_mat,spacer)
 vis_mat$Count = as.integer(vis_mat$Count)
-vis_mat$Histology_Primary = as.factor(vis_mat$Histology_Primary)
+vis_mat$Site_of_primary = as.factor(vis_mat$Site_of_primary)
 
 Study_labels = c("Alvarez","Missiaglia", "Diedisheim","Charite","Master","Sato","Sadanandam","Scarpa")
 
 vis_mat$Study = factor(vis_mat$Study,levels = c(
     "A","B","C",rev(Study_labels)
 ))
-Study_labels = c("","","",c("Master","Missiaglia","Sadanandam","Sato","Scarpa","Alvarez","Charite","Diedisheim"),rep("",24))
-vis_mat$Histology_Primary = factor(vis_mat$Histology_Primary, levels = rev(c("Pancreatic","Small_intestinal","Large_intestinal","Gastric/duodenal")))
+Study_labels = c("","","",c("Master","Missiaglia","Sadanandam","Sato","Scarpa","Alvarez","Charite","Diedisheim"),rep("",32))
+vis_mat$Site_of_primary = factor(vis_mat$Site_of_primary, levels = rev(c("Pancreatic","Small_intestinal","Large_intestinal","Gastric/duodenal","Other")))
 
 race_plot = ggplot(
     vis_mat,
     aes(
         x = Study,
         y = Count,
-        fill = Histology_Primary
+        fill = Site_of_primary
     )
 )
 race_plot = race_plot + geom_bar(width = 0.6, stat="identity")
 race_plot = race_plot + coord_polar(theta = "y") + xlab("") + ylab("")
 race_plot = race_plot + ylim(c(0,230))
-race_plot = race_plot + scale_fill_manual(values = c("#982222","yellow","black","darkgreen","white"))
+race_plot = race_plot + scale_fill_manual(values = c("gray","#C83C3C","#FEC10A","#78B8B4","#32506E","white"))
 race_plot = race_plot + geom_text(
     data = vis_mat,
     hjust = 1.1,
@@ -94,7 +94,7 @@ plot_a = plot_a + geom_treemap_subgroup_text(
     colour = "white",
     size = 22,
     min.size = 15)
-plot_a = plot_a + scale_fill_manual(values = c("black","darkgreen","#340273","#CD8200","brown","#026A73","#0E0273","#730243"))
+plot_a = plot_a + scale_fill_manual(values = c("#78B8B4","#E15759","#AFB41E","#DC5AB5","#5F87B4","#F58E2D","#533C9D","#AFC3D7"))
 plot_a = plot_a + theme(legend.position="none")
 plot_a
 
@@ -124,9 +124,9 @@ grading_plot = ggplot(
         title = "Grading"
     ) +
     theme_ipsum_rc(grid="") +
-    theme_enhance_waffle() + scale_fill_manual(values = c("darkgreen","yellow","darkred","cyan","gray")) + theme(legend.position="top")
+    theme_enhance_waffle() + scale_fill_manual(values = c("#D2E6E6","#78B8B4","#F54C19","gray")) + theme(legend.position="top")
 
-svg(filename = "~/Dropbox/Figures/F1_waffle_grading.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_waffle_grading.svg", width = 10, height = 10)
 grading_plot
 dev.off()
 
@@ -152,7 +152,7 @@ nec_net_plot = ggplot(
         title = "NEC NET"
     ) +
     theme_ipsum_rc(grid="") +
-    theme_enhance_waffle() + scale_fill_manual(values = c("purple","red","blue","cyan","gray")) + theme(legend.position="top")
+    theme_enhance_waffle() + scale_fill_manual(values = c("#9664AF","#C00000","#1E64A5","#C35078","gray")) + theme(legend.position="top")
 
 #svg(filename = "~/Dropbox/Figures/F1_waffle_nec_net.svg", width = 10, height = 10)
 nec_net_plot
@@ -182,9 +182,9 @@ primary_metastasis_plot = ggplot(
         title = "Primary vs. metastasis"
     ) +
     theme_ipsum_rc(grid="") +
-    theme_enhance_waffle() + scale_fill_manual(values = c("black","orange","cyan","gray")) + theme(legend.position="top")
+    theme_enhance_waffle() + scale_fill_manual(values = c("#DCD13C","#533C9D","#C35078","gray")) + theme(legend.position="top")
 
-svg(filename = "~/Dropbox/Figures/F1_waffle_primary_metastasis.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/F1_waffle_primary_metastasis.svg", width = 10, height = 10)
 primary_metastasis_plot
 dev.off()
 

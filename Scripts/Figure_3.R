@@ -15,23 +15,17 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### Figure 3 Plot A
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron/All.S361.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
-row_names = rownames(props)
-col_names = colnames(props)
-props = as.data.frame(matrix(as.double(as.character(unlist(props))), nrow = nrow(props), ncol = ncol(props)))
-colnames(props) = col_names
-rownames(props) = row_names
-
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
-rownames(props)[no_matcher] = str_replace(rownames(props)[no_matcher], pattern ="^X","")
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
-rownames(props)[no_matcher] = str_replace(rownames(props)[no_matcher], pattern ="^","X")
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^X","")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^","X")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
 no_matcher
 
-meta_data = meta_info[rownames(props),]
+meta_data = meta_info[props$Sample,]
 props = props[meta_data$Study %in% c("Charite","Scarpa","Master","Diedisheim"),]
 meta_data = meta_info[rownames(props),]
 dim(props)
@@ -39,25 +33,58 @@ dim(props)
 props$Exocrine_like = as.double(rowSums(props[,c("Acinar","Ductal")]))
 
 selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
-vis_mat = props[,selection]
-vis_mat
-
+vis_mat_exo = props %>% filter(Model == "Endocrine_exocrine_like")
+rownames(vis_mat_exo) = vis_mat_exo$Sample
+vis_mat = vis_mat_exo[,selection]
 meta_data = meta_info[rownames(vis_mat),]
-correlation_matrix = cor(t(vis_mat))
+
+row_max = as.double(apply( vis_mat, MARGIN = 1 , FUN = max))
+vis_mat_balanced = vis_mat / row_max
+correlation_matrix = cor(t(vis_mat_balanced))
 
 #vis_mat = vis_mat[order(vis_mat$Exocrine_like),]
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 upper_plot = pheatmap::pheatmap(
-    t(vis_mat),
+    t(vis_mat_balanced),
+    #correlation_matrix,
     annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
     annotation_colors = aka3,
-    #show_rownames = FALSE,
+    show_rownames = TRUE,
     show_colnames = FALSE,
     cluster_rows = FALSE,
     treeheight_row = 0,
     legend = T,
     clustering_method = "complete",
-    cellheight = 40,
+    #cellheight = 40,
+    fontsize = 10,
+    annotation_legend = FALSE
+)
+
+### Figure 3 alternative mit nur nec net
+
+meta_data_exo = meta_info[vis_mat_exo$Sample,]
+vis_mat_exo_g3_net_g3_nec = vis_mat_exo[meta_data_exo$Grading %in% c("G3") ,]
+selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
+vis_mat = vis_mat_exo_g3_net_g3_nec[,selection]
+
+row_max = as.double(apply( vis_mat, MARGIN = 1 , FUN = max))
+vis_mat_balanced = vis_mat / row_max
+
+correlation_matrix = cor(t(vis_mat))
+
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+upper_plot = pheatmap::pheatmap(
+    #t(vis_mat_balanced),
+    correlation_matrix,
+    annotation_col = meta_data[,c("Grading","Functionality","NEC_NET","Study")],
+    annotation_colors = aka3,
+    show_rownames = FALSE,
+    show_colnames = TRUE,
+    cluster_rows = TRUE,
+    treeheight_row = 0,
+    legend = T,
+    clustering_method = "ward.D2",
+    #cellheight = 40,
     fontsize = 10,
     annotation_legend = FALSE
 )

@@ -7,11 +7,12 @@ rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
 summary(as.double(bam_data_1["INS",]))
+summary(as.double(bam_data_1["SST",]))
 
 # variance selection
 
@@ -26,7 +27,7 @@ meta_data = meta_info[colnames(bam_data_1),]
 
 # bam data 2
 
-bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S7.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -76,65 +77,8 @@ new_mat = new_mat[ rownames(new_mat)!="NA", ]
 #new_mat = new_mat[ ,which(meta_data$Histology_Primary == "Pancreatic") ]
 dim(new_mat)
 new_mat[1:5,1:5]
+new_mat = new_mat[,order(colnames(new_mat))]
 
-#write.table(new_mat[,], "~/Deko_Projekt/Data/Publication_datasets/Combinations/Charite_Scarpa_Master_Diedisheim.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/Deko_Projekt/Data/Publication_datasets/Sato.S42.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(expr_raw, "~/Deko_Projekt/Data/Publication_datasets/Sato.S13.tsv", sep ="\t", quote =F , row.names = T)
 
-### splitter
-
-# scRNA integration
-
-bam_data_1 = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
-colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
-colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
-rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
-summary(as.double(bam_data_1["INS",]))
-
-meta_data = meta_info[colnames(bam_data_1),]
-table(meta_data$Grading)
-
-meta_data = meta_data[meta_data$Grading != "G0",]
-bam_data_1 = bam_data_1[,meta_data$Name]
-dim(bam_data_1)
-
-#write.table(bam_data_1,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann.Scarpa.tsv",sep="\t",row.names = T, col.names= T,quote=F)
-
-###
-
-meta_info = read.table("~/Deko/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-meta_info = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Meta_info.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
-
-bam_data = read.table("~/Deko/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
-colnames(bam_data) = str_replace(colnames(bam_data),pattern = "\\.","_")
-colnames(bam_data) = str_replace(colnames(bam_data),pattern = "^X","")
-rownames(bam_data) = str_to_upper(rownames(bam_data))
-bam_data = as.data.frame(bam_data)
-dim(bam_data)
-summary(as.double(bam_data["INS",])) # sanity check
-
-meta_data = meta_info[colnames(bam_data),]
-table(meta_data$Grading)
-dim(meta_data)
-#table(meta_data$Grading)
-meta_data = meta_data[meta_data$Study == "Groetzinger",]
-meta_data = meta_data[meta_data$Histology == "Pancreatic_NEN",]
-meta_data = meta_data[meta_data$Grading %in% c("G0"),]
-bam_data = bam_data[,meta_data$Name]
-dim(bam_data)
-table(meta_data$Grading)
-
-#write.table(meta_data,"~/Deko/Data/Cancer_Pancreas_Bulk_Array/Wiedenmann_Scarpa/Wiedenmann_selection_meta_data.tsv",sep="\t",row.names = T, col.names= T,quote=F)
-write.table(bam_data,"~/Deko/Data/Bench_data/Controls.S11.tsv",sep="\t",row.names = T, col.names= T,quote=F)
-
-### parse GSE73339
-
-mapping_t = read.table("~/Deko/Data/Cancer_Pancreas_Bulk_Array/GSE73339/Mapping_table.tsv",sep = "\t",header = T,stringsAsFactors = F)
-mapping_t = as.data.frame(mapping_t)
-rownames(mapping_t) = mapping_t$ID
-mapping_t[1:5,1:2]
-
-table(rownames(bam_data) %in% mapping_t$ID)
-mapping_t = mapping_t[rownames(bam_data),]
-bam_data = bam_data[rownames(mapping_t),]
-hgnc_list = mapping_t$HGNC
-hgnc_list = str_replace_all(hgnc_list,pattern = " ","")

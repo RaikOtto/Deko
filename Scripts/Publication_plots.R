@@ -26,8 +26,9 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Sato.S35.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
 no_match = colnames(expr_raw) %in% meta_info$Sample == F
@@ -38,17 +39,9 @@ no_match = colnames(expr_raw) %in% meta_info$Sample == F
 colnames(expr_raw)[which(no_match)]
 meta_data = meta_info[colnames(expr_raw),]
 
-#index = grep(rownames(expr_raw),pattern ="mki67",value = FALSE,ignore.case = TRUE)
-#index
-#meta_info[colnames(expr_raw),"Mki_67"]
-#as.character(round(as.double(expr_raw[ index[1] ,]),1))
-#meta_info[colnames(expr_raw),"Mki_67"] = as.character(round(as.double(expr_raw[ index[1] ,]),0))
-
-#write.table(meta_info,"~/Deko_Projekt/Misc/Meta_information.tsv",sep ="\t",quote =F , row.names = F)
-
 candidates = meta_data$Sample[ 
   #meta_data$Study %in% c("Master","Charite")
-  meta_data$Histology_Primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
+  meta_data$Site_of_primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
   #meta_data$NET_NEC_PCA %in% c("NEC","NET")
   #!(meta_data$Histology_Metastasis %in% c("Outlier"))
 ]
