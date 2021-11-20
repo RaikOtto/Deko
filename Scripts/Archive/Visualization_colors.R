@@ -1,34 +1,35 @@
 aka3 = list(
-    #Functionality   = c(
-    #    ACTH = "white",
-    #    PPoma = "BLACK",
-    #    Unknown = "gray",
-    #    Gastrinoma = "brown",
-    #    Glucagonoma = "blue",
-    #    Insulinoma = "darkgreen",
-    #    "Non-functional" = "white",
-    #    Somatostatinoma = "purple",
-    #    VIPoma = "cyan"
-    #),
-    Evo_up_vec = c("High" = "red", "Medium" = "yellow","Low" = "green"),
     Functionality   = c(
-        Functional = "green",
+        ACTH = "white",
+        PPoma = "BLACK",
+        Unknown = "gray",
         Gastrinoma = "brown",
         Glucagonoma = "blue",
         Insulinoma = "darkgreen",
-        Unknown = "gray",
         "Non-Functional" = "white",
-        Ppoma = "purple",
-        VIPoma = "cyan",
-        Unknown = "gray"
+        Somatostatinoma = "purple",
+        VIPoma = "cyan"
     ),
-    NEC_NET = c(NEC= "red", NET = "blue", Ambiguous = "purple", Unknown = "gray",MiNEN="cyan","SCLC" = "white"),
-    NET_NEC_PCA = c(NEC= "darkred", NET = "blue"),
-    NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
+    Cluster = c("1" = "green", "2" = "yellow","3" = "darkred"),
+    #Functionality   = c(
+    #    Functional = "green",
+    #    Gastrinoma = "brown",
+    #    Glucagonoma = "blue",
+    #    Insulinoma = "darkgreen",
+    #    Unknown = "gray",
+    #    "Non-Functional" = "white",
+    #    Ppoma = "purple",
+    #    VIPoma = "cyan",
+    #    Unknown = "gray"
+    #),
+    NEC_NET = c(NEC= "#C00000", NET = "#1E64A5", Ambiguous = "#9664AF", Unknown = "gray"),
+    #NEC_NET = c(NEC= "#C00000", NET = "#1E64A5", Unknown = "gray"),
+    NET_NEC_PCA = c(NEC= "darkred", NET = "blue","Unknown" = "gray"),
+    #NEC_NET_PCA = c(NEC= "darkred", NET = "blue"),
     #Study = c(Charite = "#35A047", Scarpa = "#F28500","Master" = "#008080",),
-    Study = c(Charite = "#C75E40", Scarpa = "#500307","Master" = "#17070C",Sato = "#52D383", Alvarez = "#2F3F49", Missiaglia = "#FC4C1D", Sadanandam = "#64E0FD",Diedisheim = "#1601AE" ),
-    Histology_Primary   = c(
-        Pancreatic = "black",
+    Study = c(Charite = "#E15759", Scarpa = "#AFC3D7","Master" = "#DC5AB5",Sato = "#533C9D", Alvarez = "#78B8B4", Missiaglia = "#5F87B4", Sadanandam = "#F58E2D",Diedisheim = "#AFB41E" ),
+    Site_of_primary   = c(
+        Pancreatic = "32506e",
         Colorectal = "brown",
         Intestinal = "white",
         Small_intestinal = "Yellow",
@@ -42,7 +43,8 @@ aka3 = list(
     Delta = c(low = "white", high = "Purple"),
     Ductal = c(low = "white", high = "Brown"),
     Acinar = c(low = "white", high = "Cyan"),
-    Grading = c( G1 = "white",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray",Organoid = "cyan"),
-    Primary_Metastasis = c("Primary" = "white", Metastasis = "gray", "Local_recurrence" = "pink"),
+    #Grading = c( G1 = "white",G2 = "#FFC000", G3 = "#EE5124", "Unknown" = "gray",Organoid = "#C35078"),
+    Grading = c( G1 = "#D2E6E6",G2 = "#78B8B4", G3 = "#F54C19", "Unknown" = "gray"),
+    Primary_Metastasis = c("Primary" = "#DCD13C", "Metastasis" = "#533C9D", "Unknown" = "gray"),
     MEN1 = c("0" = "white", "1"  = "#4073FF")
 )
