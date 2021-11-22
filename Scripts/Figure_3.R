@@ -13,84 +13,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations/Charite_Scarpa_Master.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
-### Figure 3 Plot A
-
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
-colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
-
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^X","")
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^","X")
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-no_matcher
-
-meta_data = meta_info[props$Sample,]
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
-meta_data = meta_info[rownames(props),]
-dim(props)
-
-props$Exocrine_like = as.double(rowSums(props[,c("Acinar","Ductal")]))
-
-selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
-vis_mat_exo = props %>% filter(Model == "Endocrine_exocrine_like")
-rownames(vis_mat_exo) = vis_mat_exo$Sample
-vis_mat = vis_mat_exo[,selection]
-meta_data = meta_info[rownames(vis_mat),]
-
-row_max = as.double(apply( vis_mat, MARGIN = 1 , FUN = max))
-vis_mat_balanced = vis_mat / row_max
-correlation_matrix = cor(t(vis_mat_balanced))
-
-#vis_mat = vis_mat[order(vis_mat$Exocrine_like),]
-source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-upper_plot = pheatmap::pheatmap(
-    t(vis_mat_balanced),
-    #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
-    annotation_colors = aka3,
-    show_rownames = TRUE,
-    show_colnames = FALSE,
-    cluster_rows = FALSE,
-    treeheight_row = 0,
-    legend = T,
-    clustering_method = "complete",
-    #cellheight = 40,
-    fontsize = 10,
-    annotation_legend = FALSE
-)
-
-### Figure 3 alternative mit nur nec net
-
-meta_data_exo = meta_info[vis_mat_exo$Sample,]
-vis_mat_exo_g3_net_g3_nec = vis_mat_exo[meta_data_exo$Grading %in% c("G3") ,]
-selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
-vis_mat = vis_mat_exo_g3_net_g3_nec[,selection]
-
-row_max = as.double(apply( vis_mat, MARGIN = 1 , FUN = max))
-vis_mat_balanced = vis_mat / row_max
-
-correlation_matrix = cor(t(vis_mat))
-
-source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-upper_plot = pheatmap::pheatmap(
-    #t(vis_mat_balanced),
-    correlation_matrix,
-    annotation_col = meta_data[,c("Grading","Functionality","NEC_NET","Study")],
-    annotation_colors = aka3,
-    show_rownames = FALSE,
-    show_colnames = FALSE,
-    cluster_rows = TRUE,
-    treeheight_row = 0,
-    legend = T,
-    clustering_method = "ward.D",
-    #cellheight = 40,
-    fontsize = 10,
-    annotation_legend = FALSE
-)
-
- # Figure 3 Plot B
-
+# Figure 3 Plot A Diedisheim
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine//Diedisheim.S62.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -122,7 +45,8 @@ correlation_matrix = cor(t(vis_mat))
 pcr = prcomp(t(correlation_matrix))
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-upper_plot = pheatmap::pheatmap(
+svg(filename = "~/Dropbox/Figures/Figure_3_Plot_A.svg", width = 10, height = 10)
+Diedisheim_plot = pheatmap::pheatmap(
     t(vis_mat),
     annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET")],
     annotation_colors = aka3,
@@ -133,20 +57,119 @@ upper_plot = pheatmap::pheatmap(
     cluster_rows = FALSE,
     legend = T,
     fontsize_row = 14,
+    annotation_legend = FALSE,
     clustering_method = "single"
 )
-#p = p +  theme(legend.position="top",axis.text=element_text(size=18),axis.title=element_text(size=18))+ theme(legend.text=element_text(size=18),legend.title=element_text(size=18))
-upper_plot = upper_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
-upper_plot
+dev.off()
 
+### Figure 3 Plot B Charite + Master +Scarpa absolutplot G3 only
 
-### Figure 3 Plot C UMAP PLOT
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props_endo = props %>% filter(Model == "Endocrine_only")
+props_exo = props %>% filter(Model == "Endocrine_exocrine_like")
+rownames(props_exo) = props_exo$Sample
+
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^X","")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^","X")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+no_matcher
+
+meta_data = meta_info[props$Sample,]
+props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+meta_data = meta_info[rownames(props),]
+dim(props)
+
+props_exo$Exocrine_like = as.double(rowSums(props_exo[,c("Acinar","Ductal")]))
+
+selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
+vis_mat_exo = props_exo[,selection]
+meta_data = meta_info[rownames(vis_mat_exo),]
+vis_mat_exo = vis_mat_exo%>% filter(meta_data$Study %in% c("Charite","Master","Scarpa"))
+meta_data = meta_info[rownames(vis_mat_exo),]
+vis_mat_exo = vis_mat_exo%>% filter(meta_data$Grading %in% c("G3"))
+meta_data = meta_info[rownames(vis_mat_exo),]
+
+row_max = as.double(apply( vis_mat_exo, MARGIN = 1 , FUN = max))
+vis_mat_balanced = vis_mat_exo# / row_max
+correlation_matrix = cor(t(vis_mat_balanced))
+
+vis_mat_balanced = vis_mat_balanced[order(vis_mat_balanced$Exocrine_like),]
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+
+#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_B.svg", width = 10, height = 10)
+upper_plot = pheatmap::pheatmap(
+    t(vis_mat_balanced),
+    #correlation_matrix,
+    annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
+    annotation_colors = aka3,
+    show_rownames = TRUE,
+    show_colnames = FALSE,
+    cluster_rows = FALSE,
+    cluster_cols = FALSE,
+    treeheight_row = 0,
+    legend = T,
+    clustering_method = "complete",
+    cellheight = 35,
+    fontsize = 10,
+    annotation_legend = FALSE
+)
+dev.off()
+
+### Figure 3 C MKi-67 plot
+
+### Figure 3 D correlation  plot
+
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+meta_data = meta_info[props$Sample,]
+props = props[meta_data$Study %in% c("Charite","Scarpa","Master","Diedisheim"),]
+meta_data = meta_info[rownames(props),]
+dim(props)
+
+props_exo = props %>% filter(Model == "Endocrine_exocrine_like")
+rownames(props_exo) = props_exo$Sample
+
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^X","")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^","X")
+no_matcher = which(!( props$Sample %in% meta_info$Sample))
+no_matcher
+
+selection = c("Alpha","Beta","Gamma","Delta","Ductal","Acinar","P_value","Correlation")
+vis_mat_exo = props_exo[,selection]
+meta_data = meta_info[rownames(vis_mat_exo),]
+correlation_matrix = cor(t(vis_mat_exo))
+
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_D.svg", width = 10, height = 10)
+upper_plot = pheatmap::pheatmap(
+    #t(vis_mat_balanced),
+    correlation_matrix,
+    annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
+    annotation_colors = aka3,
+    show_rownames = FALSE,
+    show_colnames = FALSE,
+    cluster_rows = TRUE,
+    cluster_cols = TRUE,
+    treeheight_row = 0,
+    legend = T,
+    clustering_method = "complete",
+    #cellheight = 35,
+    fontsize = 10,
+    annotation_legend = TRUE
+)
+dev.off()
+
+### Figure 3 Plot E UMAP PLOT
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep ="\t", header = T, as.is=TRUE)
 props = props%>% filter(Model == "Endocrine_exocrine_like")
+#props = props%>% filter(Model == "Endocrine_only")
 rownames(props) = props$Sample
 meta_data = meta_info[rownames(props),]
-props = props%>% filter(meta_data$Study %in% c("Charite","Master","Scarpa"))
+props = props%>% filter(meta_data$Study %in% c("Charite","Scarpa"))
 dim(props)
 
 no_matcher = which(!( rownames(props) %in% meta_info$Sample))

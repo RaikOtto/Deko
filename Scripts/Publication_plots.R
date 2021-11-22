@@ -26,7 +26,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Sato.S35.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
@@ -41,7 +41,8 @@ meta_data = meta_info[colnames(expr_raw),]
 
 candidates = meta_data$Sample[ 
   #meta_data$Study %in% c("Master","Charite")
-  meta_data$Site_of_primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
+  #meta_data$Site_of_primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
+  meta_data$Site_of_primary != "Pancreatic" #& meta_data$Primary_Metastasis %in% c("Primary")
   #meta_data$NET_NEC_PCA %in% c("NEC","NET")
   #!(meta_data$Histology_Metastasis %in% c("Outlier"))
 ]
@@ -49,6 +50,8 @@ length(candidates)
 expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
 dim(meta_data)
+
+write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S4.tsv",sep ="\t",quote =F , row.names = TRUE)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)

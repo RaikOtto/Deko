@@ -308,6 +308,6 @@ p_exo = ggplot(
     colour="black"
 ) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
 p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_E.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_E.svg", width = 10, height = 10)
 p_exo
 dev.off()

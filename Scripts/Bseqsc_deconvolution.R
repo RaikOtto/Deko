@@ -9,10 +9,26 @@ library("bseqsc")
 library("dplyr")
 
 remove(props)
-datasets = c("Alvarez.S105.tsv","Charite.S23.tsv","Diedisheim.S62.tsv","Master.S20.tsv","Missiaglia.S75.tsv","Sadanandam.S29.tsv","Sato.S13.tsv","Scarpa.S29.tsv")
+#datasets = c(
+    #"Alvarez.S105.tsv", #1
+    #"Charite.S23.tsv", #2
+    #"Diedisheim.S62.tsv", #3
+    #"Master.S20.tsv", #4
+    #"Missiaglia.S75.tsv", #5
+    #"Sadanandam.S29.tsv", #6
+    #"Scarpa.S29.tsv") #7
+    #"Sato.S13.tsv", #7
+    
 
-dataset_name = datasets[8]
-i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
+datasets = c(
+    "Alvarez.S100.tsv", #1
+    "Charite.S17.tsv", #2
+    "Diedisheim.S4.tsv", #3
+    "Master.S14.tsv", #4
+    "Sato.S32.tsv") #5
+
+dataset_name = datasets[5]
+i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
@@ -24,8 +40,8 @@ meta_data = meta_info[colnames(expr_raw),]
 table(meta_data$Histology_Primary)
 
 #show_models_bseqsc()
-model_name = "Alpha_Beta_Gamma_Delta_Baron"
-#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+#model_name = "Alpha_Beta_Gamma_Delta_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 
 print(dataset_name)
 
@@ -34,7 +50,7 @@ props = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = TRUE,
-    nr_permutations = 100,
+    nr_permutations = 1000,
     output_file = ""
 )
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -43,14 +59,14 @@ props = cbind(rownames(props),rep(model_name,nrow(props)),props)
 colnames(props)[1:2] = c("Sample","Model")
 
 if ("Ductal" %in% colnames(props)){
-    props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","Acinar","Ductal","P_value","Correllation","RMSE")]
+    props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","Acinar","Ductal","P_value","Correlation","RMSE")]
 } else{
     props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","P_value","Correlation","RMSE")]
 }
 
 if (exists("props")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_endocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
