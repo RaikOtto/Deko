@@ -45,10 +45,10 @@ p = p + theme(legend.position="none",axis.text=element_text(size=14),axis.title=
 p
 
 
-raw_dara = read.table("~/Dropbox/performance_deconvolution.csv",sep ="\t", as.is = T, header = T)
-colnames(raw_dara) = c("Method","Measurement","Accuracy","AUC","Sensitivity","PPV","F1","Kapp","MCC")
+raw_dara = read.table("~/Dropbox/Sonstiges/ML_performance_deko.tsv",sep ="\t", as.is = T, header = T)
+#colnames(raw_dara) = c("Method","Measurement","Accuracy","AUC","Sensitivity","PPV","F1","Kapp","MCC")
 vis_mat = reshape2::melt(raw_dara)
-colnames(vis_mat) = c("Method","Measurement","Type","Value")
+colnames(vis_mat) = c("Measurement","Method","Type","Value")
 vis_mat = vis_mat %>% filter(Type %in% c("Accuracy","Sensitivity","PPV"))
 
 error_mat_means =  vis_mat %>% filter(Measurement %in% c("Mean"))

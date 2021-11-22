@@ -11,7 +11,7 @@ library("dplyr")
 remove(props)
 datasets = c("Alvarez.S105.tsv","Charite.S23.tsv","Diedisheim.S62.tsv","Master.S20.tsv","Missiaglia.S75.tsv","Sadanandam.S29.tsv","Sato.S13.tsv","Scarpa.S29.tsv")
 
-dataset_name = datasets[7]
+dataset_name = datasets[8]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
@@ -34,7 +34,7 @@ props = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = TRUE,
-    nr_permutations = 250,
+    nr_permutations = 100,
     output_file = ""
 )
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"

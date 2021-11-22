@@ -10,8 +10,8 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-#expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-#colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations/Charite_Scarpa_Master.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 
 ### Figure 3 Plot A
 
@@ -26,7 +26,7 @@ no_matcher = which(!( props$Sample %in% meta_info$Sample))
 no_matcher
 
 meta_data = meta_info[props$Sample,]
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master","Diedisheim"),]
+props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
 meta_data = meta_info[rownames(props),]
 dim(props)
 
@@ -79,20 +79,20 @@ upper_plot = pheatmap::pheatmap(
     annotation_col = meta_data[,c("Grading","Functionality","NEC_NET","Study")],
     annotation_colors = aka3,
     show_rownames = FALSE,
-    show_colnames = TRUE,
+    show_colnames = FALSE,
     cluster_rows = TRUE,
     treeheight_row = 0,
     legend = T,
-    clustering_method = "ward.D2",
+    clustering_method = "ward.D",
     #cellheight = 40,
     fontsize = 10,
     annotation_legend = FALSE
 )
 
-# Figure 3 Plot B
+ # Figure 3 Plot B
 
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron/Diedisheim.S62.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine//Diedisheim.S62.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 no_match = rownames(props) %in% meta_info$Sample == F
@@ -142,7 +142,11 @@ upper_plot
 
 ### Figure 3 Plot C UMAP PLOT
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron/All.S361.tsv",sep ="\t", header = T, as.is=TRUE,row.names = 1)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep ="\t", header = T, as.is=TRUE)
+props = props%>% filter(Model == "Endocrine_exocrine_like")
+rownames(props) = props$Sample
+meta_data = meta_info[rownames(props),]
+props = props%>% filter(meta_data$Study %in% c("Charite","Master","Scarpa"))
 dim(props)
 
 no_matcher = which(!( rownames(props) %in% meta_info$Sample))
@@ -152,18 +156,12 @@ rownames(props)[no_matcher] = str_replace(rownames(props)[no_matcher], pattern =
 no_matcher = which(!( rownames(props) %in% meta_info$Sample))
 no_matcher
 
-meta_data = meta_info[rownames(props),]
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master","Diedisheim"),]
-meta_data = meta_info[rownames(props),]
-dim(props)
-
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 
 props$Exocrine_like = as.double(rowSums(props[,c("Acinar","Ductal")]))
 props$Endocrine = as.double(rowSums(props[,c("Alpha","Beta","Delta","Gamma")]))
-props$Ratio = log((props$Exocrine_like+1) / (props$Endocrine+1))
 
-selection = c("Alpha","Beta","Gamma","Delta","Ductal","Acinar","Correlation","P_value","Ratio")
+selection = c("Alpha","Beta","Gamma","Delta","Ductal","Acinar","Correlation","P_value")
 vis_mat = props[,selection]
 
 meta_data = meta_info[rownames(vis_mat),]
@@ -199,8 +197,7 @@ umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Grad
 #umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Grading) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NET_NEC_PCA), level=.5, type ="t", size=1.5)
 #umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Study) ))
-#umap_p = umap_p + scale_color_manual( values = c("darkgreen","yellow","red","gray")) ##33ACFF ##FF4C33
-umap_p
+umap_p = umap_p + scale_color_manual( values = c("darkgreen","yellow","darkred","red","blue")) ##33ACFF ##FF4C33
 
 umap_p = umap_p + theme(legend.position = "none") + xlab("") + ylab("")
 umap_p = umap_p + geom_vline( xintercept=-1, size = 2, linetype = 2) + geom_hline( yintercept = -1.25, size = 2, linetype = 2)  

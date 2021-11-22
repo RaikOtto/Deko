@@ -722,19 +722,33 @@ write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quot
 
 #### umap
 
-# umap
+### UMAP
 
-genes_of_interest_hgnc_t$V1
-i = 103
-sad_genes = genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]
-#sad_genes = c( genes_of_interest_hgnc_t[47,3:ncol(genes_of_interest_hgnc_t)], genes_of_interest_hgnc_t[48,3:ncol(genes_of_interest_hgnc_t)] ) 
-sad_genes = sad_genes[sad_genes != ""]
-#sad_genes = sad_genes[1:50]
-expr = expr_raw[match(sad_genes,  rownames(expr_raw), nomatch = 0),]
-#expr = expr[,meta_data$ABC_GCB != "Unclassified"]
-meta_data_plot = meta_info[colnames(expr),]
-#expr[1:5,1:5]
-correlation_matrix = cor(expr);pcr = prcomp(t(correlation_matrix))
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+
+#props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/Alvarez.S104.Cibersort.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
+colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+colnames(props) = str_replace(colnames(props),pattern = "\\.","-")
+colnames(props) = str_replace(colnames(props),pattern = "\\.ductal","ductal")
+colnames(props) = str_replace(colnames(props),pattern = "-reg\\.","-reg+")
+colnames(props) = str_replace(colnames(props),pattern = "muc5b-","muc5b+-")
+
+no_match = rownames(props) %in% meta_info$Sample == F
+rownames(props)[no_match] = paste("X",rownames(props)[no_match],sep ="")
+no_match = rownames(props) %in% meta_info$Sample == F
+sum(no_match)
+
+dim(props)
+meta_data = meta_info[rownames(props),]
+
+selection = colnames(props)[!(colnames(props) %in% c("model","Sig_score","P_value","Correlation","RMSE","Subtype","Strength_subtype","hisc"))]
+props = as.data.frame(props)
+vis_mat = props[,colnames(props) %in% selection]
+vis_mat = vis_mat[meta_data$NET_NEC_PCA != "Unknown",]
+meta_data = meta_info[rownames(vis_mat),]
+
+correlation_matrix = cor(t(vis_mat));pcr = prcomp(t(correlation_matrix))
+#vis_mat = vis_mat[order(vis_mat$endocrine_fully_differentited,decreasing = T),]
 
 custom.config = umap.defaults
 custom.config$random_state = sample(1:1000,size = 1)
