@@ -10,9 +10,6 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations/Charite_Scarpa_Master.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-
 # Figure 3 Plot A Diedisheim
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine//Diedisheim.S62.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
@@ -48,16 +45,16 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 svg(filename = "~/Dropbox/Figures/Figure_3_Plot_A.svg", width = 10, height = 10)
 Diedisheim_plot = pheatmap::pheatmap(
     t(vis_mat),
-    annotation_col = meta_data[,c("Grading","Cluster","Functionality","NEC_NET")],
+    annotation_col = meta_data[,c("Grading","Cluster","DFS","Functionality","NEC_NET")],
     annotation_colors = aka3,
     show_rownames = T,
-    show_colnames = F,
+    show_colnames = FALSE,
     treeheight_row = 0,
     cellheight = 20,
     cluster_rows = FALSE,
     legend = T,
     fontsize_row = 14,
-    annotation_legend = FALSE,
+    #annotation_legend = FALSE,
     clustering_method = "single"
 )
 dev.off()
@@ -91,7 +88,10 @@ meta_data = meta_info[rownames(vis_mat_exo),]
 vis_mat_exo = vis_mat_exo%>% filter(meta_data$Grading %in% c("G3"))
 meta_data = meta_info[rownames(vis_mat_exo),]
 
-row_max = as.double(apply( vis_mat_exo, MARGIN = 1 , FUN = max))
+vis_mat_exo$MKi67 = log(as.double(meta_data$Mki_67))
+vis_mat_exo$MKi67 = vis_mat_exo$MKi67 / max(vis_mat_exo$MKi67)
+#vis_mat_exo$MKi67 = vis_mat_exo$MKi67 * max(vis_mat_exo$Exocrine_like)
+
 vis_mat_balanced = vis_mat_exo# / row_max
 correlation_matrix = cor(t(vis_mat_balanced))
 
@@ -102,7 +102,7 @@ source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 upper_plot = pheatmap::pheatmap(
     t(vis_mat_balanced),
     #correlation_matrix,
-    annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
+    annotation_col = meta_data[,c("Grading","Functionality","NEC_NET","Study")],
     annotation_colors = aka3,
     show_rownames = TRUE,
     show_colnames = FALSE,
@@ -118,6 +118,43 @@ upper_plot = pheatmap::pheatmap(
 dev.off()
 
 ### Figure 3 C MKi-67 plot
+
+samples = rownames(vis_mat_balanced)[order(vis_mat_balanced$Exocrine_like)]
+meta_data = meta_info[samples,]
+meta_data$Mki_67
+
+#row_max = as.double(apply( vis_mat_exo, MARGIN = 1 , FUN = max))
+#vis_mat_balanced = vis_mat_exo / row_max
+
+vis_mat_exo$Endocrine = as.double(rowSums(vis_mat_exo[,c("Alpha","Beta","Delta","Gamma")]))
+vis_mat_exo$MKi67 = log(as.double(meta_data$Mki_67))
+
+selection = c("Endocrine","Exocrine_like","MKi67")
+vis_mat = cbind( 1:nrow(vis_mat_exo) ,vis_mat_exo[samples,selection])
+colnames(vis_mat) = c("Sample","Endocrine","Exocrine_like","MKi67")
+vis_mat$MKi67 = vis_mat$MKi67 / max(vis_mat$MKi67)
+#vis_mat$Endocrine = vis_mat$Endocrine / max(vis_mat$Endocrine)
+#vis_mat$Exocrine_like = vis_mat$Exocrine_like / max(vis_mat$Exocrine_like)
+vis_mat$Sample = factor(vis_mat$Sample)
+vis_mat = reshape2::melt(vis_mat)
+colnames(vis_mat) = c("Sample","Property","Value")
+vis_mat$Property = as.factor(vis_mat$Property)
+vis_mat$Value = as.double(vis_mat$Value)
+
+lower_plot = ggplot(vis_mat, aes(x = Sample, y = Value, color = Property, group = Property) ) + geom_point(stat='identity', position='identity', aes(color=Property))
+lower_plot = lower_plot + geom_smooth(method = "lm", se= FALSE)
+lower_plot = lower_plot + scale_color_manual(values=c('blue','black', 'red')) +  theme_classic()
+lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="top")
+lower_plot = lower_plot + scale_y_continuous(
+    name = "Relative cell-type proportions & p-value",
+    sec.axis = sec_axis(~.*8.5, name="log2 MKi67 mRNA expression")
+)
+
+#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_c.svg", width = 10, height = 10)
+lower_plot
+dev.off()
+
+cor.test (vis_mat_exo$Exocrine_like, vis_mat_exo$MKi67)
 
 ### Figure 3 D correlation  plot
 
@@ -143,11 +180,11 @@ meta_data = meta_info[rownames(vis_mat_exo),]
 correlation_matrix = cor(t(vis_mat_exo))
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_D.svg", width = 10, height = 10)
+svg(filename = "~/Dropbox/Figures/Figure_3_Plot_E.svg", width = 10, height = 10)
 upper_plot = pheatmap::pheatmap(
     #t(vis_mat_balanced),
     correlation_matrix,
-    annotation_col = meta_data[,c("Grading","Functionality","NET_NEC_PCA","Study")],
+    annotation_col = meta_data[,c("Grading","Functionality","NEC_NET","Study")],
     annotation_colors = aka3,
     show_rownames = FALSE,
     show_colnames = FALSE,
@@ -284,51 +321,4 @@ grid.arrange(
 )
 #dev.off()
 
-
-#### Figure 3 Plot D Kaplan-Meier survival analyses
-
-### lower plot
-
-#vis_mat$Sample = factor(rownames(vis_mat), levels = rownames(vis_mat)[order(vis_mat$Metaplastic)])
-
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron/All.S361.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T,row.names = 1)
-colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
-
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
-rownames(props)[no_matcher] = str_replace(rownames(props)[no_matcher], pattern ="^X","")
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
-rownames(props)[no_matcher] = str_replace(rownames(props)[no_matcher], pattern ="^","X")
-no_matcher = which(!( rownames(props) %in% meta_info$Sample))
-no_matcher
-
-meta_data = meta_info[rownames(props),]
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master","Diedisheim"),]
-meta_data = meta_info[rownames(props),]
-dim(props)
-
-props$Exocrine_like = as.double(rowSums(props[,c("Acinar","Ductal")]))
-props$Endocrine = as.double(rowSums(props[,c("Alpha","Beta","Delta","Gamma")]))
-props$Ratio = log((props$Exocrine_like+1) / (props$Endocrine+1))
-props$Ratio = props$Ratio + abs(min(props$Ratio)) 
-props$Ratio = props$Ratio / max(props$Ratio)
-props$MKi67 = log(as.double(meta_data$Mki_67))
-
-selection = c("Endocrine","Exocrine_like","MKi67")
-vis_mat = props[,selection]
-#vis_mat = reshape2::melt(props[,selection])
-#colnames(vis_mat) = c("Entity","Value")
-#vis_mat$Entity = factor(vis_mat$Entity)
-
-lower_plot = ggplot(vis_mat, aes(x = Exocrine_like, y=MKi67), ) + geom_point()
-lower_plot = lower_plot + geom_smooth(method = "lm", se= FALSE)
-lower_plot = lower_plot + scale_color_manual(values=c('#5D6D7E','red', '#453CFA'))
-lower_plot = lower_plot +  theme_classic()
-lower_plot = lower_plot + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(),legend.position="bottom")
-lower_plot = lower_plot + scale_y_continuous( 
-    name = "Relative cell-type proportions & p-value",
-    sec.axis = sec_axis(~.*8.5, name="log2 MKi67 mRNA expression")
-)
-lower_plot
-
-summary(log(as.double(expr_raw["MKI67",rownames(vis_mat)])))
 

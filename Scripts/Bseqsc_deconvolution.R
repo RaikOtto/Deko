@@ -40,8 +40,8 @@ meta_data = meta_info[colnames(expr_raw),]
 table(meta_data$Histology_Primary)
 
 #show_models_bseqsc()
-#model_name = "Alpha_Beta_Gamma_Delta_Baron"
-model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Baron"
+#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 
 print(dataset_name)
 
@@ -65,8 +65,8 @@ if ("Ductal" %in% colnames(props)){
 }
 
 if (exists("props")){
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Baron_endocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }

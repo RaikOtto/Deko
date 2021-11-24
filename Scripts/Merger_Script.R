@@ -7,7 +7,7 @@ rownames(meta_info) = meta_info$Sample
 
 # scRNA integration
 
-bam_data_1 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S35.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -27,7 +27,7 @@ meta_data = meta_info[colnames(bam_data_1),]
 
 # bam data 2
 
-bam_data_2 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Sato.S7.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -79,6 +79,6 @@ dim(new_mat)
 new_mat[1:5,1:5]
 new_mat = new_mat[,order(colnames(new_mat))]
 
-#write.table(new_mat[,], "~/Deko_Projekt/Data/Publication_datasets/Sato.S42.tsv", sep ="\t", quote =F , row.names = T)
+#write.table(new_mat[,], "~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Charite_Scarpa.tsv", sep ="\t", quote =F , row.names = T)
 #write.table(expr_raw, "~/Deko_Projekt/Data/Publication_datasets/Sato.S13.tsv", sep ="\t", quote =F , row.names = T)
 

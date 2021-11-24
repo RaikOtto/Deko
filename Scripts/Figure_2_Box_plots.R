@@ -1,8 +1,9 @@
+library("umap")
+library("reshape2")
 library("hrbrthemes")
 library("waffle")
 library(tidyverse)
 library("stringr")
-library("ggplot2")
 library("dplyr")
 library("ggpubr")
 library("png")
@@ -29,92 +30,70 @@ selection = c("Study","P_value","Model")
 
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
-#vis_mat[vis_mat$Study == "Alvarez","P_value"] = runif(min = 0.0001, max = 0.002,n = length(vis_mat[vis_mat$Study == "Alvarez","P_value"]))
+vis_mat$Model = factor(vis_mat$Model, levels = c("Endocrine_only","Endocrine_exocrine_like"))
+vis_mat$Study = factor(vis_mat$Study, levels = c("Alvarez","Charite","Master","Scarpa","Diedisheim","Missiaglia","Sadanandam"))
+#vis_mat[vis_mat$Study == "Diedisheim","P_value"] =vis_mat[vis_mat$Study == "Diedisheim","P_value"] / 3
 
-"Endocrine_only" %in% vis_mat$Model
-vis_mat_endocrine = vis_mat[vis_mat$Model == "Endocrine_only",]
-vis_mat_exocrine = vis_mat[vis_mat$Model == "Endocrine_exocrine_like",]
-
-vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Study))
-vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Study))
-vis_mat_mean_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_mean_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Study","P_value","Model")
-
-vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Study))
-vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Study))
-vis_mat_sd_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_sd_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Study","SD","Model")
-
-vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
-vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
-vis_mat_sd[vis_mat_sd$Study == "Diedisheim","SD"] = vis_mat_sd[vis_mat_sd$Study == "Diedisheim","SD"]*0.5
-vis_mat_sd[vis_mat_sd$Study == "Missiaglia","SD"] = vis_mat_sd[vis_mat_sd$Study == "Missiaglia","SD"]*0.5
-
-p_value_plot = ggplot(vis_mat_mean, aes( x = Study, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
-p_value_plot = p_value_plot + ylim(c(0,0.06)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
-p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
+p_value_plot = ggplot(vis_mat, aes( x = Study, y = P_value, fill = Model) )
+p_value_plot = p_value_plot + geom_boxplot(notch = TRUE,outlier.colour = "red", outlier.shape = 1)
+p_value_plot = p_value_plot + ylim(c(0,0.1)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
 p_value_plot = p_value_plot + theme(axis.text=element_text(size=14)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme(legend.text = element_text(size=14))
 p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
-p_value_plot = p_value_plot + ylab("Mean P-values")+ annotate("text", label = "P-value < 0.05", x = 2, y = 0.045, size = 6, colour = "black")+ theme(legend.position = "none")
+p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "top")
+p_value_plot
 
 #svg(filename = "~/Dropbox/Figures/Figure_2_Plot_A.svg", width = 10, height = 10)
 p_value_plot
 dev.off()
 
-# Figure 2 Plot B
+# Figure 2 Plot B Metastasis/ Primary/ Organoid
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
 props$Primary_Metastasis = meta_data$Primary_Metastasis
-props = props[props$Primary_Metastasis != "Unknown",]
-props = props[props$Primary_Metastasis != "Organoid",]
-meta_data = meta_info[props$Sample,]
+props = props %>% filter(!( Primary_Metastasis %in% c("Unknown","Outlier")))
 
-selection = c("Primary_Metastasis","P_value","Model")
+selection = c("Type","Model","Primary_Metastasis","P_value")
 
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
 
-vis_mat_endocrine = vis_mat[vis_mat$Model == "Endocrine_only",]
-vis_mat_exocrine = vis_mat[vis_mat$Model == "Endocrine_exocrine_like",]
+# pannen
 
-vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Primary_Metastasis))
-vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Primary_Metastasis))
-vis_mat_mean_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_mean_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Primary_Metastasis","P_value","Model")
+vis_mat_pannen = vis_mat %>% filter(Type == "PanNEN")
+vis_mat_pannen$Model = factor( as.character(vis_mat_pannen$Model), levels = c("Endocrine_only","Endocrine_exocrine_like"))
+vis_mat_pannen$Primary_Metastasis = factor(vis_mat_pannen$Primary_Metastasis, levels = c("Primary","Metastasis"))
 
-vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Primary_Metastasis))
-vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Primary_Metastasis))
-vis_mat_sd_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_sd_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Primary_Metastasis","SD","Model")
-
-vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
-vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
-vis_mat_sd[vis_mat_sd$Model == "Endocrine_only","SD"] = vis_mat_sd[vis_mat_sd$Model == "Endocrine_only","SD"]
-vis_mat_sd[(vis_mat_sd$Model == "Exocrine_like") & (vis_mat_sd$Primary_Metastasis == "Metastasis"),"SD"] = vis_mat_sd[(vis_mat_sd$Model == "Exocrine_like") & (vis_mat_sd$Primary_Metastasis == "Metastasis"),"SD"]
-vis_mat_mean$P_value
-
-#vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
-    
-p_value_plot = ggplot(vis_mat_mean, aes( x = Primary_Metastasis, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
-p_value_plot = p_value_plot + ylim(c(0,0.06)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
-p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
-p_value_plot = p_value_plot + theme(axis.text=element_text(size=14)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme(legend.text = element_text(size=14))
-#p_value_plot = p_value_plot + scale_fill_manual(values = c("#2F3F49","#C75E40","#158625","#17070C","#FC4C1D","#64E0FD","#52D383" ,"#500307"))
+p_value_plot = ggplot(vis_mat_pannen, aes( x = Primary_Metastasis, y = P_value, fill = Model) )
+p_value_plot = p_value_plot + geom_boxplot(notch = TRUE,outlier.colour = "red", outlier.shape = 1)
 p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
-p_value_plot = p_value_plot + ylab("Mean P-values")+ annotate("text", label = "P-value < 0.05", x = 1, y = 0.045, size = 6, colour = "black")+ theme(legend.position = "none")
+p_value_plot = p_value_plot + ylim(c(0,0.1)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
+p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "none")
+p_value_plot
 
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_B.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_B_pannen.svg", width = 10, height = 10)
 p_value_plot
 dev.off()
 
-### Figure 2 Plot C
+# nen
+
+vis_mat_nen = vis_mat %>% filter(Type == "NEN")
+vis_mat_nen$Model = factor(vis_mat_nen$Model, levels = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Organoid"))
+vis_mat_nen$Primary_Metastasis = factor(vis_mat_nen$Primary_Metastasis, levels = c("Primary","Metastasis","Organoid"))
+p_value_plot = ggplot(vis_mat_nen, aes( x = Primary_Metastasis, y = P_value, fill = Model) )
+p_value_plot = p_value_plot + geom_boxplot(notch = TRUE,outlier.colour = "red", outlier.shape = 1)
+p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
+p_value_plot = p_value_plot + ylim(c(0,0.1)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
+#p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "none")
+p_value_plot
+
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_B_nen.svg", width = 10, height = 10)
+p_value_plot
+dev.off()
+
+### Figure 2 Plot C Grading
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -127,7 +106,6 @@ props = props[props$Grading != "G3",]
 props = props[props$Grading != "Unknown",]
 meta_data = meta_info[props$Sample,]
 props[props$Grading == "Organoid","Grading"] = "G3_NEC"
-#props[meta_data$Study == "Diedisheim","P_value"] = props[meta_data$Study == "Diedisheim","P_value"] * .5
 
 selection = c("Grading","P_value","Model")
 
@@ -161,12 +139,8 @@ vis_mat_mean$Grading[vis_mat_mean$Grading == "G3_NET"] = "G3 NET"
 vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
 
 p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
-#p_value_plot = p_value_plot + ylim(c(0,0.06)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
 p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
-#p_value_plot = p_value_plot + theme(axis.text=element_text(size=14)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + theme(legend.text = element_text(size=14))
-#p_value_plot = p_value_plot + scale_fill_manual(values = c("#2F3F49","#C75E40","#158625","#17070C","#FC4C1D","#64E0FD","#52D383" ,"#500307"))
-p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
-#p_value_plot = p_value_plot + ylab("Mean P-values")+ annotate("text", label = "P-value < 0.05", x = 1, y = 0.045, size = 6, colour = "black")+ theme(legend.position = "none")
+p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
 
 #svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C.svg", width = 10, height = 10)
 p_value_plot
@@ -191,8 +165,6 @@ cell_m$Grading = factor(cell_m$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
 
 meta_data = meta_info[cell_m$Sample,]
 cell_m$Study = meta_data$Study
-cell_m = cell_m %>% filter( Study != "Sato" )
-#cell_m = cell_m %>% filter( Study %in% c("Charite") )
 meta_data = meta_info[cell_m$Sample,]
 
 ### endo
@@ -203,15 +175,11 @@ cell_m_endo = reshape2::melt(cell_m_endo)
 colnames(cell_m_endo) = c("Grading","Celltype","Proportion")
 
 cell_m_endo_g1 = cell_m_endo[cell_m_endo$Grading == "G1",]
-#cell_m_endo_g1[cell_m_endo_g1$Celltype == "Beta","Proportion"] = cell_m_endo_g1[cell_m_endo_g1$Celltype == "Beta","Proportion"] + 1
-#cell_m_endo_g1[cell_m_endo_g1$Celltype == "Delta","Proportion"] = cell_m_endo_g1[cell_m_endo_g1$Celltype == "Delta","Proportion"] + .5
 vis_mat_endo_g1 = aggregate(cell_m_endo_g1$Proportion, by = list(cell_m_endo_g1$Celltype), FUN = sum)
 vis_mat_endo_g1$x = round(vis_mat_endo_g1$x / sum(vis_mat_endo_g1$x) * 100, 1 )
 vis_mat_endo_g1$Grading = rep("G1",nrow(vis_mat_endo_g1))
 
 cell_m_endo_g2 = cell_m_endo[cell_m_endo$Grading == "G2",]
-#cell_m_endo_g2[cell_m_endo_g2$Celltype == "Beta","Proportion"] = cell_m_endo_g2[cell_m_endo_g2$Celltype == "Beta","Proportion"] + .5
-#cell_m_endo_g2[cell_m_endo_g2$Celltype == "Delta","Proportion"] = cell_m_endo_g2[cell_m_endo_g2$Celltype == "Delta","Proportion"] + .25
 vis_mat_endo_g2 = aggregate(cell_m_endo_g2$Proportion, by = list(cell_m_endo_g2$Celltype), FUN = sum)
 vis_mat_endo_g2$x = round(vis_mat_endo_g2$x / sum(vis_mat_endo_g2$x)  * 100, 1 )
 vis_mat_endo_g2$Grading = rep("G2",nrow(vis_mat_endo_g2))
@@ -285,7 +253,7 @@ p_endo = ggplot(
     data = vis_mat_endo,
     stat="identity",
     colour="black"
-)+ scale_fill_manual(values = c("blue", "darkgreen","yellow","purple")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
+)+ scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
 p_endo = p_endo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D.svg", width = 10, height = 10)
 p_endo
@@ -306,8 +274,75 @@ p_exo = ggplot(
     data = vis_mat_exo,
     stat="identity",
     colour="black"
-) + scale_fill_manual(values = c("blue", "darkgreen","yellow","purple","black")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
+) + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + ylab("") + xlab("")+ theme(legend.position = "top",axis.text=element_text(size=12))
 p_exo = p_exo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 #svg(filename = "~/Dropbox/Figures/Figure_2_Plot_E.svg", width = 10, height = 10)
 p_exo
 dev.off()
+
+#### Figure 2 Plot F
+
+meta_info_maptor = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info_maptor) = meta_info_maptor$Sample
+colnames(meta_info_maptor) = str_replace(colnames(meta_info_maptor),pattern = "\\.","_")
+meta_info_maptor$OS_Tissue = as.double(str_replace(meta_info_maptor$OS_Tissue,pattern = ",","."))
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
+rownames(meta_info) = meta_info$Sample
+colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
+matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
+meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
+
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Charite_Scarpa.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
+expr_raw[1:5,1:5]
+dim(expr_raw)
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[no_match] = str_replace(colnames(expr_raw)[no_match], pattern = "^X","")
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
+no_match = colnames(expr_raw) %in% meta_info$Sample == F
+colnames(expr_raw)[which(no_match)]
+meta_data = meta_info[colnames(expr_raw),]
+
+source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
+genes_of_interest_hgnc_t$V1
+i = 17
+genes_of_interest_hgnc_t[i,1]
+
+sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
+sad_genes = sad_genes[ sad_genes != ""]
+length(sad_genes)
+expr = expr_raw[rownames(expr_raw) %in% sad_genes[],]
+expr[1:5,1:5]
+dim(expr)
+row_var = as.double(apply(expr, MARGIN = 1, FUN= var))
+summary(row_var)
+expr = expr[row_var > mean(row_var),]
+dim(expr)
+
+correlation_matrix = cor((expr))
+pcr = prcomp((correlation_matrix))
+
+p = ggbiplot::ggbiplot(
+    pcr,
+    obs.scale =.75,
+    var.scale = 2, 
+    labels.size = 4,
+    alpha = 1,
+    groups = as.character(meta_data$NEC_NET),
+    #label = meta_data$Sample,
+    ellipse = TRUE,
+    circle = TRUE,
+    var.axes = F
+)
+p = p + geom_point( aes( size = 4, color = as.factor(meta_data$NEC_NET) ))
+p = p + scale_color_manual( values = c("Purple","Red","Blue") ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+p
+#p = p + scale_color_manual( values = c("Red","Blue"), name = "Subtype" ) + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+
+p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=element_text(size=13))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
+#svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
+p
+#dev.off()

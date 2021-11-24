@@ -51,7 +51,7 @@ expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
 dim(meta_data)
 
-write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S4.tsv",sep ="\t",quote =F , row.names = TRUE)
+#write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S4.tsv",sep ="\t",quote =F , row.names = TRUE)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
