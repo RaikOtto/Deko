@@ -95,56 +95,92 @@ dev.off()
 
 ### Figure 2 Plot C Grading
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
 props$Grading = meta_data$Grading
-props[(meta_data$NET_NEC_PCA == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
-props[(meta_data$NET_NEC_PCA == "NEC"),"Grading"] = "G3_NEC"
-props = props[props$Grading != "G3",]
-props = props[props$Grading != "Unknown",]
+props$NEC_NET = meta_data$NET_NEC_PCA
+props = props %>% filter( Grading %in% c("G1","G2","G3"))
+props = props %>% filter( NEC_NET %in% c("NEC","NET"))
 meta_data = meta_info[props$Sample,]
-props[props$Grading == "Organoid","Grading"] = "G3_NEC"
 
-selection = c("Grading","P_value","Model")
+props[(props$Grading == "G3") & (props$NEC_NET == "NET") ,"Grading"] = "G3 NET"
+props[(props$NEC_NET == "NEC") ,"Grading"] = "G3 NEC"
+meta_data = meta_info[props$Sample,]
 
+props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+meta_data = meta_info[props$Sample,]
+
+selection = c("Type","Model","Grading","P_value")
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
 
-vis_mat = vis_mat[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+# pannen
 
-vis_mat_endocrine = vis_mat[vis_mat$Model == "Endocrine_only",]
-vis_mat_exocrine = vis_mat[vis_mat$Model == "Endocrine_exocrine_like",]
+vis_mat_pannen = vis_mat[vis_mat$Type == "PanNEN",]
+
+vis_mat_endocrine = vis_mat_pannen[vis_mat_pannen$Model == "Endocrine_only",]
+vis_mat_exocrine = vis_mat_pannen[vis_mat_pannen$Model == "Endocrine_exocrine_like",]
 
 vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Grading))
 vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Grading))
 vis_mat_mean_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_mean_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
+vis_mat_mean_exo$Model = rep("Endocrine_exocrine_like",rep(nrow(vis_mat_mean_exo)))
 colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Grading","P_value","Model")
 
 vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Grading))
 vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Grading))
 vis_mat_sd_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
-vis_mat_sd_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
+vis_mat_sd_exo$Model = rep("Endocrine_exocrine_like",rep(nrow(vis_mat_mean_exo)))
 colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Grading","SD","Model")
 
 vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
+vis_mat_mean$Model = factor( as.character(vis_mat_mean$Model), levels = c("Endocrine_only","Endocrine_exocrine_like"))
+vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels = c("G1","G2", "G3 NET", "G3 NEC"))
 vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
-vis_mat_sd[(vis_mat_sd$Grading == "G2") & (vis_mat_sd$Model == "Endocrine_only"), "SD" ] = vis_mat_sd[(vis_mat_sd$Grading == "G2") & (vis_mat_sd$Model == "Endocrine_only"), "SD" ] * .5
-vis_mat_mean$P_value
-
-vis_mat_mean$Grading[vis_mat_mean$Grading == "G3_NEC"] = "G3 NEC"
-vis_mat_mean$Grading[vis_mat_mean$Grading == "G3_NET"] = "G3 NET"
-vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
 
 p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
 p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
 p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
 
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C.svg", width = 10, height = 10)
-p_value_plot
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C_pannen.svg", width = 10, height = 10)
+p_value_plot+ ylim(c(0,0.04))
 dev.off()
+
+# nen
+
+vis_mat_nen = vis_mat[vis_mat$Type == "NEN",]
+
+vis_mat_endocrine = vis_mat_nen[vis_mat_nen$Model == "Alpha_Beta_Gamma_Delta_Baron",]
+vis_mat_exocrine = vis_mat_nen[vis_mat_nen$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
+table(vis_mat_exocrine$Grading)
+
+vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Grading))
+vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Grading))
+vis_mat_mean_endo$Model = rep("Alpha_Beta_Gamma_Delta_Baron",rep(nrow(vis_mat_mean_endo)))
+vis_mat_mean_exo$Model = rep("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",rep(nrow(vis_mat_mean_exo)))
+colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Grading","P_value","Model")
+
+vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Grading))
+vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Grading))
+vis_mat_sd_endo$Model = rep("Alpha_Beta_Gamma_Delta_Baron",rep(nrow(vis_mat_mean_endo)))
+vis_mat_sd_exo$Model = rep("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",rep(nrow(vis_mat_mean_exo)))
+colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Grading","SD","Model")
+
+vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
+vis_mat_mean$Model = factor( as.character(vis_mat_mean$Model), levels = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
+vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels = c("G1","G2", "G3 NET", "G3 NEC"))
+vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
+
+p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
+p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
+p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
+
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C_nen.svg", width = 10, height = 10)
+p_value_plot+ ylim(c(0,0.04))
+dev.off()
+
 
 ### Figure 2 - Plot D cell type proportion plots 
 
@@ -346,3 +382,59 @@ p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=e
 #svg(filename = "~/Deco/Results/Images/SM_Figure_5_NEC_NET_PCA.svg", width = 10, height = 10)
 p
 #dev.off()
+
+###
+
+
+### Figure 2 Plot C Grading
+
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
+meta_data = meta_info[props$Sample,]
+
+props$Grading = meta_data$Grading
+props[(meta_data$NET_NEC_PCA == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
+props[(meta_data$NET_NEC_PCA == "NEC"),"Grading"] = "G3_NEC"
+props = props[props$Grading != "G3",]
+props = props[props$Grading != "Unknown",]
+meta_data = meta_info[props$Sample,]
+props[props$Grading == "Organoid","Grading"] = "G3_NEC"
+
+selection = c("Grading","P_value","Model")
+
+vis_mat = props[,selection]
+vis_mat$P_value = as.double(vis_mat$P_value)
+
+vis_mat = vis_mat[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+
+vis_mat_endocrine = vis_mat[vis_mat$Model == "Endocrine_only",]
+vis_mat_exocrine = vis_mat[vis_mat$Model == "Endocrine_exocrine_like",]
+
+vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Grading))
+vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Grading))
+vis_mat_mean_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
+vis_mat_mean_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
+colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Grading","P_value","Model")
+
+vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Grading))
+vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Grading))
+vis_mat_sd_endo$Model = rep("Endocrine_only",rep(nrow(vis_mat_mean_endo)))
+vis_mat_sd_exo$Model = rep("Exocrine_like",rep(nrow(vis_mat_mean_exo)))
+colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Grading","SD","Model")
+
+vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
+vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
+vis_mat_sd[(vis_mat_sd$Grading == "G2") & (vis_mat_sd$Model == "Endocrine_only"), "SD" ] = vis_mat_sd[(vis_mat_sd$Grading == "G2") & (vis_mat_sd$Model == "Endocrine_only"), "SD" ] * .5
+vis_mat_mean$P_value
+
+vis_mat_mean$Grading[vis_mat_mean$Grading == "G3_NEC"] = "G3 NEC"
+vis_mat_mean$Grading[vis_mat_mean$Grading == "G3_NET"] = "G3 NET"
+vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
+
+p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
+p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
+p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
+
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C.svg", width = 10, height = 10)
+p_value_plot
+dev.off()
