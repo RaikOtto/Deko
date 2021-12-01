@@ -1,3 +1,5 @@
+library("stringr")
+library("grid")
 library("caret")
 library("ranger")
 library("tidyverse")
@@ -18,96 +20,27 @@ opt.cut = function( perf, pred ){
 set.seed(23489)
 
 # fit a random forest model (using ranger)
-rf_fit <- train(
-    as.factor(old) ~ ., 
-    data = abalone_train, 
-    method = "ranger")
 
+res_mat = read.table("~/Dropbox/testproject/Results/Prediction_results_baseline.tsv", header = TRUE)
 
-rf_fit <- train(
-    as.factor(truth_vec) ~ ., 
-    data = train_mat, 
-    method = "ranger")
-
-
-rf_fit
-
-
-###
-library("stringr")
-library("grid")
-
-#path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
-path_transcriptome_file = "~/Downloads/RepSet.S84.Cibersort.tsv"
-
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-
-train_mat = expr_raw[,!(colnames(expr_raw) %in% c("Grading","Grading_binary") )]
-truth_vec = as.character(expr_raw[,"Grading_binary"])
-
-
-draw_colnames_45 <- function (coln, gaps, ...) {
-    coord = pheatmap:::find_coordinates(length(coln), gaps)
-    x = coord$coord - 0.5 * coord$size
-    res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...))
-    return(res)}
-assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
-
-meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Sample
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_data = meta_info[rownames(expr_raw),]
-
-rownames(expr_raw)[which(!(rownames(expr_raw) %in% rownames(meta_info)))]
-
-truth_vec = meta_data$Grading
-truth_vec[truth_vec %in% c("G1","G2")] = 0
-truth_vec[truth_vec %in% c("G1_G2")] = 0
-truth_vec[truth_vec %in% c("G3")] = 1
-
-plot(train_mat$ductal,truth_vec)
-aggregate(train_mat$ductal,by=list(meta_data$Grading),FUN=mean)
-
-train_mat = t(expr_raw)[,1:50]
-train_mat = scale(train_mat)
-
-t_data = data.frame(
-    cbind(
-        Grading = as.double(truth_vec),
-        train_mat
-    )
-)
-
-rf_fit <- glm(
-    Grading ~ ., data = t_data, family=binomial(link="logit")
-    #method = "glm"#,
-    #lambda = 0
-)
-prediction_vector <- plogis(predict(rf_fit, as.data.frame(train_mat)))  # predicted scores
-optCutOff = InformationValue::optimalCutoff(as.double(t_data$Grading), prediction_vector)[1] 
-sensitivity = round(InformationValue::sensitivity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
-specificity = round(InformationValue::specificity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
-
-F1_score =  round(2*(sensitivity*specificity/(sensitivity+specificity)),2)
+truth_vec = res_mat$Grading_Binary
+truth_vec[truth_vec == "G3"] = 0
+truth_vec[truth_vec == "G1_G2"] = 1
+truth_vec = as.double(truth_vec)
+table(truth_vec)
+prediction_vec = res_mat$Prediction_Grading_binary
+prediction_vec[prediction_vec == "G3"] = 0
+prediction_vec[prediction_vec == "G1_G2"] = 1
+prediction_vec = as.double(prediction_vec)
+table(prediction_vec)
 
 pred_obj = ROCR::prediction(
-    predictions = as.double( prediction_vector  ),
-    labels = truth_vec
+    labels = truth_vec,
+    predictions = prediction_vec
 )
+ROCR::performance(pred_obj,"sens")
 
-rocr_auc = as.character(
-    round(
-        as.double(
-            unclass(
-                ROCR::performance(
-                    pred_obj,
-                    "auc"
-                )
-            )@"y.values"
-        ),
-        2 )
-)
+rocr_auc = round(as.double(unclass(ROCR::performance(pred_obj,"auc"))@"y.values"),2 )
 
 print( paste0( c( "Sensitivity:", sensitivity,", Specificity:", specificity, ", F1:", F1_score, ", ROC:",rocr_auc) ), collapse = " " )
 perf_vec = ROCR::performance(
