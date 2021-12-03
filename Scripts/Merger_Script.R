@@ -3,6 +3,7 @@ library("stringr")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 
+<<<<<<< HEAD
 # scRNA integration
 
 new_mat = bam_data_1 = read.table("~/Dropbox/testproject/Datasets/PanNEN_only/Deconvolution/6_studies.Exocrine.Absolute.PanNEN_only.Grading_binary.S232.tsv" , sep ="\t" ,header = T, stringsAsFactors = F)
@@ -11,6 +12,11 @@ new_mat = bam_data_1 = read.table("~/Dropbox/testproject/Datasets/PanNEN_only/Ex
 allowed_genes = colnames(bam_data_1)
 
 bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Charite_Scarpa_Master_Diedisheim.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+=======
+#
+bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.NEN.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+#bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+>>>>>>> 9bc00275ee3721ca59b01ac60dbef7c0671edf84
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -32,13 +38,18 @@ meta_data = meta_info[colnames(bam_data_1),]
 table(meta_data$Study)
 
 # bam data 2
-
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Master.S20.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+<<<<<<< HEAD
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S75.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+=======
+bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S75.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+
+>>>>>>> 9bc00275ee3721ca59b01ac60dbef7c0671edf84
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -55,6 +66,7 @@ meta_data_2 = meta_info[colnames(bam_data_2),]
 dim(bam_data_2)
 dim(meta_data_2)
 
+table(colnames(bam_data_2) %in% colnames(bam_data_1))
 #bam_data_2 = bam_data_2[,which(meta_data_2$Clusters %in% c("EEC-Progenitor (Neurog3+)","MucinDuctalProgenitor"))]
 #meta_data_2 = meta_info_2[colnames(bam_data_2),]
 #table(meta_data_2$Clusters)
@@ -96,6 +108,11 @@ new_mat = new_mat[ ,which(meta_data$Site_of_primary == "Pancreatic") ]
 
 dim(new_mat)
 new_mat[1:5,1:5]
+<<<<<<< HEAD
+=======
+new_mat = new_mat[,order(colnames(new_mat))]
+new_mat = new_mat[grep(rownames(new_mat), pattern = "\\.",invert = TRUE),]
+>>>>>>> 9bc00275ee3721ca59b01ac60dbef7c0671edf84
 
 new_mat = new_mat[ which(meta_data$Study %in% c("Charite","Diedisheim","Master","Scarpa")) ,]
 meta_data = meta_info[colnames(new_mat),]
