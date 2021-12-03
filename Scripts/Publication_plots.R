@@ -6,13 +6,6 @@ library("ggplot2")
 library("dplyr")
 library("grid")
 
-#draw_colnames_45 <- function (coln, gaps, ...) {
-#  coord = pheatmap:::find_coordinates(length(coln), gaps)
-#  x = coord$coord - 0.5 * coord$size
-#  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
-#  return(res)}
-#assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
-
 meta_info_maptor = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info_maptor) = meta_info_maptor$Sample
 colnames(meta_info_maptor) = str_replace(colnames(meta_info_maptor),pattern = "\\.","_")
@@ -25,37 +18,6 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
-
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
-expr_raw[1:5,1:5]
-dim(expr_raw)
-
-
-
-#no_match = colnames(expr_raw) %in% meta_info$Sample == F
-#colnames(expr_raw)[no_match] = str_replace(colnames(expr_raw)[no_match], pattern = "^X","")
-#no_match = colnames(expr_raw) %in% meta_info$Sample == F
-#colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
-#no_match = colnames(expr_raw) %in% meta_info$Sample == F
-#colnames(expr_raw)[which(no_match)]
-#meta_data = meta_info[colnames(expr_raw),]
-
-candidates = meta_data$Sample[ 
-  #meta_data$Study %in% c("Master","Charite")
-  #meta_data$Site_of_primary %in% c("Pancreatic") #& meta_data$Primary_Metastasis %in% c("Primary")
-  meta_data$Site_of_primary != "Pancreatic" #& meta_data$Primary_Metastasis %in% c("Primary")
-  #meta_data$NET_NEC_PCA %in% c("NEC","NET")
-  #!(meta_data$Histology_Metastasis %in% c("Outlier"))
-]
-length(candidates)
-expr_raw = expr_raw[,candidates]
-meta_data = meta_info[colnames(expr_raw),]
-dim(meta_data)
-
-#write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S4.tsv",sep ="\t",quote =F , row.names = TRUE)
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)

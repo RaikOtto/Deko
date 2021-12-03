@@ -1,57 +1,29 @@
-library("stringr")
-library("grid")
-library("caret")
-library("ranger")
-library("tidyverse")
-library("e1071")
+library(mltest)
 
-opt.cut = function( perf, pred ){
-    cut.ind = mapply( FUN = function( x, y, p ){
-        d = (x - 0)^2 + ( y - 1 )^2
-        ind = which(d == min(d))
-        c(
-            sensitivity = y[[ ind ]],
-            specificity = 1 - x[[ ind ]], 
-            cutoff = p[[ ind ]])
-    }, perf@x.values, perf@y.values, pred@cutoffs)
-}
+performance_mat_deconvolution_grading_tertiary = read.table("~/Downloads/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
 
-# split into training and testing
-set.seed(23489)
+#classifier_metrics <- ml_test(predicted_labels, true_labels, output.as.table = FALSE)
+classifier_metrics <- ml_test(performance_mat_deconvolution[,2], performance_mat_deconvolution[,1], output.as.table = TRUE)
+classifier_metrics
 
-# fit a random forest model (using ranger)
+###
 
-res_mat = read.table("~/Dropbox/testproject/Results/Prediction_results_baseline.tsv", header = TRUE)
+performance_mat_expression_grading_tertiary = read.table("~/Downloads/Expression_grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
 
-truth_vec = res_mat$Grading_Binary
-truth_vec[truth_vec == "G3"] = 0
-truth_vec[truth_vec == "G1_G2"] = 1
-truth_vec = as.double(truth_vec)
-table(truth_vec)
-prediction_vec = res_mat$Prediction_Grading_binary
-prediction_vec[prediction_vec == "G3"] = 0
-prediction_vec[prediction_vec == "G1_G2"] = 1
-prediction_vec = as.double(prediction_vec)
-table(prediction_vec)
+#classifier_metrics <- ml_test(predicted_labels, true_labels, output.as.table = FALSE)
+classifier_metrics <- ml_test(performance_mat_expression_grading_tertiary[,2], performance_mat_expression_grading_tertiary[,1], output.as.table = TRUE)
+classifier_metrics
 
-pred_obj = ROCR::prediction(
-    labels = truth_vec,
-    predictions = prediction_vec
-)
-ROCR::performance(pred_obj,"sens")
+performance_mat_deconvolution_grading_binary = read.table("~/Downloads/Deconvolution.Grading_binary.tsv",header = TRUE,  as.is = TRUE)
 
-rocr_auc = round(as.double(unclass(ROCR::performance(pred_obj,"auc"))@"y.values"),2 )
+#classifier_metrics <- ml_test(predicted_labels, true_labels, output.as.table = FALSE)
+classifier_metrics <- ml_test(performance_mat_deconvolution_grading_binary[,2], performance_mat_deconvolution_grading_binary[,1], output.as.table = TRUE)
+classifier_metrics
 
-print( paste0( c( "Sensitivity:", sensitivity,", Specificity:", specificity, ", F1:", F1_score, ", ROC:",rocr_auc) ), collapse = " " )
-perf_vec = ROCR::performance(
-    prediction.obj = pred_obj,
-    measure = "tpr",
-    x.measure = "fpr"
-);
+###
 
-perf_vec <<- c(perf_vec,perf)
-res_vec = c(dataset_query, subtype,sensitivity,specificity,F1_score,rocr_auc)
-res_mat =  rbind(res_mat,res_vec)
+performance_mat_expression_grading_binary = read.table("~/Downloads/Expression_grading_binary.tsv",header = TRUE,  as.is = TRUE)
 
-predictor_mat = cbind(train_mat,meta_data$Grading)
-#write.table(predictor_mat,"~/Downloads/ml_data.tsv",quot =F, sep ="\t")
+#classifier_metrics <- ml_test(predicted_labels, true_labels, output.as.table = FALSE)
+classifier_metrics <- ml_test(performance_mat_expression_grading_binary[,2], performance_mat_expression_grading_binary[,1], output.as.table = TRUE)
+classifier_metrics
