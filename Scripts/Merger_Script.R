@@ -3,14 +3,9 @@ library("stringr")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 
-# scRNA integration
-
-<<<<<<< HEAD
-bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Charite.S40.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
-=======
+#
 bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.NEN.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 #bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
->>>>>>> 8968e823316ba78c3ce756528d666795470a87de
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "^X","")
 rownames(bam_data_1) = str_to_upper(rownames(bam_data_1))
@@ -30,21 +25,13 @@ meta_data = meta_info[colnames(bam_data_1),]
 table(meta_data$Study)
 
 # bam data 2
-
-<<<<<<< HEAD
-#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S66.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Master.S34.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S75.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-=======
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Master.S20.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S75.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
->>>>>>> 8968e823316ba78c3ce756528d666795470a87de
+
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
 rownames(bam_data_2) = str_to_upper(rownames(bam_data_2))
 table("INS" %in% rownames(bam_data_2))
@@ -102,20 +89,6 @@ meta_data = meta_info[colnames(new_mat),]
 table(meta_data$Study)
 
 meta_data$Grading_binary = meta_data$Grading
-<<<<<<< HEAD
-meta_data$Grading_binary[meta_data$Grading_binary %in% c("G1","G2")] = "G1_G2"
-new_mat = new_mat[meta_data$Grading_binary !="Unknown",]
-
-new_mat = new_mat[meta_data$NET_NEC_PCA %in% c("NET","NEC"),]
-
-new_mat = t(new_mat)
-new_mat = as.data.frame(new_mat )
-meta_data = meta_info[rownames(new_mat),]
-#new_mat$Grading_binary = meta_data$Grading_binary
-new_mat$NET_NEC = meta_data$NET_NEC_PCA
-#write.table(new_mat[,], "~/Dropbox/testproject/Datasets/Expression_6_studies_3388_genes.S330.Grading_binary.tsv", sep ="\t", quote =F , row.names = T)
-#write.table(new_mat, "~/Dropbox/testproject/Datasets/Expression_6_studies_3388_genes.S330.NET_NEC.tsv", sep ="\t", quote =F , row.names = T)
-=======
 meta_data$Grading_binary[meta_data$Grading_binary %in% c("G1","G2")] = "1"
 meta_data$Grading_binary[meta_data$Grading_binary %in% c("G3")] = "0"
 
@@ -135,7 +108,6 @@ dim(new_mat)
 #write.table(new_mat[,], "~/Dropbox/testproject/Datasets/Expression_6_studies_3473_genes.NET_NEC.S264.tsv", sep ="\t", quote =F , row.names = FALSE)
 #write.table(new_mat[,], "~/Dropbox/testproject/Datasets/Expression_6_studies_3473_genes.Grading_binary.S264.tsv", sep ="\t", quote =F , row.names = FALSE)
 #write.table(meta_data, "~/Dropbox/testproject/Datasets/Expression_6_studies_3473_genes.meta_data.tsv", sep ="\t", quote =F , row.names = T)
->>>>>>> 8968e823316ba78c3ce756528d666795470a87de
 
 #write.table(deco_mat_grading[,], "~/Dropbox/testproject/Datasets/Deconvolution.6_studies.Exocrine.Absolute.PanNEN_NEN.Grading_binary.S264.tsv", sep ="\t", quote =F , row.names = FALSE)
 #write.table(deco_mat_net_nec[,], "~/Dropbox/testproject/Datasets/Deconvolution.6_studies.Exocrine.Absolute.PanNEN_NEN.NET_NEC.S264.tsv", sep ="\t", quote =F , row.names = FALSE)
