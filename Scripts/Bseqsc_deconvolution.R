@@ -30,6 +30,9 @@ datasets = c(
 dataset_name = datasets[5]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
 i_filename = paste(i_filename, dataset_name, sep ="")
+
+i_filename = "~/SeneSys/Data/Data_9461.Counts.HGNC.tsv"
+
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
