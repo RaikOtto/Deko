@@ -240,32 +240,30 @@ colnames(cell_m) = c("Dataset","Grading","Cell_type","Proportion")
 vis_mat_g1 = cell_m %>% filter(Grading == "G1") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
 vis_mat_g1$Grading = rep( "G1", nrow(vis_mat_g1))
 vis_mat_g2 = cell_m %>% filter(Grading == "G2") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g2$Grading = rep( "G2", nrow(vis_mat_g2))
 vis_mat_g3_net = cell_m %>% filter(Grading == "G3 NET") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g3_net$Grading = rep( "G3 NET", nrow(vis_mat_g3_net))
 vis_mat_g3_nec = cell_m %>% filter(Grading == "G3 NEC") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g3_nec$Grading = rep( "G3 NEC", nrow(vis_mat_g3_nec))
 
+blocker = as.data.frame(matrix(rep(NA,4), ncol = 4))
 vis_mat_exo = rbind(vis_mat_g1,vis_mat_g2,vis_mat_g3_net,vis_mat_g3_nec)
-colnames(vis_mat_exo) = c("Dataset","Cell_Type","Proportion")
-vis_mat_exo$Celltype = factor(vis_mat_exo$Celltype, levels = c("Alpha","Beta","Gamma","Delta","Exocrine_like"))
-vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3 NET","G3 NEC"))
+colnames(blocker) = colnames(vis_mat_exo) = c("Dataset","Cell_type","Proportion","Grading")
+vis_mat_exo$Cell_type = factor(vis_mat_exo$Cell_type, levels = c("Alpha","Beta","Gamma","Delta","Exocrine_like"))
+vis_mat_exo = rbind(blocker,vis_mat_exo)
+vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = rev(vis_mat_exo$Grading))
+vis_mat_exo$Proportion = as.double(vis_mat_exo$Proportion)
 
 ### plot
 
-p_endo = ggplot(
-    data = vis_mat_endo,
-    aes(
-        x = Grading,
-        y = Proportion
-    )
-) + geom_bar(
-    aes(
-        y = Proportion,
-        x = Grading,
-        fill = Celltype
-    ),
-    data = vis_mat_endo,
-    stat="identity",
-    colour="black"
-)+ scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
+p_endo = ggplot(data = vis_mat_exo)
+p_endo = p_endo + geom_bar(
+    aes(y = Proportion, x = Dataset,fill = Cell_type),
+    data = vis_mat_exo,stat="identity", color = "black")
+p_endo = p_endo + coord_polar("y", start=0,direction = 1)
+p_endo = p_endo + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
+p_endo
+
 p_endo = p_endo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
 svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D.svg", width = 10, height = 10)
 p_endo
