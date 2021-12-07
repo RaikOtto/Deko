@@ -51,10 +51,15 @@ dim(expr_raw)
 show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+<<<<<<< HEAD
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
 model_name = "Tosti_400_endocrine_only"
 #model_name = "Tosti_400_endocrine_exocrine_all"
+=======
+#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
+model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+>>>>>>> f98ba4ab2d0300191cec9c4af0474a0e7b6ecf76
 
 print(dataset_name)
 
@@ -63,7 +68,7 @@ props = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = TRUE,
-    nr_permutations = 1000,
+    nr_permutations = 1,
     output_file = ""
 )
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -81,10 +86,14 @@ if (exists("props")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
+<<<<<<< HEAD
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine/"
     o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"
+=======
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+>>>>>>> f98ba4ab2d0300191cec9c4af0474a0e7b6ecf76
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
