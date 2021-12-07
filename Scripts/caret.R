@@ -1,8 +1,6 @@
 library(mltest)
 library(stringr)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 performance_mat_deconvolution_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
 ml_predictions = ml_test(performance_mat_deconvolution_grading_tertiary[,2], performance_mat_deconvolution_grading_tertiary[,1], output.as.table = TRUE)
 ml_predictions = round(ml_predictions,2)
@@ -43,15 +41,9 @@ ml_predictions = ml_test(performance_mat_expression_net_nec[,2], performance_mat
 ml_predictions = round(ml_predictions,2)
 write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv", sep ="\t", quote =F)
 
-=======
-performance_mat_deconvolution_grading_tertiary = read.table("~/Downloads/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
-classifier_metrics <- ml_test(performance_mat_deconvolution[,2], performance_mat_deconvolution[,1], output.as.table = TRUE)
-classifier_metrics
-=======
 performance_mat_deconvolution_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
 classifier_metrics <- ml_test(performance_mat_deconvolution_grading_tertiary[,2], performance_mat_deconvolution_grading_tertiary[,1], output.as.table = TRUE)
 write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.Grading_tertiary.tsv")
->>>>>>> 031963ef0f9262657dafcbb781fe690c1f5ddc45
 
 ###
 
@@ -81,10 +73,6 @@ write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visua
 
 performance_mat_expression_NET_NEC = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv",header = TRUE,  as.is = TRUE)
 classifier_metrics <- ml_test(performance_mat_expression_NET_NEC[,2], performance_mat_expression_NET_NEC[,1], output.as.table = TRUE)
-<<<<<<< HEAD
-classifier_metrics
->>>>>>> 202dfd25bed0797af48fb60fbfaa528be49ef295
-=======
 write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv", sep ="\t", quote =F)
 
 ###
@@ -101,4 +89,3 @@ aggregate(single_performance_indices[single_performance_indices$Type == "Baselin
 aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","PPV"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
 aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","Sensitivity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
 aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","Specificity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
->>>>>>> 031963ef0f9262657dafcbb781fe690c1f5ddc45
