@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 library("devtools")
 load_all("~/artdeco")
 source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
@@ -7,31 +9,35 @@ library("stringr")
 library("reshape2")
 library("bseqsc")
 library("dplyr")
+library("optparse")
 
-remove(props)
-#datasets = c(
-    #"Alvarez.S105.tsv", #1
-    #"Charite.S23.tsv", #2
-    #"Diedisheim.S62.tsv", #3
-    #"Master.S20.tsv", #4
-    #"Missiaglia.S75.tsv", #5
-    #"Sadanandam.S29.tsv", #6
-    #"Scarpa.S29.tsv") #7
-    #"Sato.S13.tsv", #7
-    
+option_list = list(
+    make_option(c("-i", "--index"), type="integer", default=NULL,help="dataset file name", metavar="integer")
+);
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+input_index = opt$index
 
+#remove(props)
 datasets = c(
-    "Alvarez.S100.tsv", #1
-    "Charite.S17.tsv", #2
-    "Diedisheim.S4.tsv", #3
-    "Master.S14.tsv", #4
-    "Sato.S32.tsv") #5
+    "Alvarez.S105.tsv", #1
+    "Charite.S23.tsv", #2
+    "Diedisheim.S62.tsv", #3
+    "Master.S20.tsv", #4
+    "Missiaglia.S75.tsv", #5
+    "Sadanandam.S29.tsv", #6
+    "Scarpa.S29.tsv") #7
 
-dataset_name = datasets[5]
-i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
+#datasets = c(
+#    "Alvarez.S100.tsv", #1
+#    "Charite.S17.tsv", #2
+#    "Diedisheim.S4.tsv", #3
+#    "Master.S14.tsv", #4
+#    "Sato.S32.tsv") #5
+
+dataset_name = datasets[input_index]
+i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = paste(i_filename, dataset_name, sep ="")
-
-i_filename = "~/SeneSys/Data/Data_9461.Counts.HGNC.tsv"
 
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
@@ -39,12 +45,13 @@ colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
 
-meta_data = meta_info[colnames(expr_raw),]
-table(meta_data$Histology_Primary)
+#meta_data = meta_info[colnames(expr_raw),]
+#table(meta_data$Histology_Primary)
 
-#show_models_bseqsc()
-model_name = "Alpha_Beta_Gamma_Delta_Baron"
+show_models_bseqsc()
+#model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
 
 print(dataset_name)
 
@@ -53,7 +60,7 @@ props = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = TRUE,
-    nr_permutations = 1000,
+    nr_permutations = 1,
     output_file = ""
 )
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -69,7 +76,8 @@ if ("Ductal" %in% colnames(props)){
 
 if (exists("props")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
