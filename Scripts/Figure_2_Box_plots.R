@@ -184,25 +184,6 @@ dev.off()
 
 ### Figure 2 - Plot D cell type proportion plots 
 
-cell_m = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep ="\t", header = T, stringsAsFactors = F)
-cell_m = as.data.frame(cell_m)
-cell_m$Ductal = as.double(cell_m$Ductal)
-cell_m$Acinar = as.double(cell_m$Acinar)
-meta_data = meta_info[cell_m$Sample,]
-cell_m$Grading = meta_data$Grading
-cell_m[(meta_data$NET_NEC_PCA == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
-cell_m[(meta_data$NET_NEC_PCA == "NEC"),"Grading"] = "G3_NEC"
-cell_m = cell_m[cell_m$Grading != "G3",]
-cell_m = cell_m[cell_m$Grading != "Unknown",]
-cell_m = cell_m[cell_m$Grading != "Organoid",]
-cell_m$Grading[cell_m$Grading == "G3_NEC"] = "G3 NEC"
-cell_m$Grading[cell_m$Grading == "G3_NET"] = "G3 NET"
-cell_m$Grading = factor(cell_m$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
-
-meta_data = meta_info[cell_m$Sample,]
-cell_m$Study = meta_data$Study
-meta_data = meta_info[cell_m$Sample,]
-
 ### endo
 
 cell_m_endo = cell_m %>% filter(Model == "Endocrine_only")
@@ -237,38 +218,33 @@ vis_mat_endo$Grading = factor(vis_mat_endo$Grading, levels = c("G1","G2","G3 NET
 
 ### exo
 
-cell_m_exo = cell_m %>% filter(Model == "Endocrine_exocrine_like")
-cell_m_exo$Exocrine_like = rowSums(cell_m_exo[,c("Acinar","Ductal")])
-cell_m_exo = cell_m_exo[,colnames(cell_m_exo) %in% c("Alpha","Beta","Gamma","Delta","Exocrine_like","Grading")]
-cell_m_exo = reshape2::melt(cell_m_exo)
-colnames(cell_m_exo) = c("Grading","Celltype","Proportion")
+cell_m = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/endocrine_exocrine.4_scRNA_studies.absolute.tsv",sep ="\t", header = T, stringsAsFactors = F)
+cell_m = as.data.frame(cell_m)
+meta_data = meta_info[cell_m$Sample,]
+cell_m$Grading = meta_data$Grading
+cell_m[(meta_data$NET_NEC_PCA == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
+cell_m[(meta_data$NET_NEC_PCA == "NEC"),"Grading"] = "G3_NEC"
+cell_m = cell_m[cell_m$Grading != "G3",]
+cell_m = cell_m[cell_m$Grading != "Unknown",]
+cell_m = cell_m[cell_m$Grading != "Organoid",]
+cell_m$Grading[cell_m$Grading == "G3_NEC"] = "G3 NEC"
+cell_m$Grading[cell_m$Grading == "G3_NET"] = "G3 NET"
+cell_m$Grading = factor(cell_m$Grading, levels= c("G1","G2","G3 NET","G3 NEC"))
 
-cell_m_exo_g1 = cell_m_exo[cell_m_exo$Grading == "G1",]
-#cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Beta","Proportion"] + 1
-#cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] = cell_m_exo_g1[cell_m_exo_g1$Celltype == "Delta","Proportion"] + .5
-vis_mat_exo_g1 = aggregate(cell_m_exo_g1$Proportion, by = list(cell_m_exo_g1$Celltype), FUN = sum)
-vis_mat_exo_g1$x = round(vis_mat_exo_g1$x / sum(vis_mat_exo_g1$x) * 100, 1 )
-vis_mat_exo_g1$Grading = rep("G1",nrow(vis_mat_exo_g1))
+meta_data = meta_info[cell_m$Sample,]
+cell_m = cell_m[,!( colnames(cell_m) %in% c("P_value","Correlation","RMSE","Sample") )]
 
-cell_m_exo_g2 = cell_m_exo[cell_m_exo$Grading == "G2",]
-#cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Beta","Proportion"] + .5
-#cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] = cell_m_exo_g2[cell_m_exo_g2$Celltype == "Delta","Proportion"] + .25
-vis_mat_exo_g2 = aggregate(cell_m_exo_g2$Proportion, by = list(cell_m_exo_g2$Celltype), FUN = sum)
-vis_mat_exo_g2$x = round(vis_mat_exo_g2$x / sum(vis_mat_exo_g2$x)  * 100, 1 )
-vis_mat_exo_g2$Grading = rep("G2",nrow(vis_mat_exo_g2))
+cell_m = reshape2::melt(cell_m)
+colnames(cell_m) = c("Dataset","Grading","Cell_type","Proportion")
 
-cell_m_exo_g3_net = cell_m_exo[cell_m_exo$Grading == "G3 NET",]
-vis_mat_exo_g3_net = aggregate(cell_m_exo_g3_net$Proportion, by = list(cell_m_exo_g3_net$Celltype), FUN = sum)
-vis_mat_exo_g3_net$x = round(vis_mat_exo_g3_net$x / sum(vis_mat_exo_g3_net$x)  * 100, 1 )
-vis_mat_exo_g3_net$Grading = rep("G3 NET",nrow(vis_mat_exo_g3_net))
+vis_mat_g1 = cell_m %>% filter(Grading == "G1") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g1$Grading = rep( "G1", nrow(vis_mat_g1))
+vis_mat_g2 = cell_m %>% filter(Grading == "G2") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g3_net = cell_m %>% filter(Grading == "G3 NET") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
+vis_mat_g3_nec = cell_m %>% filter(Grading == "G3 NEC") %>% group_by(Dataset, Cell_type) %>% summarise( Mean_Proportion = sum(Proportion) )
 
-cell_m_exo_g3_nec = cell_m_exo[cell_m_exo$Grading == "G3 NEC",]
-vis_mat_exo_g3_nec = aggregate(cell_m_exo_g3_nec$Proportion, by = list(cell_m_exo_g3_nec$Celltype), FUN = sum)
-vis_mat_exo_g3_nec$x = round(vis_mat_exo_g3_nec$x / sum(vis_mat_exo_g3_nec$x)  * 100, 1 )
-vis_mat_exo_g3_nec$Grading = rep("G3 NEC",nrow(vis_mat_exo_g3_nec))
-
-vis_mat_exo = rbind(vis_mat_exo_g1,vis_mat_exo_g2,vis_mat_exo_g3_net,vis_mat_exo_g3_nec)
-colnames(vis_mat_exo) = c("Celltype","Proportion","Grading")
+vis_mat_exo = rbind(vis_mat_g1,vis_mat_g2,vis_mat_g3_net,vis_mat_g3_nec)
+colnames(vis_mat_exo) = c("Dataset","Cell_Type","Proportion")
 vis_mat_exo$Celltype = factor(vis_mat_exo$Celltype, levels = c("Alpha","Beta","Gamma","Delta","Exocrine_like"))
 vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3 NET","G3 NEC"))
 
@@ -383,10 +359,7 @@ p = p + theme(legend.position="top",axis.text=element_text(size=12),axis.title=e
 p
 #dev.off()
 
-###
-
-
-### Figure 2 Plot C Grading
+'
 
 props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -438,3 +411,4 @@ p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + the
 #svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C.svg", width = 10, height = 10)
 p_value_plot
 dev.off()
+'
