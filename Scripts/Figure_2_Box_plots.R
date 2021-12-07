@@ -250,17 +250,17 @@ blocker = as.data.frame(matrix(rep(NA,4), ncol = 4))
 vis_mat_exo = rbind(vis_mat_g1,vis_mat_g2,vis_mat_g3_net,vis_mat_g3_nec)
 colnames(blocker) = colnames(vis_mat_exo) = c("Dataset","Cell_type","Proportion","Grading")
 vis_mat_exo$Cell_type = factor(vis_mat_exo$Cell_type, levels = c("Alpha","Beta","Gamma","Delta","Exocrine_like"))
-vis_mat_exo = rbind(blocker,vis_mat_exo)
+#vis_mat_exo = rbind(blocker,vis_mat_exo)
 vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = rev(vis_mat_exo$Grading))
 vis_mat_exo$Proportion = as.double(vis_mat_exo$Proportion)
 
 ### plot
 
-p_endo = ggplot(data = vis_mat_exo)
-p_endo = p_endo + geom_bar(
-    aes(y = Proportion, x = Dataset,fill = Cell_type),
-    data = vis_mat_exo,stat="identity", color = "black")
-p_endo = p_endo + coord_polar("y", start=0,direction = 1)
+p_exo = ggplot(vis_mat_exo, aes(x = Dataset, y = Proportion, fill = Cell_type)) +
+    geom_bar(stat = "identity", position = "dodge")
+p_exo = p_exo + coord_polar("y", start=0,direction = 1)
+p_exo
+
 p_endo = p_endo + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
 p_endo
 
