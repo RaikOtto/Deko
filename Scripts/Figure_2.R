@@ -270,24 +270,8 @@ vis_mat_exo$Grading = factor(vis_mat_exo$Grading, levels = c("G1","G2","G3 NET",
 
 ### plot
 
-p_endo = ggplot(
-    data = vis_mat_endo,
-    aes(
-        x = Grading,
-        y = Proportion
-    )
-) + geom_bar(
-    aes(
-        y = Proportion,
-        x = Grading,
-        fill = Celltype
-    ),
-    data = vis_mat_endo,
-    stat="identity",
-    colour="black"
-)+ scale_fill_manual(values = c("blue", "darkgreen","yellow","purple")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Aggregated celltype proportions") + xlab("")
-p_endo = p_endo + theme(legend.position="top",axis.text=element_text(size=14),axis.title=element_text(size=14))+ theme(legend.text=element_text(size=13),legend.title=element_text(size=13))
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D.svg", width = 10, height = 10)
+
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D.svg", width = 10, height = 10)
 p_endo
 dev.off()
 

@@ -1,124 +1,91 @@
-library("caret")
-library("ranger")
-library("tidyverse")
-library("e1071")
+library(mltest)
+library(stringr)
 
-opt.cut = function( perf, pred ){
-    cut.ind = mapply( FUN = function( x, y, p ){
-        d = (x - 0)^2 + ( y - 1 )^2
-        ind = which(d == min(d))
-        c(
-            sensitivity = y[[ ind ]],
-            specificity = 1 - x[[ ind ]], 
-            cutoff = p[[ ind ]])
-    }, perf@x.values, perf@y.values, pred@cutoffs)
-}
-
-# split into training and testing
-set.seed(23489)
-
-# fit a random forest model (using ranger)
-rf_fit <- train(
-    as.factor(old) ~ ., 
-    data = abalone_train, 
-    method = "ranger")
-
-
-rf_fit <- train(
-    as.factor(truth_vec) ~ ., 
-    data = train_mat, 
-    method = "ranger")
-
-
-rf_fit
-
+performance_mat_deconvolution_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_deconvolution_grading_tertiary[,2], performance_mat_deconvolution_grading_tertiary[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.Grading_tertiary.tsv", sep ="\t", quote =F)
 
 ###
-library("stringr")
-library("grid")
 
-#path_transcriptome_file = "~/Deco/Data/Bench_data/MAPTor_NET.S57.tsv"
-path_transcriptome_file = "~/Downloads/RepSet.S84.Cibersort.tsv"
+performance_mat_expression_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_grading_tertiary_6_studies.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_expression_grading_tertiary[,2], performance_mat_expression_grading_tertiary[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_grading_tertiary_6_studies.tsv", sep ="\t", quote =F)
 
-expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
+###
 
-train_mat = expr_raw[,!(colnames(expr_raw) %in% c("Grading","Grading_binary") )]
-truth_vec = as.character(expr_raw[,"Grading_binary"])
+performance_mat_deconvolution_grading_binary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.6_studies.hold_out.Grading_binary.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_deconvolution_grading_binary[,2], performance_mat_deconvolution_grading_binary[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.6_studies.hold_out.Grading_binary.tsv", sep ="\t", quote =F)
 
+#
 
-draw_colnames_45 <- function (coln, gaps, ...) {
-    coord = pheatmap:::find_coordinates(length(coln), gaps)
-    x = coord$coord - 0.5 * coord$size
-    res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 90, gp = gpar(...))
-    return(res)}
-assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
+performance_mat_expression_grading_binary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_grading_binary.3471_genes.hold_out.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_expression_grading_binary[,2], performance_mat_expression_grading_binary[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_grading_binary.3471_genes.hold_out.tsv", sep ="\t", quote =F)
 
-meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Sample
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-meta_data = meta_info[rownames(expr_raw),]
+###
 
-rownames(expr_raw)[which(!(rownames(expr_raw) %in% rownames(meta_info)))]
+performance_mat_deconvolution_net_nec = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.NET_NEC.6_studies.hold_out.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_deconvolution_net_nec[,2],true =  performance_mat_deconvolution_net_nec[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.NET_NEC.6_studies.hold_out.tsv", sep ="\t", quote =F)
 
-truth_vec = meta_data$Grading
-truth_vec[truth_vec %in% c("G1","G2")] = 0
-truth_vec[truth_vec %in% c("G1_G2")] = 0
-truth_vec[truth_vec %in% c("G3")] = 1
+#
 
-plot(train_mat$ductal,truth_vec)
-aggregate(train_mat$ductal,by=list(meta_data$Grading),FUN=mean)
+performance_mat_expression_net_nec = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv",header = TRUE,  as.is = TRUE)
+ml_predictions = ml_test(performance_mat_expression_net_nec[,2], performance_mat_expression_net_nec[,1], output.as.table = TRUE)
+ml_predictions = round(ml_predictions,2)
+write.table(ml_predictions,"~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv", sep ="\t", quote =F)
 
-train_mat = t(expr_raw)[,1:50]
-train_mat = scale(train_mat)
+performance_mat_deconvolution_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.Grading_tertiary.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_deconvolution_grading_tertiary[,2], performance_mat_deconvolution_grading_tertiary[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.Grading_tertiary.tsv")
 
-t_data = data.frame(
-    cbind(
-        Grading = as.double(truth_vec),
-        train_mat
-    )
-)
+###
 
-rf_fit <- glm(
-    Grading ~ ., data = t_data, family=binomial(link="logit")
-    #method = "glm"#,
-    #lambda = 0
-)
-prediction_vector <- plogis(predict(rf_fit, as.data.frame(train_mat)))  # predicted scores
-optCutOff = InformationValue::optimalCutoff(as.double(t_data$Grading), prediction_vector)[1] 
-sensitivity = round(InformationValue::sensitivity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
-specificity = round(InformationValue::specificity(actuals = as.double(truth_vec),prediction_vector, threshold = optCutOff),2)
+performance_mat_expression_grading_tertiary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_grading_tertiary_6_studies.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_expression_grading_tertiary[,2], performance_mat_expression_grading_tertiary[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_grading_tertiary_6_studies.tsv", sep ="\t", quote =F)
 
-F1_score =  round(2*(sensitivity*specificity/(sensitivity+specificity)),2)
+###
 
-pred_obj = ROCR::prediction(
-    predictions = as.double( prediction_vector  ),
-    labels = truth_vec
-)
+performance_mat_deconvolution_grading_binary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.Grading_binary.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_deconvolution_grading_binary[,2], performance_mat_deconvolution_grading_binary[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.6_studies.hold_out.Grading_binary.tsv", sep ="\t", quote =F)
 
-rocr_auc = as.character(
-    round(
-        as.double(
-            unclass(
-                ROCR::performance(
-                    pred_obj,
-                    "auc"
-                )
-            )@"y.values"
-        ),
-        2 )
-)
+###
 
-print( paste0( c( "Sensitivity:", sensitivity,", Specificity:", specificity, ", F1:", F1_score, ", ROC:",rocr_auc) ), collapse = " " )
-perf_vec = ROCR::performance(
-    prediction.obj = pred_obj,
-    measure = "tpr",
-    x.measure = "fpr"
-);
+performance_mat_expression_grading_binary = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_grading_binary_6_studies.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_expression_grading_binary[,2], performance_mat_expression_grading_binary[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_grading_binary.3471_genes.hold_out.tsv", sep ="\t", quote =F)
 
-perf_vec <<- c(perf_vec,perf)
-res_vec = c(dataset_query, subtype,sensitivity,specificity,F1_score,rocr_auc)
-res_mat =  rbind(res_mat,res_vec)
+###
 
-predictor_mat = cbind(train_mat,meta_data$Grading)
-#write.table(predictor_mat,"~/Downloads/ml_data.tsv",quot =F, sep ="\t")
+performance_mat_deconvolution_NET_NEC = read.table("~/Dropbox/testproject/Results/PanNEN_only/Deconvolution.NET_NEC.6_studies.hold_out.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_deconvolution_NET_NEC[,2], performance_mat_deconvolution_NET_NEC[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Deconvolution.NET_NEC.6_studies.hold_out.tsv", sep ="\t", quote =F)
+
+###
+
+performance_mat_expression_NET_NEC = read.table("~/Dropbox/testproject/Results/PanNEN_only/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv",header = TRUE,  as.is = TRUE)
+classifier_metrics <- ml_test(performance_mat_expression_NET_NEC[,2], performance_mat_expression_NET_NEC[,1], output.as.table = TRUE)
+write.table(classifier_metrics, "~/Dropbox/testproject/Results/PanNEN_only/Visualization/Expression_NET_NEC_6_studies_3471_genes_hold_out.tsv", sep ="\t", quote =F)
+
+###
+
+single_performance_indices = read.table("~/Dropbox/testproject/Results/PanNEN_only/Visualization/ML_predictions_means.tsv",  sep ="\t", header = T)
+aggregate(single_performance_indices[single_performance_indices$Type == "Deconvolution","Accuracy"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Deconvolution","F1"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Deconvolution","PPV"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Deconvolution","Sensitivity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Deconvolution","Specificity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+
+aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","Accuracy"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","F1"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","PPV"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","Sensitivity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)
+aggregate(single_performance_indices[single_performance_indices$Type == "Baseline","Specificity"], by = list(single_performance_indices[single_performance_indices$Type == "Deconvolution","Experiment"]), FUN =mean)

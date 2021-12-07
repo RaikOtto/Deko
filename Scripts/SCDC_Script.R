@@ -17,14 +17,16 @@ rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 #expr_raw = read.table("~/MAPTor_NET/BAMs_new/RepSet_S56.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+#expr_raw = read.table("~/Dropbox/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep="\t", stringsAsFactors =  F, header = T,as.is = TRUE)
+
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
 
-no_match = colnames(expr_raw) %in% meta_info$Sample == F
-colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
-no_match = colnames(expr_raw) %in% meta_info$Sample == F
-no_match
+no_match = expr_raw$Sample %in% meta_info$Sample == F
+expr_raw$Sample[no_match] = paste("X",expr_raw$Sample[no_match],sep ="")
+no_match = expr_raw$Sample %in% meta_info$Sample == F
+table(no_match)
 
 #expr_raw = expr_raw[,meta_data$Histology_Primary %in% c("Pancreatic")]
 meta_data = meta_info[colnames(expr_raw),]
@@ -52,7 +54,7 @@ dim(expr)
 #expr_scrna =  read.table("~/Deko_Projekt//Data/Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron.tsv", sep ="\t", header = T)
 expr_scrna =  as.data.frame(read.table("~/Dropbox/Tosti.S3573.RepSet_genes.tsv", sep ="\t", header = T))
 
-cell_type_vec = meta_info[colnames(expr_scrna),"NEC_NET_Color"]
+ell_type_vec = meta_info[colnames(expr_scrna),"NEC_NET_Color"]
 cell_type_vec
 #expr_scrna = expr_scrna[,!(cell_type_vec %in% c("Ductal","Acinar"))]
 table(cell_type_vec)
@@ -100,9 +102,44 @@ colnames(props) = colnames(scdc_props$prop.est.mvw)
 rownames(props)  = rownames(scdc_props$prop.est.mvw)
 rownames(props) = str_replace(rownames(props), pattern = "^X","")
 
-#write.table(props,"~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_SCDC.tsv",sep = "\t")
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 ###
+
+expr_raw = read.table("~/Dropbox/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep="\t", stringsAsFactors =  F, header = T,as.is = TRUE)
+expr_raw = read.table("~/Dropbox/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T,as.is = TRUE)
+colnames(expr_raw)
+
+meta_data = meta_info[expr_raw$Sample,]
+expr_raw = expr_raw[meta_data$Grading != "Unknown",]
+meta_data = meta_info[expr_raw$Sample,]
+expr_raw = expr_raw[!( meta_data$NET_NEC_PCA %in% c("Unknown","MiNEN")),]
+meta_data = meta_info[expr_raw$Sample,]
+Grading_binary = meta_data$Grading
+Grading_binary[Grading_binary %in% c("G1","G2")] = "G1_G2"
+
+table(meta_data$NET_NEC_PCA)
+expr_raw$Grading_binary = Grading_binary
+expr_raw$NET_NEC = meta_data$NET_NEC_PCA
+expr_raw = expr_raw[expr_raw$Model %in% c("Endocrine_exocrine_like","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"),]
+rownames(expr_raw) = expr_raw$Sample
+expr_raw = expr_raw[ ,!(colnames(expr_raw) %in% c("Sample","Model"))]
+dim(expr_raw)
+table(expr_raw$NET_NEC)
+meta_data = meta_info[rownames(expr_raw),]
+
+expr_raw$Grading_binary[expr_raw$Grading_binary == "G1_G2"] = 1
+expr_raw$Grading_binary[expr_raw$Grading_binary == "G3"] = 0
+
+expr_raw_repset = expr_raw[meta_data$Study %in% c("Charite","Master","Scarpa"),]
+dim(expr_raw_repset)
+
+expr_raw_g3_only = expr_raw[meta_data$Grading %in% c("G3"),]
+dim(expr_raw_g3_only)
+
+write.table(expr_raw,"~/Dropbox/testproject/Datasets/Deconvolution.Absolute.Exocrine.PanNEN.NEN.S281.tsv",sep = "\t")
+table(meta_data[,c("Study","Grading")])
+
+###
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S103.tsv",sep = "\t",as.is = F, stringsAsFactors = F)
 
 show_models_bseqsc()
 model_name = "Alpha_Beta_Gamma_Delta_Baron"

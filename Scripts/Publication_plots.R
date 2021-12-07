@@ -6,13 +6,6 @@ library("ggplot2")
 library("dplyr")
 library("grid")
 
-#draw_colnames_45 <- function (coln, gaps, ...) {
-#  coord = pheatmap:::find_coordinates(length(coln), gaps)
-#  x = coord$coord - 0.5 * coord$size
-#  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
-#  return(res)}
-#assignInNamespace(x="draw_colnames", value="draw_colnames_45",ns=asNamespace("pheatmap"))
-
 meta_info_maptor = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info_maptor) = meta_info_maptor$Sample
 colnames(meta_info_maptor) = str_replace(colnames(meta_info_maptor),pattern = "\\.","_")
@@ -26,6 +19,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
+<<<<<<< HEAD
 #expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
@@ -57,6 +51,8 @@ dim(meta_data)
 
 #write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/NEN/Diedisheim.S4.tsv",sep ="\t",quote =F , row.names = TRUE)
 
+=======
+>>>>>>> 075923a06aa678e37472d17dffd23a921122532b
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
 #liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
