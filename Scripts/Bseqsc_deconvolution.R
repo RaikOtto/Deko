@@ -52,7 +52,9 @@ show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
-model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+#model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"
+model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
 
 print(dataset_name)
 
@@ -61,7 +63,7 @@ props = Deconvolve_transcriptome(
     deconvolution_algorithm = "bseqsc",
     models = model_name,
     Cibersort_absolute_mode = TRUE,
-    nr_permutations = 1,
+    nr_permutations = 1000,
     output_file = ""
 )
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
@@ -76,10 +78,11 @@ if ("Ductal" %in% colnames(props)){
 }
 
 if (exists("props")){
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
-    o_filename = paste(o_filename, dataset_name, sep ="/")
+    	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
+    	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
+    	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
+	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Lawlor_exocrine//"
+	o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Lawlor_endocrine//"    
+o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
