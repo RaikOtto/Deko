@@ -51,10 +51,21 @@ dim(expr_raw)
 show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+<<<<<<< HEAD
+#model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
+model_name = "Tosti_400_endocrine_only"
+#model_name = "Tosti_400_endocrine_exocrine_all"
+=======
+#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
+<<<<<<< HEAD
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"
 model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
+=======
+model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+>>>>>>> f98ba4ab2d0300191cec9c4af0474a0e7b6ecf76
+>>>>>>> c2960db8720c4cedc4e487125e5f55aa2fb62616
 
 print(dataset_name)
 
@@ -78,11 +89,37 @@ if ("Ductal" %in% colnames(props)){
 }
 
 if (exists("props")){
+<<<<<<< HEAD
     	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
     	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
 	#o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Lawlor_exocrine//"
 	o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Lawlor_endocrine//"    
 o_filename = paste(o_filename, dataset_name, sep ="/")
+=======
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
+<<<<<<< HEAD
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"
+=======
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+>>>>>>> f98ba4ab2d0300191cec9c4af0474a0e7b6ecf76
+    o_filename = paste(o_filename, dataset_name, sep ="/")
+>>>>>>> c2960db8720c4cedc4e487125e5f55aa2fb62616
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
+
+"""
+Rscript --vanilla Bseqsc_deconvolution.R --index 1 &
+Rscript --vanilla Bseqsc_deconvolution.R --index 2&
+Rscript --vanilla Bseqsc_deconvolution.R --index 3&
+Rscript --vanilla Bseqsc_deconvolution.R --index 4&
+Rscript --vanilla Bseqsc_deconvolution.R --index 5&
+Rscript --vanilla Bseqsc_deconvolution.R --index 6&
+Rscript --vanilla Bseqsc_deconvolution.R --index 7&
+
+"""
