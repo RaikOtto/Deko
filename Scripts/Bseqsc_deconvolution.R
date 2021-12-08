@@ -53,13 +53,11 @@ show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
-<<<<<<< HEAD
+#model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
+#model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+
 #model_name = "Tosti_400_endocrine_only"
 model_name = "Tosti_400_endocrine_exocrine_all"
-=======
-model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
-model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
->>>>>>> a321a19d055ff7c39694443a0e2b46839f6f879a
 
 print(dataset_name)
 
@@ -82,12 +80,8 @@ colnames(props)[1:2] = c("Sample","Model")
     props_export = props#[,c("Sample","Model","Alpha","Beta","Gamma","Delta","P_value","Correlation","RMSE")]
 #}
 
-<<<<<<< HEAD
 if (exists("props_export")){
-=======
-if (exists("props")){
 
->>>>>>> a321a19d055ff7c39694443a0e2b46839f6f879a
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
