@@ -5,19 +5,18 @@ source("~/Deko_Projekt/CIBERSORT_package/CIBERSORT.R")
 library("stringr")
 library("bseqsc")
 
-expr_raw = read.table("~/Deko_Projekt/Data/Mouse_progenitor_pancreas_scRNA/senescence.tsv",sep ="\t", header = T, row.names = 1)
-#expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
+#expr_raw = read.table("~/Deko_Projekt/Data/Mouse_progenitor_pancreas_scRNA/senescence.tsv",sep ="\t", header = T, row.names = 1)
+expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
 #expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Filtered-YFP+_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
 #expr_raw = read.table("~/Downloads/Feature_Barcode_rawCountMatrix_Tuft+EEC_all-samples_QCed.csv",sep =",", header = T, row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw),"^X","")
 expr_raw[1:5,1:5]
 
-#meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv", sep ="\t", header = T)
+meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv", sep ="\t", header = T)
 rownames(meta_info) = meta_info$Sample
 
 #meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_YFP+_all-samples_QCed.csv", sep =",", header = T)
 #meta_info = read.table("~/Downloads/GSE172380_Cluster+CelltypeLabel_Tuft+EEC_all-samples_QCed.csv", sep =",", header = T)
-meta_info = read.table("~/Deko_Projekt/Misc/Meta_information_scRNA.tsv", sep ="\t", header = T)
 rownames(meta_info) = meta_info$Sample
 
 table(meta_info$Cluster)
@@ -31,19 +30,19 @@ subtype_vector = meta_data$Cluster
 table(subtype_vector)
 
 #candidates = which(subtype_vector %in% c("alpha","beta","gamma","delta","acinar-s","acinar-reg+","acinar-i","ductal","muc5b+ ductal"))
-#candidates = which(subtype_vector %in% c("Alpha","Beta","Gamma","Delta","Acinar-i","MUC5B+ Ductal","Acinar-REG+"))
+candidates = which(subtype_vector %in% c("Alpha","Beta","Gamma","Delta"))
 #candidates = which(subtype_vector %in% c("Alpha","Beta","Gamma","Delta","Acinar","Ductal"))
-#expr_raw = expr_raw[,candidates]
+expr_raw = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr_raw),]
-subtype_vector_reduced = meta_data$Cluster
-table(subtype_vector_reduced)
+subtype_vector = meta_data$Cluster
+table(subtype_vector)
 
-subtype_vector = as.character(str_remove_all(colnames(expr_raw), pattern = "_[0-9]*"))
-table(subtype_vector_reduced)
+#subtype_vector = as.character(str_remove_all(colnames(expr_raw), pattern = "_[0-9]*"))
+#table(subtype_vector_reduced)
 
 amount_genes = 400
 amount_samples = 300
-model_name = "Senesys_ADR_ADROHT_PS"
+model_name = "Tosti_400_endocriny_only"
 
 selected_samples = c()
 

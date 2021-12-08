@@ -35,7 +35,7 @@ datasets = c(
 #    "Master.S14.tsv", #4
 #    "Sato.S32.tsv") #5
 
-dataset_name = datasets[input_index]
+dataset_name = 3#datasets[input_index]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 
@@ -51,8 +51,10 @@ dim(expr_raw)
 show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+#model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
-model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
+#model_name = "Tosti_400_endocrine_only"
+model_name = "Tosti_400_endocrine_exocrine_all"
 
 print(dataset_name)
 
@@ -69,17 +71,31 @@ colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(p
 props = cbind(rownames(props),rep(model_name,nrow(props)),props)
 colnames(props)[1:2] = c("Sample","Model")
 
-if ("Ductal" %in% colnames(props)){
-    props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","Acinar","Ductal","P_value","Correlation","RMSE")]
-} else{
-    props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","P_value","Correlation","RMSE")]
-}
+#if ("Ductal" %in% colnames(props)){
+    #props_export = props[,c("Sample","Model","Alpha","Beta","Gamma","Delta","Acinar","Ductal","P_value","Correlation","RMSE")]
+#} else{
+    props_export = props#[,c("Sample","Model","Alpha","Beta","Gamma","Delta","P_value","Correlation","RMSE")]
+#}
 
-if (exists("props")){
+if (exists("props_export")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
+
+"
+Rscript --vanilla Bseqsc_deconvolution.R --index 1 &
+Rscript --vanilla Bseqsc_deconvolution.R --index 2&
+Rscript --vanilla Bseqsc_deconvolution.R --index 3&
+Rscript --vanilla Bseqsc_deconvolution.R --index 4&
+Rscript --vanilla Bseqsc_deconvolution.R --index 5&
+Rscript --vanilla Bseqsc_deconvolution.R --index 6&
+Rscript --vanilla Bseqsc_deconvolution.R --index 7&
+
+"
