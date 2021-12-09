@@ -59,7 +59,7 @@ fractions <<- matrix( as.character(), ncol = 6)
     dataset_query = str_replace_all(dataset_query,".tsv","")
 
     if (type == "Exocrine-like") {
-        models = models_ductal[[2]]
+        models = models_ductal[[i]]
     } else if  (type == "hisc") {
         models = models_hisc#[[1]]
     }

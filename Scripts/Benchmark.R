@@ -99,7 +99,7 @@ run_benchmark = function(
         
         write.table(
             deconvolution_results,
-            path_benchmark_files_dec_res,
+            # path_benchmark_files_dec_res,
             sep="\t",
             quote =F, row.names = F
         )
@@ -107,6 +107,8 @@ run_benchmark = function(
     
     #return(deconvolution_results)
     
+    deconvolution_results$Exocrine_like = rowSums(deconvolution_results[,c("ductal","acinar")])
+        
     #if (type == "hisc")
     #    deconvolution_results = deconvolution_results[grep(deconvolution_results$model, pattern = "Hisc", ignore.case = T),]
     #if (type == "ductal")
@@ -305,14 +307,14 @@ run_benchmark = function(
             
             scale_mat = data.frame(
                 "MKI67" = deconvolution_results$MKI67,
-                "Exocrine_like" = deconvolution_results$
+                "Exocrine_like" = deconvolution_results$Exocrine_like
             )
-            lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Ductal) # Fit linear model
+            lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Exocrine_like) # Fit linear model
             summary(lm.model)
-            correlation = round(cor(scale_mat$MKI67, scale_mat$Ductal),2)
-            cor.test(scale_mat$MKI67, scale_mat$Ductal)
+            correlation = round(cor(scale_mat$MKI67, scale_mat$Exocrine_like),2)
+            cor.test(scale_mat$MKI67, scale_mat$Exocrine_like)
             cor_ductal_MKI_67 = correlation
-            cor_ductal_MKI_67_p_value = cor.test(scale_mat$MKI67, scale_mat$Ductal)$p.value
+            cor_ductal_MKI_67_p_value = cor.test(scale_mat$MKI67, scale_mat$Exocrine_like)$p.value
             
             cor_hisc_MKI_67 = 1
             cor_hisc_MKI_67_p_value = 1
@@ -339,29 +341,31 @@ run_benchmark = function(
     
     if ( length(vis_mat$grading) > 0){ ### case grading available
         
-        off_set = rnorm(nrow(deconvolution_results),mean=0.001,sd=0.001)
+        meta_grading = meta_data[meta_data$Grading %in% c("G1","G2","G3"),]
+        deco_res_grading = deconvolution_results[meta_grading$Sample,]
+        off_set = rnorm(nrow(deco_res_grading),mean=0.001,sd=0.001)
         
         # numerical grading
-        grading_numeric = vis_mat$grading
+        grading_numeric = meta_grading$Grading
         grading_numeric = as.integer(str_replace_all(grading_numeric,pattern ="G",""))
         
         # MKI-67 vs. grading numeric
         
-        cor_MKI67_grading = cor(deconvolution_results$MKI67 + off_set,grading_numeric)
-        cor_MKI67_grading_p_value = cor.test(deconvolution_results$MKI67,grading_numeric)$p.value
+        cor_MKI67_grading = cor(deco_res_grading$MKI67 + off_set,grading_numeric)
+        cor_MKI67_grading_p_value = cor.test(deco_res_grading$MKI67,grading_numeric)$p.value
         
         # ductal vs. grading numeric
         
-        cor_ductal_grading = cor(deconvolution_results$ductal + off_set,grading_numeric)
-        cor_ductal_grading_p_value = cor.test(deconvolution_results$ductal  + off_set,grading_numeric)$p.value
+        cor_ductal_grading = cor(deco_res_grading$Exocrine_like + off_set,grading_numeric)
+        cor_ductal_grading_p_value = cor.test(deco_res_grading$Exocrine_like  + off_set,grading_numeric)$p.value
         
         # hisc vs. grading numeric
         
         if ( type == "hisc"){
             
-            off_set = rnorm(length(deconvolution_results$hisc),mean=0.001,sd=0.001)
-            cor_hisc_grading = cor(deconvolution_results$hisc + off_set,grading_numeric)
-            cor_hisc_grading_p_value = cor.test(deconvolution_results$hisc + off_set,grading_numeric)$p.value
+            off_set = rnorm(length(deco_res_grading$hisc),mean=0.001,sd=0.001)
+            cor_hisc_grading = cor(deco_res_grading$hisc + off_set,grading_numeric)
+            cor_hisc_grading_p_value = cor.test(deco_res_grading$hisc + off_set,grading_numeric)$p.value
         } else {cor_hisc_grading = cor_hisc_grading_p_value = 1.0}
         
 
@@ -399,15 +403,18 @@ run_benchmark = function(
     # anova mki-67 versus grading
     
     if (
-        (length(vis_mat$Grading) > 0) &
+        (length(meta_data$Grading) > 0) &
         (length(ki_index) != 0) &
-        (length(unique(vis_mat$Grading)) > 1)
+        (length(unique(meta_data$Grading)) > 1)
     ) {
         
         # anova 1
         
-        anova_1 = aov(deconvolution_results$MKI67 ~ as.factor(as.character(vis_mat$Grading)) )
-        anova_1_p_value = TukeyHSD(anova_1)$`as.factor(as.character(vis_mat$Grading))`
+        meta_grading = meta_data[meta_data$Grading %in% c("G1","G2","G3"),]
+        deco_res_grading = deconvolution_results[meta_grading$Sample,]
+        
+        anova_1 = aov(deco_res_grading$MKI67 ~ as.factor(as.character(meta_grading$Grading)) )
+        anova_1_p_value = TukeyHSD(anova_1)$`as.factor(as.character(meta_grading$Grading))`
         G1_G2_index = which(rownames(anova_1_p_value) == "G2-G1")
         G1_G3_index = which(rownames(anova_1_p_value) == "G3-G1")
         G2_G3_index = which(rownames(anova_1_p_value) == "G3-G2")
@@ -422,8 +429,8 @@ run_benchmark = function(
         } else {mki_67_g1_g2 = 1}
 
         #data_mat = reshape2::melt(deconvolution_results)
-        data_mat = deconvolution_results[,c("Grading","MKI67")]
-        data_mat$Sample = rownames(deconvolution_results)
+        data_mat = deco_res_grading[,c("Grading","MKI67")]
+        data_mat$Sample = rownames(deco_res_grading)
         data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$MKI67)] )
         data_mat$MKI67 = data_mat$MKI67
         
@@ -454,16 +461,19 @@ run_benchmark = function(
     # anova ductal versus grading
     
     if (
-        (length(vis_mat$Grading) > 0) & 
-        (length(unique(vis_mat$Grading)) > 1)
+        (length(meta_data$Grading) > 0) & 
+        (length(unique(meta_data$Grading)) > 1)
     ) {
+        
+        meta_grading = meta_data[meta_data$Grading %in% c("G1","G2","G3"),]
+        deco_res_grading = deconvolution_results[meta_grading$Sample,]
         
         # anova 2 ductal
         
-        off_set = rnorm(nrow(deconvolution_results),mean = 0.0001, sd = 0.0001)
+        off_set = rnorm(nrow(deco_res_grading),mean = 0.0001, sd = 0.0001)
         
-        anova_2 = aov(deconvolution_results$ductal + off_set ~ as.factor(as.character(vis_mat$Grading)) )
-        anova_2_p_value = TukeyHSD(anova_2)$`as.factor(as.character(vis_mat$Grading))`
+        anova_2 = aov(deco_res_grading$Exocrine_like + off_set ~ as.factor(as.character(meta_grading$Grading)) )
+        anova_2_p_value = TukeyHSD(anova_2)$`as.factor(as.character(meta_grading$Grading))`
         G1_G2_index = which(rownames(anova_2_p_value) == "G2-G1")
         G1_G3_index = which(rownames(anova_2_p_value) == "G3-G1")
         G2_G3_index = which(rownames(anova_2_p_value) == "G3-G2")
@@ -478,16 +488,16 @@ run_benchmark = function(
         } else {ductal_g2_g3 = 1}
         
         data_mat = reshape2::melt(deconvolution_results )
-        data_mat = deconvolution_results[,c("Grading","ductal")]
+        data_mat = deconvolution_results[,c("Grading","Exocrine_like")]
         data_mat$Sample = rownames(data_mat)
-        data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$ductal)] )
-        data_mat$ductal = data_mat$ductal
+        data_mat$Sample = factor(data_mat$Sample, levels = data_mat$Sample[order(data_mat$Exocrine_like)] )
+        data_mat$ductal = data_mat$Exocrine_like
         
         color_vec = data_mat$Grading
         color_vec[color_vec == "G1"] = "green"
         color_vec[color_vec == "G2"] = "yellow"
         color_vec[color_vec == "G3"] = "red"
-        color_vec = color_vec[order(data_mat$ductal)]
+        color_vec = color_vec[order(data_mat$Exocrine_like)]
         g=ggplot(data_mat,aes( x = Grading, y = ductal, fill = Grading )) + geom_boxplot( )
         
         ductal_grading_path = paste("~/Deko_Projekt/Results/Images",algorithm, sep ="/")
@@ -507,8 +517,8 @@ run_benchmark = function(
     
     if (
         (length(deconvolution_results$hisc) > 0) &
-        (length(vis_mat$Grading) > 0) &
-        (length(unique(vis_mat$Grading)) > 1)
+        (length(meta_data$Grading) > 0) &
+        (length(unique(meta_data$Grading)) > 1)
     ){
         
         # anova 3
@@ -565,21 +575,13 @@ run_benchmark = function(
         dataset_training,
         cor_ductal_grading,
         cor_ductal_grading_p_value,
-        cor_hisc_grading,
-        cor_hisc_grading_p_value,
         cor_ductal_MKI_67,
         cor_ductal_MKI_67_p_value,
-        cor_hisc_MKI_67,
-        cor_hisc_MKI_67_p_value,
         ductal_g1_g2,
         ductal_g1_g3,
         ductal_g2_g3,
-        hisc_g1_g2,
-        hisc_g1_g3,
-        hisc_g2_g3,
         surv_mki67,
         surv_ductal,
-        surv_hisc,
         type
     )
     
@@ -591,21 +593,13 @@ run_benchmark = function(
             "dataset_training_label",
             "cor_ductal_grading",
             "cor_ductal_grading_p_value",
-            "cor_hisc_grading",
-            "cor_hisc_grading_p_value",
             "cor_ductal_MKI_67",
             "cor_ductal_MKI_67_p_value",
-            "cor_hisc_MKI_67",
-            "cor_hisc_MKI_67_p_value",
             "ductal_g1_g2",
             "ductal_g1_g3",
             "ductal_g2_ g3",
-            "hisc_g1_g2",
-            "hisc_g1_g3",
-            "hisc_g2_g3",
             "surv_mki67",
             "surv_ductal",
-            "surv_hisc",
             "type"
         )
     } else {
