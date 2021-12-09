@@ -20,7 +20,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 ### p-values
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.NEN_only.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
@@ -31,7 +31,7 @@ selection = c("Study","P_value","Model")
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
 vis_mat$Model = factor(vis_mat$Model, levels = c("Endocrine_only","Endocrine_exocrine_like"))
-vis_mat$Study = factor(vis_mat$Study, levels = c("Alvarez","Charite","Master","Scarpa","Diedisheim","Missiaglia","Sadanandam"))
+vis_mat$Study = factor(vis_mat$Study, levels = c("Alvarez","Charite","Master","Diedisheim","Sato"))
 #vis_mat[vis_mat$Study == "Diedisheim","P_value"] =vis_mat[vis_mat$Study == "Diedisheim","P_value"] / 3
 
 p_value_plot = ggplot(vis_mat, aes( x = Study, y = P_value, fill = Model) )
@@ -42,13 +42,13 @@ p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
 p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "top")
 p_value_plot
 
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_A.svg", width = 10, height = 10)
+svg(filename = "~/Dropbox/Figures/Supplementary/SM_Figure_2_Plot_A.svg", width = 10, height = 10)
 p_value_plot
 dev.off()
 
 # Figure 2 Plot B Metastasis/ Primary/ Organoid
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.NEN_only.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
@@ -60,42 +60,25 @@ selection = c("Type","Model","Primary_Metastasis","P_value")
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
 
-# pannen
-
-vis_mat_pannen = vis_mat %>% filter(Type == "PanNEN")
-vis_mat_pannen$Model = factor( as.character(vis_mat_pannen$Model), levels = c("Endocrine_only","Endocrine_exocrine_like"))
-vis_mat_pannen$Primary_Metastasis = factor(vis_mat_pannen$Primary_Metastasis, levels = c("Primary","Metastasis"))
-
-p_value_plot = ggplot(vis_mat_pannen, aes( x = Primary_Metastasis, y = P_value, fill = Model) )
-p_value_plot = p_value_plot + geom_boxplot(notch = TRUE,outlier.colour = "red", outlier.shape = 1)
-p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
-p_value_plot = p_value_plot + ylim(c(0,0.1)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
-p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "none")
-p_value_plot
-
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_B_pannen.svg", width = 10, height = 10)
-p_value_plot
-dev.off()
-
 # nen
 
 vis_mat_nen = vis_mat %>% filter(Type == "NEN")
-vis_mat_nen$Model = factor(vis_mat_nen$Model, levels = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron","Organoid"))
+vis_mat_nen$Model = factor(vis_mat_nen$Model, levels = c("Endocrine_only","Endocrine_exocrine_like"))
 vis_mat_nen$Primary_Metastasis = factor(vis_mat_nen$Primary_Metastasis, levels = c("Primary","Metastasis","Organoid"))
 p_value_plot = ggplot(vis_mat_nen, aes( x = Primary_Metastasis, y = P_value, fill = Model) )
 p_value_plot = p_value_plot + geom_boxplot(notch = TRUE,outlier.colour = "red", outlier.shape = 1)
 p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))
 p_value_plot = p_value_plot + ylim(c(0,0.1)) + geom_hline(yintercept = 0.05, color = "red",linetype="dashed", size =2)
-#p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "none")
+p_value_plot = p_value_plot + ylab("Mean P-values") + theme(legend.position = "top")
 p_value_plot
 
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_B_nen.svg", width = 10, height = 10)
+svg(filename = "~/Dropbox/Figures/Supplementary/Figure_2_Plot_B_nen.svg", width = 10, height = 10)
 p_value_plot
 dev.off()
 
 ### Figure 2 Plot C Grading
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.NEN_only.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 colnames(props)[colnames(props) == "alpha"] = "Alpha";colnames(props)[colnames(props) == "beta"] = "Beta";colnames(props)[colnames(props) == "gamma"] = "Gamma";colnames(props)[colnames(props) == "delta"] = "Delta";colnames(props)[colnames(props) == "acinar"] = "Acinar";colnames(props)[colnames(props) == "ductal"] = "Ductal"
 meta_data = meta_info[props$Sample,]
 
@@ -109,19 +92,20 @@ props[(props$Grading == "G3") & (props$NEC_NET == "NET") ,"Grading"] = "G3 NET"
 props[(props$NEC_NET == "NEC") ,"Grading"] = "G3 NEC"
 meta_data = meta_info[props$Sample,]
 
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+#props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
 meta_data = meta_info[props$Sample,]
 
 selection = c("Type","Model","Grading","P_value")
 vis_mat = props[,selection]
 vis_mat$P_value = as.double(vis_mat$P_value)
 
-# pannen
+# nen
 
-vis_mat_pannen = vis_mat[vis_mat$Type == "PanNEN",]
+vis_mat_nen = vis_mat[vis_mat$Type == "NEN",]
 
-vis_mat_endocrine = vis_mat_pannen[vis_mat_pannen$Model == "Endocrine_only",]
-vis_mat_exocrine = vis_mat_pannen[vis_mat_pannen$Model == "Endocrine_exocrine_like",]
+vis_mat_endocrine = vis_mat_nen[vis_mat_nen$Model == "Endocrine_only",]
+vis_mat_exocrine = vis_mat_nen[vis_mat_nen$Model == "Endocrine_exocrine_like",]
+table(vis_mat_exocrine$Grading)
 
 vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Grading))
 vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Grading))
@@ -144,41 +128,8 @@ p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model)
 p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
 p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
 
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C_pannen.svg", width = 10, height = 10)
-p_value_plot+ ylim(c(0,0.04))
-dev.off()
-
-# nen
-
-vis_mat_nen = vis_mat[vis_mat$Type == "NEN",]
-
-vis_mat_endocrine = vis_mat_nen[vis_mat_nen$Model == "Alpha_Beta_Gamma_Delta_Baron",]
-vis_mat_exocrine = vis_mat_nen[vis_mat_nen$Model == "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",]
-table(vis_mat_exocrine$Grading)
-
-vis_mat_mean_endo = aggregate(vis_mat_endocrine$P_value, FUN = mean, by = list(vis_mat_endocrine$Grading))
-vis_mat_mean_exo = aggregate(vis_mat_exocrine$P_value, FUN = mean, by = list(vis_mat_exocrine$Grading))
-vis_mat_mean_endo$Model = rep("Alpha_Beta_Gamma_Delta_Baron",rep(nrow(vis_mat_mean_endo)))
-vis_mat_mean_exo$Model = rep("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_mean_endo) = colnames(vis_mat_mean_exo) = c("Grading","P_value","Model")
-
-vis_mat_sd_endo = aggregate(vis_mat_endocrine$P_value, FUN = sd, by = list(vis_mat_endocrine$Grading))
-vis_mat_sd_exo  = aggregate(vis_mat_exocrine$P_value, FUN = sd, by = list(vis_mat_exocrine$Grading))
-vis_mat_sd_endo$Model = rep("Alpha_Beta_Gamma_Delta_Baron",rep(nrow(vis_mat_mean_endo)))
-vis_mat_sd_exo$Model = rep("Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron",rep(nrow(vis_mat_mean_exo)))
-colnames(vis_mat_sd_endo) = colnames(vis_mat_sd_exo) = c("Grading","SD","Model")
-
-vis_mat_mean = rbind(vis_mat_mean_endo,vis_mat_mean_exo)
-vis_mat_mean$Model = factor( as.character(vis_mat_mean$Model), levels = c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"))
-vis_mat_mean$Grading = factor(vis_mat_mean$Grading, levels = c("G1","G2", "G3 NET", "G3 NEC"))
-vis_mat_sd = rbind(vis_mat_sd_endo,vis_mat_sd_exo)
-
-p_value_plot = ggplot(vis_mat_mean, aes( x = Grading, y = P_value, fill = Model) ) + geom_bar(stat="identity", position=position_dodge(), width = .9)
-p_value_plot = p_value_plot + geom_errorbar(aes(ymin = P_value, ymax = P_value + vis_mat_sd$SD),  position = "dodge")
-p_value_plot = p_value_plot + scale_fill_manual(values = c("blue","red"))  + theme(legend.position = "top")
-
-#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_C_nen.svg", width = 10, height = 10)
-p_value_plot+ ylim(c(0,0.04))
+svg(filename = "~/Dropbox/Figures/Supplementary/Figure_2_Plot_C_nen.svg", width = 10, height = 10)
+p_value_plot+ ylim(c(0,0.1))
 dev.off()
 
 
@@ -236,7 +187,7 @@ p_endo_g1 = p_endo_g1 + geom_bar(stat = "identity", width = 1.0, color = "black"
 p_endo_g1 = p_endo_g1 + coord_polar("y", start=0,direction =-1) + ylab("") + xlab("")
 p_endo_g1 = p_endo_g1 + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_1.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_1.svg", width = 10, height = 10)
 p_endo_g1
 dev.off()
 
@@ -257,7 +208,7 @@ p_endo_g1 = p_endo_g1 + geom_bar(stat = "identity", width = 1.0, color = "black"
 p_endo_g1 = p_endo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xlab("")
 p_endo_g1 = p_endo_g1 + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_2.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_2.svg", width = 10, height = 10)
 p_endo_g1
 dev.off()
 
@@ -279,7 +230,7 @@ p_endo_g1 = p_endo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xl
 p_endo_g1 = p_endo_g1 + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_3.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_3.svg", width = 10, height = 10)
 p_endo_g1
 dev.off()
 
@@ -302,7 +253,7 @@ p_endo_g1 = p_endo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xl
 p_endo_g1 = p_endo_g1 + scale_fill_manual(values = c("#051e5c", "yellow","orange","#6c8188","red")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 p_endo_g1
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_4.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_4.svg", width = 10, height = 10)
 p_endo_g1
 dev.off()
 
@@ -359,7 +310,7 @@ p_exo_g1 = p_exo_g1 + geom_bar(stat = "identity", width = 1.0, color = "black")
 p_exo_g1 = p_exo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xlab("")
 p_exo_g1 = p_exo_g1 + scale_fill_manual(values = c("red","#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_5.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_5.svg", width = 10, height = 10)
 p_exo_g1
 dev.off()
 
@@ -381,7 +332,7 @@ p_exo_g1 = p_exo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xlab
 p_exo_g1 = p_exo_g1 + scale_fill_manual(values = c("red","#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 p_exo_g1
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_6.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_6.svg", width = 10, height = 10)
 p_exo_g1
 dev.off()
 
@@ -403,7 +354,7 @@ p_exo_g1 = p_exo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xlab
 p_exo_g1 = p_exo_g1 + scale_fill_manual(values = c("red","#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 p_exo_g1
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_7.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_7.svg", width = 10, height = 10)
 p_exo_g1
 dev.off()
 
@@ -426,6 +377,6 @@ p_exo_g1 = p_exo_g1 + coord_polar("y", start=0,direction = -1) + ylab("") + xlab
 p_exo_g1 = p_exo_g1 + scale_fill_manual(values = c("red","#051e5c", "yellow","orange","#6c8188")) + theme(legend.position="none",axis.text=element_text(size=12)) + ylab("Celltype proportions") + xlab("")
 p_exo_g1
 
-svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_8.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_2_Plot_D_8.svg", width = 10, height = 10)
 p_exo_g1
 dev.off()

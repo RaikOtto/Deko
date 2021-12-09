@@ -42,7 +42,7 @@ correlation_matrix = cor(t(vis_mat))
 pcr = prcomp(t(correlation_matrix))
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-svg(filename = "~/Dropbox/Figures/Figure_3_Plot_A.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_A.svg", width = 10, height = 10)
 Diedisheim_plot = pheatmap::pheatmap(
     t(vis_mat),
     annotation_col = meta_data[,c("Grading","Cluster","DFS","Functionality","NEC_NET")],
@@ -180,7 +180,7 @@ meta_data = meta_info[rownames(vis_mat_exo),]
 correlation_matrix = cor(t(vis_mat_exo))
 
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
-svg(filename = "~/Dropbox/Figures/Figure_3_Plot_E.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Figure_3_Plot_E.svg", width = 10, height = 10)
 upper_plot = pheatmap::pheatmap(
     #t(vis_mat_balanced),
     correlation_matrix,

@@ -19,8 +19,7 @@ library("SCDC")
 models_ductal = c(
     list(c("Alpha_Beta_Gamma_Delta_Baron","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron")),
     list(c("Alpha_Beta_Gamma_Delta_Segerstolpe","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor")),
-    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron_Segerstolpe"))
+    list(c("Alpha_Beta_Gamma_Delta_Lawlor","Alpha_Beta_Gamma_Delta_Acinar_Ductal_Lawlor"))
 )
 
 models_hisc = c(
@@ -30,26 +29,27 @@ models_hisc = c(
 )
 nr_models = length(models_ductal)
 
-transcriptome_files = list.files("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/",full.names = T,pattern = ".tsv")
+#transcriptome_files = list.files("~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/",full.names = T,pattern = ".tsv")
+transcriptome_files = "~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv"
+visualization_files = "~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.DESeq2.tsv"
 transcriptome_files = as.character(sapply(transcriptome_files,FUN=rep,3))
-visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
+#visualization_files = str_replace_all(transcriptome_files,pattern ="\\.tsv",".vis.tsv")
 
-#meta_info = read.table("~/MAPTor_NET/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
-rownames(meta_info) = meta_info$Name
+rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
 source("~/Deko_Projekt/Scripts/Benchmark.R")
 
 algorithm = "bseqsc" # NMF # music # bseqsc # SCDC
-type = "ductal"
+type = "Exocrine-like"
 #type = "HISC"
 
 high_threshold = 66
 low_threshold = 33
 confidence_threshold = 1.1
 transcriptome_files
-i = 4
+i = 2
 fractions <<- matrix( as.character(), ncol = 6)
 
 #for( i in 1:length(transcriptome_files)){
@@ -58,14 +58,14 @@ fractions <<- matrix( as.character(), ncol = 6)
     dataset_query = tail(as.character(unlist(str_split(transcriptome_files[i],pattern = "/"))),1)
     dataset_query = str_replace_all(dataset_query,".tsv","")
 
-    if (type == "ductal") {
-        models = models_ductal[[1]]
+    if (type == "Exocrine-like") {
+        models = models_ductal[[2]]
     } else if  (type == "hisc") {
         models = models_hisc#[[1]]
     }
     
-    models = models[ (i - 1) %% 3 + 1]
-    dataset_training = as.character(unlist(models))[2]
+    models = models[ (i - 1) %% 2 + 1]
+    dataset_training = as.character(unlist(models))[1]
     
     path_benchmark_files = paste0(
         "~/Deko_Projekt/Results/Cell_fraction_predictions/",

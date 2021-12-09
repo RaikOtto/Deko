@@ -165,7 +165,7 @@ run_benchmark = function(
     
     ### survival curve
     
-    if (sum( meta_data$OS_Tissue != "") != 0){
+    if (sum(! is.na(meta_data$OS_Tissue )) != 0){
 
         vis_mat = vis_mat[rownames(deconvolution_results),]
         vis_mat$OS_Tissue = as.double(str_replace_all(meta_data$OS_Tissue, pattern = ",", "\\."))
@@ -301,11 +301,11 @@ run_benchmark = function(
         
         vis_mat = vis_mat[rownames(deconvolution_results),]
         
-        if (type == "ductal"){
+        if (type == "Exocrine-like"){
             
             scale_mat = data.frame(
                 "MKI67" = deconvolution_results$MKI67,
-                "Ductal" = deconvolution_results$ductal
+                "Exocrine_like" = deconvolution_results$
             )
             lm.model <- lm(scale_mat$MKI67 ~ scale_mat$Ductal) # Fit linear model
             summary(lm.model)
