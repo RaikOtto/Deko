@@ -3,7 +3,7 @@ library("stringr")
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
 #
-bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/RepSet_S103.NEN.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
+bam_data_1 = read.table("~/MAPTor_NET/BAMs_new/Charite/Groetzinger_new.S40.HGNC.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 #bam_data_1 = read.table("~/Deko_Projekt/Data/Publication_datasets/Charite.S23.tsv" , sep ="\t" ,header = T, row.names = 1, stringsAsFactors = F)
 
 colnames(bam_data_1) = str_replace(colnames(bam_data_1),pattern = "\\.","_")
@@ -29,10 +29,10 @@ table(meta_data$Study)
 # bam data 2
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Master.S20.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
-#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Scarpa.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Diedisheim.S62.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 
-bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
+#bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Sadanandam.S29.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 #bam_data_2 = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S75.tsv" , sep ="\t" ,header = T, stringsAsFactors = F, row.names = 1)
 
 colnames(bam_data_2) = str_replace_all(colnames(bam_data_2) , pattern = "^X", "")
@@ -80,9 +80,9 @@ dim(new_mat)
 
 row_var = as.double(apply(new_mat, FUN = function(vec){return(var(vec))}, MARGIN = 1))
 summary(row_var)
-selection = order(row_var, decreasing = )[1:400]
+selection = order(row_var, decreasing = TRUE)
 #new_mat = new_mat[which( row_var >= 1),]
-new_mat = new_mat[selection,]
+#new_mat = new_mat[selection,]
 dim(new_mat)
 
 ###
@@ -124,17 +124,7 @@ new_mat$NET_NEC[new_mat$NET_NEC == "NET"] = "1"
 
 dim(new_mat)
 
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/4_studies.400_genes.S128.Grading_tertiary.tsv", sep ="\t", quote =F , row.names = FALSE)
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/6_studies.400_genes.S232.Grading_tertiary.tsv", sep ="\t", quote =F , row.names = FALSE)
-
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Deconvolution/4_studies.Exocrine.Absolute.PanNEN_only.NET_NEC.S128.tsv", sep ="\t", quote =F , row.names = FALSE)
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/6_studies.400_genes.S232.Grading_tertiary.tsv", sep ="\t", quote =F , row.names = FALSE)
-
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/4_studies.400_genes.S128.Grading_binary.tsv", sep ="\t", quote =F , row.names = FALSE)
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/6_studies.400_genes.S238.Grading_binary.tsv", sep ="\t", quote =F , row.names = FALSE)
-
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/4_studies.400_genes.S128.NET_NEC.tsv", sep ="\t", quote =F , row.names = TRUE)
-write.table(new_mat, "~/Dropbox/testproject/Datasets/PanNEN_only/Expression/6_studies.400_genes.S207.NET_NEC.tsv", sep ="\t", quote =F , row.names = TRUE)
+#write.table(new_mat, "~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Charite_Scarpa.S52.tsv", sep ="\t", quote =F , row.names = FALSE)
 
 deco_mat_grading = deco_mat[deco_mat$Sample %in% rownames(new_mat),]
 

@@ -1,16 +1,16 @@
-run_benchmark = function(
-    dataset_query,
-    dataset_training,
-    algorithm,
-    type,
-    transcriptome_file,
-    visualization_file,
-    path_benchmark_files,
-    confidence_threshold,
-    high_threshold,
-    low_threshold,
-    path_benchmark_files_dec_res
-){
+# run_benchmark = function(
+#     dataset_query,
+#     dataset_training,
+#     algorithm,
+#     type,
+#     transcriptome_file,
+#     visualization_file,
+#     path_benchmark_files,
+#     confidence_threshold,
+#     high_threshold,
+#     low_threshold,
+#     path_benchmark_files_dec_res
+# ){
     
     ### prep
     
@@ -74,13 +74,6 @@ run_benchmark = function(
             nr_permutations = 1000,
             output_file = ""
         )
-        
-        if ( type == "ductal")
-            deconvolution_results = deconvolution_results[
-                grep(deconvolution_results$model, pattern = "Ductal", value = F) ,]
-        if ( type == "hisc")
-            deconvolution_results = deconvolution_results[
-                grep(deconvolution_results$model, pattern = "Hisc", value = F) ,]
         
         if (algorithm == "bseqsc")
             deconvolution_results$P_value = as.double(deconvolution_results$P_value)
@@ -472,6 +465,7 @@ run_benchmark = function(
         
         off_set = rnorm(nrow(deco_res_grading),mean = 0.0001, sd = 0.0001)
         
+        #
         anova_2 = aov(deco_res_grading$Exocrine_like + off_set ~ as.factor(as.character(meta_grading$Grading)) )
         anova_2_p_value = TukeyHSD(anova_2)$`as.factor(as.character(meta_grading$Grading))`
         G1_G2_index = which(rownames(anova_2_p_value) == "G2-G1")
@@ -610,7 +604,7 @@ run_benchmark = function(
 
     # output 
     
-    write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
-    return(benchmark_results_t)
-}
+    #write.table(benchmark_results_t, path_benchmark_files,sep="\t",quote=F,row.names= F, col.names = T)
+   # return(benchmark_results_t)
+#}
     
