@@ -19,8 +19,8 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-#expr_raw = read.table("~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/Diedisheim.S66.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Sato.S22.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+#expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
@@ -33,7 +33,7 @@ dim(expr_raw)
 #colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 #no_match = colnames(expr_raw) %in% meta_info$Sample == F
 #colnames(expr_raw)[which(no_match)]
-#meta_data = meta_info[colnames(expr_raw),]
+meta_data = meta_info[colnames(expr_raw),]
 
 candidates = meta_data$Sample[ 
   #meta_data$Study %in% c("Master","Charite")

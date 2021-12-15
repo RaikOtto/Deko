@@ -1,7 +1,7 @@
 
 hgnc_list = results[match(rownames(expr_raw),results[,1]),2]
-
 hgnc_list = row.names(expr_raw)
+
 expr_raw = expr_raw[ ! is.na(hgnc_list),]
 expr_raw = expr_raw[ hgnc_list != "",]
 hgnc_list = hgnc_list[!is.na(hgnc_list)]
@@ -51,4 +51,4 @@ length(hgnc_list_uni)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "" )
 
-#write.table(expr_raw,"~/Deko_Projekt/Data/JGA/Sato.S35.HGNC.tsv",sep="\t",quote = F)
+#write.table(expr_raw,"~/Deko_Projekt/Data/Cancer_Pancreas_Bulk_Array/GSE73338/Missiaglia.S88.tsv",sep="\t",quote = F)
