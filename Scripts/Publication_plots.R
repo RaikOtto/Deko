@@ -19,7 +19,7 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Sato.S22.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Missiaglia.S88.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 #expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
