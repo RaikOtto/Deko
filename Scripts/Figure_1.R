@@ -20,14 +20,14 @@ meta_data = meta_info[ rownames(data),]
 
 ### Figure 1 plot A - Racetrack Plot
 
-#data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Relative/Baron_exocrine/NEN/All.S.tsv",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
-meta_data = meta_info
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[unique(data$Sample),]
 table(meta_data$Study)
 meta_data = meta_data %>% 
     filter(!(Primary_Metastasis %in% c("Outlier","Control")))%>% filter(Study != "Fadista") %>% filter(NET_NEC_PCA != "MiNEN") %>% filter(Site_of_metastasis != "Control")
 dim(meta_data)
+table(meta_data$Site_of_primary)
 table(meta_data$Study)
-
 
 vis_mat = meta_data[,c("Study","Site_of_primary")]
 vis_mat = as.data.frame(table(reshape2::melt(vis_mat)))

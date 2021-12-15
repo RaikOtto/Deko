@@ -49,7 +49,7 @@ dim(expr_raw)
 #table(meta_data$Histology_Primary)
 
 show_models_bseqsc()
-#model_name = "Alpha_Beta_Gamma_Delta_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
@@ -57,7 +57,7 @@ show_models_bseqsc()
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 
 #model_name = "Tosti_400_endocrine_only"
-model_name = "Tosti_400_endocrine_exocrine_all"
+#model_name = "Tosti_400_endocrine_exocrine_all"
 
 print(dataset_name)
 
@@ -87,7 +87,7 @@ if (exists("props_export")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
