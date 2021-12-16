@@ -8,22 +8,10 @@ library("ggpubr")
 
 meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 rownames(meta_info) = meta_info$Sample
-colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
-study_selection = c("Alvarez","Charite","Diedisheim","Master","Missiaglia","Sadanandam","Sato","Scarpa")
-meta_data = meta_info[meta_info$Study %in% study_selection,]
-meta_data = meta_data[meta_data$NEC_NET %in% c("Ambiguous", "Unknown", "NEC", "NET"),]
 
-table(meta_info$Study)
-
-###
-
-meta_data = meta_info[meta_info$Study %in% study_selection,]
-meta_data = meta_data[meta_data$Primary_Metastasis != "Control",]
-meta_data = meta_data[meta_data$Primary_Metastasis != "Outlier",]
-meta_data = meta_data[meta_data$NEC_NET != "Control",]
-meta_data = meta_data[meta_data$Grading != "Control",]
-dim(meta_data)
-
+expr_raw = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[expr_raw$Sample,]
+table(meta_data$Study)
 
 ### waffle plots
 
@@ -47,7 +35,7 @@ grading_plot = ggplot(
         title = "Grading"
     ) +
     theme_ipsum_rc(grid="") +
-    theme_enhance_waffle() + scale_fill_manual(values = c("darkgreen","yellow","darkred","cyan","gray")) + theme(legend.position="top")
+    theme_enhance_waffle() + scale_fill_manual(values = c("#D2E6E6","#78B8B4","#F54C19","gray")) + theme(legend.position="top")
 
 #svg(filename = "~/Dropbox/Figures/F1_waffle_grading.svg", width = 10, height = 10)
 grading_plot
@@ -58,7 +46,7 @@ dev.off()
 nec_net_data = reshape2::melt(table(meta_data[,c("NEC_NET","Study")]))
 colnames(nec_net_data) = c("NEC_NET","Study","Count")
 nec_net_data$NEC_NET = as.character(nec_net_data$NEC_NET)
-nec_net_data[as.character(nec_net_data$NEC_NET) %in% c("MiNEN","SCLC"),"NEC_NET"] = "Other"
+nec_net_data[as.character(nec_net_data$NEC_NET) %in% c("SCLC"),"NEC_NET"] = "Other"
 nec_net_plot = ggplot(
     nec_net_data,
     aes(
@@ -75,7 +63,7 @@ nec_net_plot = ggplot(
         title = "NEC NET"
     ) +
     theme_ipsum_rc(grid="") +
-    theme_enhance_waffle() + scale_fill_manual(values = c("purple","red","blue","cyan","gray")) + theme(legend.position="top")
+    theme_enhance_waffle() + scale_fill_manual(values = c("#9664AF","#C00000","#1E64A5","cyan","gray")) + theme(legend.position="top")
 
 #svg(filename = "~/Dropbox/Figures/F1_waffle_nec_net.svg", width = 10, height = 10)
 nec_net_plot

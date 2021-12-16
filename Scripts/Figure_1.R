@@ -15,18 +15,11 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-data = read.table("~/Deko_Projekt/Results/cell",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
-meta_data = meta_info[ rownames(data),]
-
 ### Figure 1 plot A - Racetrack Plot
 
-data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep ="\t", header = T, stringsAsFactors = F)
-meta_data = meta_info[unique(data$Sample),]
-table(meta_data$Study)
-meta_data = meta_data %>% 
-    filter(!(Primary_Metastasis %in% c("Outlier","Control")))%>% filter(Study != "Fadista") %>% filter(NET_NEC_PCA != "MiNEN") %>% filter(Site_of_metastasis != "Control")
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/All.endocrine.Baron.absolute.with_NENs.S513.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[ data$Sample,]
 dim(meta_data)
-table(meta_data$Site_of_primary)
 table(meta_data$Study)
 
 vis_mat = meta_data[,c("Study","Site_of_primary")]
@@ -43,7 +36,7 @@ Study_labels = c("Califano","Missiaglia", "Diedisheim","Riemer","Fröhling","Sat
 vis_mat$Study = factor(vis_mat$Study,levels = c(
     "A","B","C",rev(Study_labels)
 ))
-Study_labels = c("","","",c("Fröhling","Missiaglia","Sadanandam","Sato","Scarpa","Califano","Riemer","Diedisheim"),rep("",40))
+Study_labels = c("","","",c("Fröhling","Missiaglia","Sadanandam","Sato","Scarpa","Califano","Riemer","Diedisheim"),rep("",32))
 vis_mat$Site_of_primary = factor(vis_mat$Site_of_primary, levels = rev(c("Pancreatic","Small_intestinal","Large_intestinal","Gastric/duodenal","Other")))
 
 race_plot = ggplot(

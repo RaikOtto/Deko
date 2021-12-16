@@ -139,3 +139,4 @@ deco_mat_net_nec$NET_NEC = meta_data$NET_NEC_PCA
 deco_mat_net_nec$NET_NEC[deco_mat_net_nec$NET_NEC == "NEC"] = "0"
 deco_mat_net_nec$NET_NEC[deco_mat_net_nec$NET_NEC == "NET"] = "1"
 table(deco_mat_net_nec$NET_NEC)
+

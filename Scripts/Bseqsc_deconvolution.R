@@ -19,6 +19,7 @@ opt = parse_args(opt_parser);
 input_index = opt$index
 
 #remove(props)
+'
 datasets = c(
     "Alvarez.S105.tsv", #1
     "Charite.S23.tsv", #2
@@ -27,16 +28,18 @@ datasets = c(
     "Missiaglia.S88.tsv", #5
     "Sadanandam.S29.tsv", #6
     "Scarpa.S29.tsv") #7
+'
 
-#datasets = c(
-#    "Alvarez.S100.tsv", #1
-#    "Charite.S17.tsv", #2
-#    "Diedisheim.S4.tsv", #3
-#    "Master.S14.tsv", #4
-#    "Sato.S32.tsv") #5
+datasets = c(
+    "Alvarez.S100.tsv", #1
+    "Charite.S17.tsv", #2
+    "Diedisheim.S4.tsv", #3
+    "Master.S14.tsv", #4
+    "Sato.S22.tsv") #5
 
-dataset_name = 3#datasets[input_index]
-i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
+dataset_name = datasets[input_index]
+#i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
+i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
@@ -49,8 +52,8 @@ dim(expr_raw)
 #table(meta_data$Histology_Primary)
 
 show_models_bseqsc()
-model_name = "Alpha_Beta_Gamma_Delta_Baron"
-#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+#model_name = "Alpha_Beta_Gamma_Delta_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
@@ -81,9 +84,9 @@ colnames(props)[1:2] = c("Sample","Model")
 #}
 
 if (exists("props_export")){
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
     o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
