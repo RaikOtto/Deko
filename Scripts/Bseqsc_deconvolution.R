@@ -42,6 +42,9 @@ dataset_name = datasets[input_index]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 
+dataset_name = "Fadista"
+i_filename = "~/Deko_Projekt/Data/Human_differentiated_pancreatic_islet_cells_Bulk/Fadista.tsv"
+
 expr_raw = read.table(i_filename,sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
@@ -52,8 +55,8 @@ dim(expr_raw)
 #table(meta_data$Histology_Primary)
 
 show_models_bseqsc()
-#model_name = "Alpha_Beta_Gamma_Delta_Baron"
-model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
+model_name = "Alpha_Beta_Gamma_Delta_Baron"
+#model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Baron"
 #model_name = "Alpha_Beta_Gamma_Delta_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Acinar_Ductal_Segerstolpe"
 #model_name = "Alpha_Beta_Gamma_Delta_Lawlor"
@@ -85,15 +88,12 @@ colnames(props)[1:2] = c("Sample","Model")
 
 if (exists("props_export")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
-    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_endocrine//"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"
+    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine//"
     o_filename = paste(o_filename, dataset_name, sep ="/")
     write.table(props_export,o_filename,sep = "\t",row.names = FALSE)
 }
