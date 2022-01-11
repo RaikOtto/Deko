@@ -19,22 +19,22 @@ colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 matcher = match(meta_info_maptor$Sample,meta_info$Sample, nomatch = 0)
 meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Sato.S22.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
-#expr_raw = read.table("~/Dropbox/testproject/Datasets/Deconvolution/Exocrine/Absolute/All.exocrine.Baron.absolute.with_NENs.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+#expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/NEN/Sato.S22.tsv",sep="\t", stringsAsFactors =  F, header = T, row.names = 1,as.is = F)
+expr_raw = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_Cibersort_Tosti_200_genes_200_samples_endocrine_exocrine_metaplastic_acinar-i_muc5+_only.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
 
+expr_raw = expr_raw[,!(colnames(expr_raw) %in% c("","X","RMSE","Correlation","P_value","Subtype","Strength_subtype","model","Sig_score"))]
+expr_raw = t(expr_raw)
 
-#no_match = colnames(expr_raw) %in% meta_info$Sample == F
+no_match = colnames(expr_raw) %in% meta_info$Sample == FALSE
 #colnames(expr_raw)[no_match] = str_replace(colnames(expr_raw)[no_match], pattern = "^X","")
 #no_match = colnames(expr_raw) %in% meta_info$Sample == F
 #colnames(expr_raw)[no_match] = paste("X",colnames(expr_raw)[no_match],sep ="")
 #no_match = colnames(expr_raw) %in% meta_info$Sample == F
 #colnames(expr_raw)[which(no_match)]
-meta_data = meta_info[colnames(expr_raw),]
-
 
 candidates = meta_data$Sample[ 
   #meta_data$Study %in% c("Master","Charite")
@@ -78,18 +78,19 @@ pcr = prcomp((correlation_matrix))
 #expr = expr[,order(meta_exp)]
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
-  correlation_matrix,
-  #expr,
+  #correlation_matrix,
+  expr,
   annotation_col = meta_data[,c("NET_NEC_PCA","Grading","Primary_Metastasis","Study")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
-  show_rownames = F,
+  show_rownames = TRUE,
   cluster_cols = TRUE,
   show_colnames = FALSE,
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "complete"
+  cellheight = 15,
+  clustering_method = "average"
 )
 
 p = ggbiplot::ggbiplot(
@@ -125,7 +126,8 @@ rownames(meta_info) = meta_info$Name
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 meta_info$NEC_NET = meta_info$NEC_NET_PCA
 
-data_t = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = T)
+data_t = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions/RepSet_S57_CIBERSORT_Tosti_400.Absolute.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = T)
+#data_t = read.table("~/Deko_Projekt/Results/Bseq_results_fractions_p_values.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = T)
 table(data_t$Dataset) / 3
 vis_mat = data_t
 vis_mat = vis_mat[ vis_mat$Dataset %in% c("Fadista","RepSet") ,]
