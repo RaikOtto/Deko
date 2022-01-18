@@ -35,7 +35,7 @@ datasets = c(
 #    "Master.S14.tsv", #4
 #    "Sato.S32.tsv") #5
 
-dataset_name = 3#datasets[input_index]
+dataset_name = datasets[input_index]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = paste(i_filename, dataset_name, sep ="")
 
@@ -81,8 +81,8 @@ colnames(props)[1:2] = c("Sample","Model")
 #}
 
 if (exists("props_export")){
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
+    #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
+#    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
     o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Segerstolpe_exocrine/NEN/"
