@@ -4,7 +4,8 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 sort(table(meta_info$Sample),decreasing = TRUE)
 
-path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S103.HGNC.DESeq2.tsv"
+path_transcriptome_file = "~/MAPTor_NET/BAMs_new/RepSet_S69.NEN.HGNC.tsv"
+#path_transcriptome_file = "~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Charite_Scarpa_Master_Diedisheim.tsv"
 expr_raw = read.table(path_transcriptome_file,sep="\t", stringsAsFactors =  F, header = T, as.is = F,row.names = 1)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 expr_raw[1:5,1:5]
@@ -13,7 +14,7 @@ table(match(colnames(expr_raw), meta_info$Sample, nomatch = 0) != 0)
 
 meta_data = meta_info[colnames(expr_raw),]
 candidates = meta_data$Sample[ 
-    meta_data$Histology_Primary %in% c("Pancreatic") & meta_data$Primary_Metastasis %in% c("Primary")
+    meta_data$Site_of_primary %in% c("Pancreatic")
 ]
 expr = expr_raw[,candidates]
 meta_data = meta_info[colnames(expr),]
@@ -21,8 +22,9 @@ dim(meta_data)
 
 ### cls file
 
-#cohort_vec = meta_data$NET_NEC_PCA
-cohort_vec = meta_data$Cohort
+cohort_vec = meta_data$NET_NEC_PCA
+#cohort_vec = meta_data$Cohort
+
 cohort_vec = str_replace(cohort_vec," ","_")
 table(cohort_vec)
 
@@ -36,8 +38,8 @@ second_line[4:(length(cohort_vec))] = ""
 
 cls_file = rbind(first_line,second_line,cohort_vec)
 
-write.table(cls_file, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.cls",row.names = F, quote = F, sep ="\t",col.names = FALSE)
-write.table(cls_file, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.cls.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(cls_file, "~/Deko_Projekt/GSEA/RepSet.S69.Metaplastic.Exocrine.cls",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(cls_file, "~/Deko_Projekt/GSEA/RepSet.S69.Metaplastic.Exocrine.cls.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
 
 ### gct file
 
@@ -51,5 +53,17 @@ gct_matrix = cbind(rownames(expr),rownames(expr),expr)
 output_gct = rbind(first_line,second_line, third_line, gct_matrix)
 output_gct[1:5,1:5]
 
-write.table(output_gct, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.gct",row.names = F, quote = F, sep ="\t",col.names = FALSE)
-write.table(output_gct, "~/MAPTor_NET/GSEA/RepSet.S72.left_right_20_genes.gct.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(output_gct, "~/Deko_Projekt/GSEA/RepSet.S69.Metaplastic.Exocrine.gct",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+write.table(output_gct, "~/Deko_Projekt/GSEA/RepSet.S69.Metaplastic.Exocrine.gct.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+
+####
+
+percentages_t = as.data.frame(read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv", header = TRUE, sep ="\t"))
+percentages_t = percentages_t %>% dplyr::filter( Model != "Endocrine_only")
+matcher = match(colnames(expr),percentages_t$Sample)
+cohort_vec = cohort_vec_numeric = as.double(rowSums(percentages_t[ matcher, c("Ductal","Acinar")]))
+cohort_vec[cohort_vec_numeric > mean(cohort_vec_numeric)] = "Exocrine-like-high"
+cohort_vec[cohort_vec_numeric <= mean(cohort_vec_numeric)] = "Exocrine-like-low"
+
+#write.table(output_gct, "~/Deko_Projekt/GSEA/Charite_Diedisheim_Riemer_Scarpa_S134.Exocrine.HGNC.cls.tsv",row.names = F, quote = F, sep ="\t",col.names = FALSE)
+#write.table(output_gct, "~/Deko_Projekt/GSEA/RepSet_S51.Exocrine.HGNC.cls",row.names = F, quote = F, sep ="\t",col.names = FALSE)

@@ -61,41 +61,38 @@ dev.off()
 
 ### Figure 3 Plot B Charite + Master +Scarpa absolutplot G3 only
 
-props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/All.exocrine.Baron.absolute_with_NENs.S513.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
+props = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep = "\t", as.is = T, stringsAsFactors = F, header = T)
 props_endo = props %>% filter(Model == "Endocrine_only")
 props_exo = props %>% filter(Model == "Endocrine_exocrine_like")
 rownames(props_exo) = props_exo$Sample
 
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^X","")
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-props$Sample[no_matcher] = str_replace(props$Sample[no_matcher], pattern ="^","X")
-no_matcher = which(!( props$Sample %in% meta_info$Sample))
-no_matcher
-
 meta_data = meta_info[props$Sample,]
-props = props[meta_data$Study %in% c("Charite","Scarpa","Master"),]
+candidate_studies = c("Riemer","Fröhling","Diedisheim","Sadanandam")
+props = props[meta_data$Study %in% candidate_studies,]
 meta_data = meta_info[rownames(props),]
 dim(props)
 
 props_exo$Exocrine_like = as.double(rowSums(props_exo[,c("Acinar","Ductal")]))
 
-selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like")
+selection = c("Alpha","Beta","Gamma","Delta","Exocrine_like","Correlation","RMSE","P_value")
 vis_mat_exo = props_exo[,selection]
 meta_data = meta_info[rownames(vis_mat_exo),]
-vis_mat_exo = vis_mat_exo%>% filter(meta_data$Study %in% c("Charite","Master","Scarpa"))
+vis_mat_exo = vis_mat_exo%>% filter(meta_data$Study %in% candidate_studies)
 meta_data = meta_info[rownames(vis_mat_exo),]
 vis_mat_exo = vis_mat_exo%>% filter(meta_data$Grading %in% c("G3"))
 meta_data = meta_info[rownames(vis_mat_exo),]
-
+vis_mat_exo = vis_mat_exo[meta_data$NEC_NET != "Unknown",]
+meta_data = meta_info[rownames(vis_mat_exo),]
 vis_mat_exo$MKi67 = log(as.double(meta_data$Mki_67))
 vis_mat_exo$MKi67 = vis_mat_exo$MKi67 / max(vis_mat_exo$MKi67)
 #vis_mat_exo$MKi67 = vis_mat_exo$MKi67 * max(vis_mat_exo$Exocrine_like)
 
-vis_mat_balanced = vis_mat_exo# / row_max
-correlation_matrix = cor(t(vis_mat_balanced))
+row_max = as.double(apply(vis_mat_exo[,c("Alpha","Beta","Gamma","Delta","Exocrine_like","RMSE")], FUN = max, MARGIN = 1))
+vis_mat_balanced = vis_mat_exo 
+vis_mat_balanced[,c("Alpha","Beta","Gamma","Delta","Exocrine_like","RMSE")] = vis_mat_balanced[,c("Alpha","Beta","Gamma","Delta","Exocrine_like","RMSE")]/ row_max
 
-vis_mat_balanced = vis_mat_balanced[order(vis_mat_balanced$Exocrine_like),]
+#vis_mat_balanced = vis_mat_balanced[order(vis_mat_balanced$Exocrine_like),]
 source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
 
 #svg(filename = "~/Dropbox/Figures/Figure_3_Plot_B.svg", width = 10, height = 10)
@@ -107,13 +104,13 @@ upper_plot = pheatmap::pheatmap(
     show_rownames = TRUE,
     show_colnames = FALSE,
     cluster_rows = FALSE,
-    cluster_cols = FALSE,
+    cluster_cols = TRUE,
     treeheight_row = 0,
     legend = T,
-    clustering_method = "complete",
+    clustering_method = "single",
     cellheight = 35,
-    fontsize = 10,
-    annotation_legend = FALSE
+    fontsize = 10#,
+    #annotation_legend = FALSE
 )
 dev.off()
 

@@ -15,18 +15,11 @@ meta_info = read.table("~/Deko_Projekt/Misc/Meta_information.tsv",sep = "\t",hea
 rownames(meta_info) = meta_info$Sample
 colnames(meta_info) = str_replace(colnames(meta_info),pattern = "\\.","_")
 
-data = read.table("~/Deko_Projekt/Results/cell",sep ="\t", header = T, stringsAsFactors = F,row.names = 1)
-meta_data = meta_info[ rownames(data),]
-
 ### Figure 1 plot A - Racetrack Plot
 
-data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/All.endocrine.exocrine.Baron.absolute.with_NENs.tsv",sep ="\t", header = T, stringsAsFactors = F)
-meta_data = meta_info[unique(data$Sample),]
-table(meta_data$Study)
-meta_data = meta_data %>% 
-    filter(!(Primary_Metastasis %in% c("Outlier","Control")))%>% filter(Study != "Fadista") %>% filter(NET_NEC_PCA != "MiNEN") %>% filter(Site_of_metastasis != "Control")
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/All.endocrine.Baron.absolute.with_NENs.S513.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[ data$Sample,]
 dim(meta_data)
-table(meta_data$Site_of_primary)
 table(meta_data$Study)
 
 vis_mat = meta_data[,c("Study","Site_of_primary")]
@@ -43,7 +36,7 @@ Study_labels = c("Califano","Missiaglia", "Diedisheim","Riemer","Fröhling","Sat
 vis_mat$Study = factor(vis_mat$Study,levels = c(
     "A","B","C",rev(Study_labels)
 ))
-Study_labels = c("","","",c("Fröhling","Missiaglia","Sadanandam","Sato","Scarpa","Califano","Riemer","Diedisheim"),rep("",40))
+Study_labels = c("","","",c("Fröhling","Missiaglia","Sadanandam","Sato","Scarpa","Califano","Riemer","Diedisheim"),rep("",32))
 vis_mat$Site_of_primary = factor(vis_mat$Site_of_primary, levels = rev(c("Pancreatic","Small_intestinal","Large_intestinal","Gastric/duodenal","Other")))
 
 race_plot = ggplot(
@@ -76,9 +69,11 @@ dev.off()
 
 ### Figure 1 Plot b - Treemap alternative to plot A, amount of samples per study
 
-meta_data_pannen = meta_data %>% filter(Site_of_primary == "Pancreatic")
-dim(meta_data_pannen)
-table(meta_data_pannen$Study)
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[ data$Sample,]
+dim(meta_data)
+table(meta_data$Study)
+
 vis_mat_plot_a = reshape2::melt(table(meta_data_pannen$Study))
 colnames(vis_mat_plot_a) = c("Study","Count")
 
@@ -267,3 +262,45 @@ plot_b = plot_b + geom_segment(data=base_data, aes(x = start, y = -5, xend = end
 plot_b = plot_b + geom_text(data=base_data, aes(x = title, y = -18, label=group), hjust=c(1,1,1,1,0,0,0,0), colour = "black", alpha=0.8, size=4, fontface="bold", inherit.aes = FALSE)
 plot_b = plot_b + scale_fill_manual(values = c("#C75E40","#500307","#17070C","#52D383","#2F3F49","#FC4C1D","#64E0FD","#1601AE"))
 plot_b
+
+###
+
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/All.S157.Baron_exocrine_absolute_NEN_only.tsv",sep ="\t", header = T, stringsAsFactors = F)
+dim(data)
+meta_data = meta_info[ data$Sample,]
+dim(meta_data)
+
+meta_data[(meta_data$NEC_NET == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
+meta_data[(meta_data$NEC_NET == "NEC"),"Grading"] = "G3_NEC"
+table(meta_data$Grading)
+table(meta_data$NEC_NET)
+sum(table(meta_data$NEC_NET))
+table(meta_data$Functionality)
+
+table(meta_data$Study,meta_data$Grading)
+
+###
+
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep ="\t", header = T, stringsAsFactors = F)
+meta_data = meta_info[ data$Sample,]
+
+meta_data[(meta_data$NEC_NET == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
+meta_data[(meta_data$NEC_NET == "NEC"),"Grading"] = "G3_NEC"
+table(meta_data$Grading)
+table(meta_data$NEC_NET)
+table(meta_data$Functionality)
+
+table(meta_data$Study,meta_data$Grading)  
+
+###
+
+data = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/All.exocrine.Baron.absolute_with_NENs.S513.tsv", header = TRUE)
+meta_data = meta_info[ data$Sample,]
+
+meta_data[(meta_data$NEC_NET == "NET") & (meta_data$Grading == "G3"),"Grading"] = "G3_NET"
+meta_data[(meta_data$NEC_NET == "NEC"),"Grading"] = "G3_NEC"
+table(meta_data$Grading)
+table(meta_data$NEC_NET)
+table(meta_data$Functionality)
+
+table(meta_data$Study,meta_data$Grading)  
