@@ -30,17 +30,6 @@ datasets = c(
     "Scarpa.S29.tsv") #7
 '
 
-<<<<<<< HEAD
-#datasets = c(
-#    "Alvarez.S100.tsv", #1
-#    "Charite.S17.tsv", #2
-#    "Diedisheim.S4.tsv", #3
-#    "Master.S14.tsv", #4
-#    "Sato.S32.tsv") #5
-
-dataset_name = datasets[input_index]
-i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
-=======
 datasets = c(
     "Alvarez.S100.tsv", #1
     "Charite.S17.tsv", #2
@@ -51,7 +40,6 @@ datasets = c(
 dataset_name = datasets[input_index]
 #i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
->>>>>>> 0309b8d5971e7262453387dffda80f1e324e8478
 i_filename = paste(i_filename, dataset_name, sep ="")
 
 dataset_name = "Fadista"
@@ -100,13 +88,8 @@ colnames(props)[1:2] = c("Sample","Model")
 
 if (exists("props_export")){
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/"
-<<<<<<< HEAD
-#    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
-    o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
-=======
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/"
->>>>>>> 0309b8d5971e7262453387dffda80f1e324e8478
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_endocrine/NEN/"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_exocrine"
     #o_filename = "~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Tosti_endocrine/"

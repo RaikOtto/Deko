@@ -3,12 +3,38 @@ library("Seurat")
 library("dplyr")
 library("Matrix")
 
-meta_info = read.table("~/Deko_Projekt/Misc/Tosti_Metadaten.tsv",sep ="\t", header = T)
-rownames(meta_info) = meta_info$Cell
+meta_info = read.table("~/Downloads/drive-download-20220114T151242Z-001/barcodes.tsv",sep =",", header = T)
+rownames(meta_info) = meta_info$cell.name
 
-scrna_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
-meta_data = meta_info[colnames(scrna_raw),]
-age_exclusion_vec = which(meta_data$age<5)
+#scrna_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
+scrna_raw = read.table("~/Downloads/count-matrix.txt", sep =" ", header = TRUE)
+scrna_raw[1:5,1:5]
+meta_data = meta_info[match(colnames(scrna_raw), meta_info$cell.name,nomatch = 0),]
+table(meta_data$patient)
+table(meta_data$is_edge)
+
+n_finder = str_detect(colnames(scrna_raw), pattern = "N")
+colnames(scrna_raw)[n_finder]
+n_finder = str_detect(meta_info$cell.name, pattern = "N")
+meta_info[n_finder,]
+"N1_AAACCTGCAACCGCCA" %in% colnames(scrna_raw)
+"N1_AAACCTGCAACCGCCA" %in% meta_info$cell.name
+colnames(scrna_raw)[str_detect(colnames(scrna_raw), pattern ="N")]
+
+candidate_samples = which(colnames(scrna_raw) %in% meta_info$cell.name)
+scrna.S12608 = scrna_raw[,candidate_samples]
+meta_data = meta_info[match(colnames(scrna.S12608), meta_info$cell.name,nomatch = 0),]
+table(meta_data$patient)
+table(meta_data$is_edge)
+saveRDS(scrna.S12608, "~/Downloads/Peng.S12608.RDS")
+
+meta_data = meta_info[match(colnames(scrna.S12608), meta_info$cell.name,nomatch = 0),]
+candidate_not_neoplastic = str_detect(meta_data$patient, pattern = "N")
+scrna = scrna.S12608[,candidate_not_neoplastic]
+dim(scrna)
+saveRDS(scrna.S12608, "~/Downloads/Peng.S12608.RDS")
+dim(scrna)
+
 scrna_raw = scrna_raw[,-age_exclusion_vec]
 dim(scrna_raw)
 meta_data = meta_info[colnames(scrna_raw),]
@@ -96,14 +122,15 @@ write.table(
     '~/Downloads/Tosti.Seurat.normalized.S78048.tsv', 
     sep = ',', row.names = T, col.names = T, quote = F)
 
-write.table(pbmc.markers,"~/Downloads/Marker_genes.tsv",sep ="\t",quote =F )
+#write.table(meta_data,"~/Downloads/Meta_info.Edge.tsv",sep ="\t",quote =F)
 
 
 ####
 
-expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
-rownames = as.character(sapply(rownames(expr_raw), FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "\\|")))[1])}))
-rownames = as.character(sapply(rownames, FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "-")))[1])}))
+#expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
+#rownames = as.character(sapply(rownames(expr_raw), FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "\\|")))[1])}))
+rownames = as.character(sapply(rownames(expr_raw), FUN = function(vec){return(as.character(unlist(str_split(vec,pattern = "\\.")))[1])}))
+rownames = str_to_upper(rownames(expr_raw))
 hgnc_list = rownames
 
 #### downsampling
@@ -113,18 +140,22 @@ rownames(meta_info) = meta_info$Cell
 
 expr_raw = readRDS("~/Downloads/Tosti.Seurat.normalized.S78048.RDS")
 meta_data = meta_info[colnames(expr_raw),]
-cell_type_vec_overall = str_to_lower(meta_data$Cluster)
+
+candidates_cells = which((meta_data$cluster == "Acinar cell") & (meta_data$is_edge == "1"))
+meta_data[candidates_cells,"cluster"] = "Acinar_edge_cell"
+
+cell_type_vec_overall = str_to_lower(meta_data$cluster)
 table(cell_type_vec_overall)
 
 #
 
-cell_type_vec_overall[cell_type_vec_overall %in% c("acinar-i","acinar-s","acinar-reg+")] = "acinar"
-cell_type_vec_overall[cell_type_vec_overall %in% c("muc5b+ ductal","ductal")] = "ductal"
+#cell_type_vec_overall[cell_type_vec_overall %in% c("acinar-i","acinar-s","acinar-reg+")] = "acinar"
+#cell_type_vec_overall[cell_type_vec_overall %in% c("muc5b+ ductal","ductal")] = "ductal"
 
 #
 
 #cell_type_vec = cell_type_vec_overall[!(cell_type_vec_overall %in% c("schwann","endothelial","activated stellate","quiescent stellate","macrophage"))]
-cell_type_vec = cell_type_vec_overall[!(cell_type_vec_overall %in% c("alpha","beta","gamma","delta","schwann","endothelial","activated stellate","quiescent stellate","macrophage"))]
+cell_type_vec = cell_type_vec_overall#[!(cell_type_vec_overall %in% c("alpha","beta","gamma","delta","schwann","endothelial","activated stellate","quiescent stellate","macrophage"))]
 table(cell_type_vec)
 selected_samples = c()
 
@@ -139,7 +170,7 @@ for ( cell_type in unique(cell_type_vec)){
 length(selected_samples)
 
 expr = expr_raw[,selected_samples]
-model_name = "Tosti_200_aggregated_Exocrine_only"
+model_name = "Gopalan_S784"
 
 library("devtools")
 load_all("~/artdeco")
