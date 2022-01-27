@@ -29,6 +29,7 @@ datasets = c(
     "Sadanandam.S29.tsv", #6
     "Scarpa.S29.tsv") #7
 
+<<<<<<< HEAD
 
 #datasets = c(
 #    "Alvarez.S100.tsv", #1
@@ -39,6 +40,18 @@ datasets = c(
 
 dataset_name = datasets[input_index]
 i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
+=======
+datasets = c(
+    "Alvarez.S100.tsv", #1
+    "Charite.S17.tsv", #2
+    "Diedisheim.S4.tsv", #3
+    "Master.S14.tsv", #4
+    "Sato.S22.tsv") #5
+
+dataset_name = datasets[input_index]
+#i_filename = "~/Deko_Projekt/Data/Publication_datasets/"
+i_filename = "~/Deko_Projekt/Data/Publication_datasets/NEN/"
+>>>>>>> 44d98cb2c9a8d063c5710e6982bbf8436bd6d880
 i_filename = paste(i_filename, dataset_name, sep ="")
 
 #dataset_name = "Fadista"
