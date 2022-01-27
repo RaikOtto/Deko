@@ -71,7 +71,7 @@ summary(row_var)
 #expr = expr[row_var > 3,]
 dim(expr)
 
-correlation_matrix = cor((expr))
+correlation_matrix = cor(t(expr))
 pcr = prcomp((correlation_matrix))
 
 #meta_exp = as.double(apply(expr, MARGIN = 1, FUN = mean))
@@ -79,8 +79,8 @@ pcr = prcomp((correlation_matrix))
 #svg(filename = "~/Downloads/Heatmap.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   #correlation_matrix,
-  expr,
-  annotation_col = meta_data[,c("NET_NEC_PCA","Grading","Primary_Metastasis","Study")],
+  t(expr),
+  annotation_col = meta_data[,c("NEC_NET","Grading","Primary_Metastasis")],
   #annotation_col = meta_data[,c("NEC_NET_Color","Histology")],
   annotation_colors = aka3,
   show_rownames = TRUE,
@@ -89,7 +89,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  cellheight = 15,
+  #cellheight = 15,
   clustering_method = "average"
 )
 
@@ -182,15 +182,33 @@ melt_mat_crine$Model = c(rep("Endocrine-only",5),rep("Endocrine & Exocrine",5),r
 melt_mat_crine$Model = factor(melt_mat_crine$Model,  levels =  c("Endocrine-only","Endocrine & Exocrine","Endocrine & HISC"))
 melt_mat_crine = melt_mat_crine[,]
 #melt_mat_crine = melt_mat_crine %>% filter(Grading != "G3_other")
+
+melt_mat_crine = props[,c("endocrine cell","ductal cell type 1","acinar cell","acinar_edge_cell")]
+melt_mat_crine_save = melt_mat_crine = t(apply( melt_mat_crine, MARGIN = 1, FUN = function(vec){return((vec/sum(vec))*100)}))
+melt_mat_crine = as.matrix(melt_mat_crine, nrow = nrow(melt_mat_crine_save), ncol = ncol(melt_mat_crine_save))
+
+melt_mat_crine$NEC_NET= meta_data$NET_NEC_PCA
+melt_mat_crine$Grading= meta_data$Grading
+melt_mat_crine = melt_mat_crine %>% dplyr::filter(Grading != "Unknown")
+melt_mat_crine[melt_mat_crine$NEC_NET == "NEC","Grading"] = "G3_NEC"
+melt_mat_crine[(melt_mat_crine$NEC_NET == "NET") & melt_mat_crine$Grading == "G3","Grading"] = "G3_NET"
+
+melt_mat_crine = reshape2::melt(melt_mat_crine)
+colnames(melt_mat_crine) = c("Sample","Cell_type","Prediction")
+#colnames(melt_mat_crine) = c("NEC_NET","Grading","Cell_type","Prediction")
+melt_mat_crine$Grading = meta_data[,"Grading"]
+melt_mat_crine_vis = melt_mat_crine %>% group_by(Grading,Cell_type) %>% summarise("Average_Absolute_Prediction" = mean(Prediction)) 
+
 p = ggplot(
-  data = melt_mat_crine,
+  data = melt_mat_crine_vis,
   aes(
     x = Grading,
-    y = P_value,
-    fill = Model
+    y = Average_Absolute_Prediction,
+    fill = Cell_type
   )
 )
-p = p + geom_bar(stat="identity", position=position_dodge(), color = "black")
+p = p + geom_bar(stat="identity",  color = "black",position = "dodge")
+
 p = p + scale_fill_manual(values = c("darkgreen", "darkred","black"))
 p = p + ylab(label = "P-value nu-SVR regression models")  + xlab(label = "Grading")
 p = p + geom_errorbar(aes(ymin = P_value,ymax = P_value+SD*.25),  position = "dodge")

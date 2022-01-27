@@ -21,7 +21,8 @@ meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
 ### Supplementary Figure 4 and 5
 
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Riemer_Scarpa.S52.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+#expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Riemer_Scarpa.S52.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Riemer_Scarpa_Master_Diedisheim.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
@@ -30,8 +31,7 @@ dim(expr_raw)
 meta_data = meta_info[colnames(expr_raw),]
 dim(meta_data)
 
-cell_type_predictions = read.table("~/Downloads/Cell_type_proportions_combined_endocrine_exocrine_SM_figure_3_4.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
-cell_type_predictions = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+cell_type_predictions = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 rownames(cell_type_predictions) = cell_type_predictions$Sample
 cell_type_predictions = cell_type_predictions[meta_data$Sample,]
 
@@ -47,16 +47,16 @@ meta_data = meta_info[colnames(expr_raw),]
 cell_type_predictions$Exocrine_like = rowSums(cell_type_predictions[,c("Acinar","Ductal")])
 meta_data[,c("Alpha","Beta","Gamma","Delta","Exocrine_like")] = cell_type_predictions[,c("Alpha","Beta","Gamma","Delta","Exocrine_like")]
 meta_data$Mki_67 = log(meta_data$Mki_67)
-meta_data$Mki_67 = meta_data$Mki_67 / max(meta_data$Mki_67)
 
 expr = expr_raw[rownames(expr_raw) %in% sad_genes[],]
 correlation_matrix = cor((expr))
+meta_data$MKi67 = meta_data$Mki_67
 
-svg(filename = "~/Dropbox/Figures/Supplementary/SM_Figure_4_NEC_NET_PCA_new.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Supplementary/SM_Figure_4_NEC_NET_PCA_new.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("Mki_67","NET_NEC_PCA","Grading","Primary_Metastasis","Study")],
+  annotation_col = meta_data[,c("MKi67","NEC_NET","Grading","Primary_Metastasis","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   cluster_cols = TRUE,
@@ -64,7 +64,7 @@ p  =pheatmap::pheatmap(
   treeheight_row = 0,
   legend = T,
   fontsize_col = 7,
-  clustering_method = "ward.D"
+  clustering_method = "average"
 )
 dev.off()
 
