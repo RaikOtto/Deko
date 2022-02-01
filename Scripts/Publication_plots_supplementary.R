@@ -21,42 +21,72 @@ meta_info[matcher,"OS_Tissue"] = meta_info_maptor[matcher != 0,"OS_Tissue"]
 
 ### Supplementary Figure 4 and 5
 
-#expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Riemer_Scarpa.S52.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
-expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Riemer_Scarpa_Master_Diedisheim.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+#expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Scarpa_Master.S49.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
+expr_raw = read.table("~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Scarpa_Master.S49.DeSEQ2.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^X", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "\\.", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
 
 meta_data = meta_info[colnames(expr_raw),]
+riemer_candidates = meta_data[meta_data$Study == "Riemer","Sample"]
+diedisheim_candidates = meta_data[meta_data$Study == "Diedisheim","Sample"]
+expr_raw = expr_raw[,!(colnames(expr_raw) %in% riemer_candidates)]
+meta_data = meta_info[colnames(expr_raw),]
+expr_raw = expr_raw[,!(colnames(expr_raw) %in% diedisheim_candidates)]
+meta_data = meta_info[colnames(expr_raw),]
+
 dim(meta_data)
 
 cell_type_predictions = read.table("~/Deko_Projekt/Results/Cell_fraction_predictions_visualization/Absolute/Baron_exocrine/All.exocrine.Baron.absolute.S356.tsv",sep="\t", stringsAsFactors =  F, header = T, as.is = TRUE)
 rownames(cell_type_predictions) = cell_type_predictions$Sample
 cell_type_predictions = cell_type_predictions[meta_data$Sample,]
 
-source("~/Deko_Projekt/Scripts/Archive/Visualization_colors.R")
+source("~/Deko_Projekt/Scripts/Visualization_colors.R")
 genes_of_interest_hgnc_t = read.table("~/Deko_Projekt/Misc/Stem_signatures.gmt.tsv",sep ="\t", stringsAsFactors = F, header = F)
 
 i = 7
-
 sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_of_interest_hgnc_t)]) )
 sad_genes = sad_genes[ sad_genes != ""]
 length(sad_genes)
+
 meta_data = meta_info[colnames(expr_raw),]
 cell_type_predictions$Exocrine_like = rowSums(cell_type_predictions[,c("Acinar","Ductal")])
 meta_data[,c("Alpha","Beta","Gamma","Delta","Exocrine_like")] = cell_type_predictions[,c("Alpha","Beta","Gamma","Delta","Exocrine_like")]
-meta_data$Mki_67 = log(meta_data$Mki_67)
+
+sum(table(meta_data$Grading))
+table(meta_data$Grading)
+high_number = 67#81#round((111*.75)/111*100,0)
+medium_number = 34#51#round(111*.25,0)
+
+MKi67_vec = MKi67_vec_numeric = (meta_data$Mki_67)
+threshold_MKi67_medium = quantile(MKi67_vec_numeric, seq(0,1,0.01)[medium_number])
+threshold_MKi67_high = quantile(MKi67_vec_numeric, seq(0,1,0.01)[high_number])
+MKi67_vec[MKi67_vec_numeric <= threshold_MKi67_medium] = "Low"
+MKi67_vec[MKi67_vec_numeric > threshold_MKi67_medium] = "Medium"
+MKi67_vec[MKi67_vec_numeric > threshold_MKi67_high] = "High"
+meta_data$MKi67 = MKi67_vec
+
+table(meta_data$NEC_NET)
+#high_number = 75
+
+Exocrine_like_vec = Exocrine_like_vec_numeric = (meta_data$Exocrine_like)
+threshold_exocrine_medium = quantile(Exocrine_like_vec_numeric, seq(0,1,0.01)[medium_number])
+threshold_exocrine_high = quantile(Exocrine_like_vec_numeric, seq(0,1,0.01)[high_number])
+Exocrine_like_vec[Exocrine_like_vec_numeric <= threshold_exocrine_medium] = "Low"
+Exocrine_like_vec[Exocrine_like_vec_numeric > threshold_exocrine_medium] = "Medium"
+Exocrine_like_vec[Exocrine_like_vec_numeric > threshold_exocrine_high] = "High"
+meta_data$Exocrine_like = Exocrine_like_vec
 
 expr = expr_raw[rownames(expr_raw) %in% sad_genes[],]
 correlation_matrix = cor((expr))
-meta_data$MKi67 = meta_data$Mki_67
+#meta_data$MKi67 = meta_data$Mki_67
 
-#svg(filename = "~/Dropbox/Figures/Supplementary/SM_Figure_4_NEC_NET_PCA_new.svg", width = 10, height = 10)
+#svg(filename = "~/Dropbox/Figures/Supplement/SM_Figure_5_Correlation_Heatmap_Riemer_Scarpa_PCA.svg", width = 10, height = 10)
 p  =pheatmap::pheatmap(
   correlation_matrix,
   #expr,
-  annotation_col = meta_data[,c("MKi67","NEC_NET","Grading","Primary_Metastasis","Study")],
+  annotation_col = meta_data[,c("MKi67","Exocrine_like","NEC_NET","Grading","Study")],
   annotation_colors = aka3,
   show_rownames = F,
   cluster_cols = TRUE,
@@ -68,6 +98,12 @@ p  =pheatmap::pheatmap(
 )
 dev.off()
 
+meta_data$Grading = factor(meta_data$MKi67, levels = c("High","Medium","Low"))
+table(meta_data$Grading,meta_data$MKi67)
+table(meta_data$Grading,meta_data$Exocrine_like)
+table(meta_data$NEC_NET,meta_data$MKi67)
+
+cor.test(MKi67_vec_numeric,Exocrine_like_vec_numeric)
 # SM Figure 4 <- here be changes for supervised versus unsupervised
 
 #data_t = read.table("~/Deko_Projekt/Results/Figure_4.tsv",sep="\t",header = T,stringsAsFactors = F)
@@ -188,7 +224,7 @@ stem_t = rbind(stem_t,genes_17)
 meta_t[,1:10]
 meta_t = rbind(meta_t, genes_1, genes_9, genes_10, genes_11, genes_14,genes_15,genes_17)
 
-write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quote = F, row.names = FALSE,col.names = FALSE)
+#write.table(meta_t,"~/Deko_Projekt/GSEA//Stem_signatures.gmt.tsv",sep ="\t",quote = F, row.names = FALSE,col.names = FALSE)
 
 #### umap
 
@@ -282,3 +318,5 @@ table(meta_data[meta_data$NEC_NET == "Ambiguous","Grading"],meta_data[meta_data$
 
 table(meta_data_sato_pan$Grading,meta_data_sato_pan$NEC_NET)
 table(meta_data_sato_gep$Grading,meta_data_sato_gep$NEC_NET)
+
+#write.table(expr_raw,"~/Deko_Projekt/Data/Publication_datasets/Combinations_PanNEN/Scarpa_Master.S49.DeSEQ2.tsv",sep ="\t",quote = F, row.names = TRUE,col.names = TRUE)
